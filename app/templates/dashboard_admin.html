@@ -1,0 +1,240 @@
+{% extends "layout.html" %}
+{% block title %}Tableau de Bord Administrateur{% endblock %}
+
+{% block head %}
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard_admin.css') }}">
+    <script src="{{ url_for('static', filename='js/dashboard_admin.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+<!-- Mobile Toggle -->
+<button class="mobile-toggle" onclick="toggleSidebar()">
+    <i class="fas fa-bars"></i>
+</button>
+
+<!-- Overlay -->
+<div class="overlay" onclick="toggleSidebar()"></div>
+
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <div class="logo">UDM</div>
+        <div class="admin-info">
+            <h2>Admin Panel</h2>
+            <p>Transport Universitaire</p>
+        </div>
+    </div>
+    <nav class="nav-menu">
+        <div class="nav-item">
+            <a href="{{ url_for('admin.dashboard') }}" class="nav-link {% if active_page == 'accueil' %}active{% endif %}">
+                <i class="fas fa-tachometer-alt"></i>
+                Accueil
+            </a>
+        </div>
+        <div class="nav-item">
+            <a href="{{ url_for('admin.bus') }}" class="nav-link {% if active_page == 'bus' %}active{% endif %}">
+                <i class="fas fa-bus"></i>
+                Bus AED
+            </a>
+        </div>
+        <div class="nav-item">
+            <a href="{{ url_for('admin.chauffeurs') }}" class="nav-link {% if active_page == 'chauffeurs' %}active{% endif %}">
+                <i class="fas fa-user-tie"></i>
+                Chauffeurs
+            </a>
+        </div>
+        <div class="nav-item">
+            <a href="{{ url_for('admin.utilisateurs') }}" class="nav-link {% if active_page == 'utilisateurs' %}active{% endif %}">
+                <i class="fas fa-users"></i>
+                Utilisateurs
+            </a>
+        </div>
+        <div class="nav-item">
+            <a href="{{ url_for('admin.rapports') }}" class="nav-link {% if active_page == 'rapports' %}active{% endif %}">
+                <i class="fas fa-chart-bar"></i>
+                Rapports
+            </a>
+        </div>
+        <div class="nav-item">
+            <a href="{{ url_for('admin.parametres') }}" class="nav-link {% if active_page == 'parametres' %}active{% endif %}">
+                <i class="fas fa-cog"></i>
+                Paramètres
+            </a>
+        </div>
+        <div class="nav-item" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+            <a href="{{ url_for('auth.logout') }}" class="nav-link">
+                <i class="fas fa-sign-out-alt"></i>
+                Déconnexion
+            </a>
+        </div>
+    </nav>
+</div>
+
+<!-- Main Content -->
+<div class="main-content">
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <h1 class="page-title">{{ page_title or "Tableau de Bord" }}</h1>
+        <div class="top-bar-actions">
+            <div class="notification-bell" onclick="toggleNotifications()">
+                <i class="fas fa-bell"></i>
+                {% if notifications|length > 0 %}
+                    <span class="notification-badge">{{ notifications|length }}</span>
+                {% endif %}
+            </div>
+            <div class="user-menu">
+                <div class="user-avatar">{{ current_user.initials }}</div>
+                <div>
+                    <div style="font-weight: 600; font-size: 14px;">{{ current_user.nom_utilisateur }}</div>
+                    <div style="font-size: 12px; color: #64748b;">{{ current_user.login }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Panel -->
+    <div class="notification-panel" id="notificationPanel">
+        <div class="notification-header">
+            <h3>Notifications</h3>
+            <button onclick="toggleNotifications()" style="background: none; border: none; cursor: pointer; font-size: 16px;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        {% for notif in notifications %}
+        <div class="notification-item">
+            <div class="notification-icon {{ notif.type }}">
+                <i class="{{ notif.icon }}"></i>
+            </div>
+            <div>
+                <div style="font-weight: 600; margin-bottom: 5px;">{{ notif.title }}</div>
+                <div style="font-size: 14px; color: #64748b;">{{ notif.time }}</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Dashboard Content -->
+    <div class="dashboard-content">
+        <!-- Statistics Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value">{{ stats.bus_actifs }}</div>
+                        <div class="stat-label">Bus AED Actifs</div>
+                    </div>
+                    <div class="stat-icon blue">
+                        <i class="fas fa-bus"></i>
+                    </div>
+                </div>
+                <div class="stat-change positive">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>{{ stats.bus_actifs_change }}</span>
+                </div>
+            </div>
+
+            <div class="stat-card success">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value">{{ stats.trajets_jour }}</div>
+                        <div class="stat-label">Trajets du Jour</div>
+                    </div>
+                    <div class="stat-icon green">
+                        <i class="fas fa-route"></i>
+                    </div>
+                </div>
+                <div class="stat-change positive">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>{{ stats.trajets_jour_change }}</span>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value">{{ stats.etudiants }}</div>
+                        <div class="stat-label">Étudiants Transportés</div>
+                    </div>
+                    <div class="stat-icon blue">
+                        <i class="fas fa-users"></i>
+                    </div>
+                </div>
+                <div class="stat-change positive">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>{{ stats.etudiants_change }}</span>
+                </div>
+            </div>
+
+            <div class="stat-card warning">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value">{{ stats.bus_maintenance }}</div>
+                        <div class="stat-label">Bus en Maintenance</div>
+                    </div>
+                    <div class="stat-icon orange">
+                        <i class="fas fa-tools"></i>
+                    </div>
+                </div>
+                <div class="stat-change negative">
+                    <i class="fas fa-arrow-down"></i>
+                    <span>{{ stats.bus_maintenance_info }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <h2 class="section-title">
+                <i class="fas fa-bolt"></i>
+                Actions Rapides
+            </h2>
+            <div class="actions-grid">
+                <a href="{{ url_for('admin.ajouter_bus') }}" class="action-btn">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>Ajouter un Bus</span>
+                </a>
+                <a href="{{ url_for('admin.ajouter_chauffeur') }}" class="action-btn">
+                    <i class="fas fa-user-plus"></i>
+                    <span>Nouveau Chauffeur</span>
+                </a>
+                <a href="{{ url_for('admin.planifier_trajet') }}" class="action-btn">
+                    <i class="fas fa-route"></i>
+                    <span>Planifier Trajet</span>
+                </a>
+                <a href="{{ url_for('admin.generer_rapport') }}" class="action-btn">
+                    <i class="fas fa-file-alt"></i>
+                    <span>Générer Rapport</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- État des Bus -->
+        <div class="quick-actions">
+            <h2 class="section-title">
+                <i class="fas fa-bus"></i>
+                État des Bus en Temps Réel
+            </h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                {% for bus in etat_bus %}
+                <div style="background: {{ bus.bg }}; border: 2px solid {{ bus.border }}; border-radius: 15px; padding: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <strong>{{ bus.nom }}</strong>
+                        <span style="background: {{ bus.etat_bg }}; color: white; padding: 5px 10px; border-radius: 20px; font-size: 12px;">
+                            {{ bus.etat }}
+                        </span>
+                    </div>
+                    <div style="font-size: 14px; color: #64748b;">
+                        {% for info in bus.infos %}
+                        <div>{{ info }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% endblock %}

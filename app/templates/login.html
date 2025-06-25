@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+{% block title %}Connexion{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="logo-container">
+        <div class="logo">
+            <span class="logo-text">UDM</span>
+        </div>
+        <h1 class="welcome-text">Bienvenue</h1>
+        <p class="subtitle">Gestion de Transport Universitaire</p>
+    </div>
+    <form method="POST" action="{{ url_for('auth.login') }}">
+        {{ form.hidden_tag() }}
+        <div class="form-group">
+            {{ form.login.label(class="form-label") }}
+            {{ form.login(class="form-input", placeholder="Entrez votre nom d'utilisateur") }}
+            {% for error in form.login.errors %}
+                <span class="form-error">{{ error }}</span>
+            {% endfor %}
+        </div>
+        <div class="form-group">
+            {{ form.mot_de_passe.label(class="form-label") }}
+            {{ form.mot_de_passe(class="form-input", placeholder="Entrez votre mot de passe") }}
+            {% for error in form.mot_de_passe.errors %}
+                <span class="form-error">{{ error }}</span>
+            {% endfor %}
+        </div>
+        {% if form.errors or error %}
+            <div class="form-error" style="margin-bottom: 15px;">{{ error or "Identifiant ou mot de passe incorrect." }}</div>
+        {% endif %}
+        <button type="submit" class="login-button">Se connecter</button>
+        <div class="forgot-password">
+            <a href="#" onclick="alert('Fonctionnalité à implémenter')">Mot de passe oublié ?</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
