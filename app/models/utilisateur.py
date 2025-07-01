@@ -1,15 +1,7 @@
 from app.database import db
-from sqlalchemy import Enum
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin  # Ajout pour Flask-Login
-import enum
-
-# Enumération des rôles utilisateurs possibles
-class UserRole(enum.Enum):
-    ADMIN = "ADMIN"
-    CHAUFFEUR = "CHAUFFEUR"
-    MECANICIEN = "MECANICIEN"
-    CHARGE = "CHARGE"
+from sqlalchemy import Enum
 
 # Modèle représentant un utilisateur dans la base de données
 class Utilisateur(UserMixin, db.Model):  # Hérite de UserMixin pour Flask-Login
@@ -19,7 +11,9 @@ class Utilisateur(UserMixin, db.Model):  # Hérite de UserMixin pour Flask-Login
     nom_utilisateur = db.Column(db.String(100), nullable=False)  # Nom complet
     login = db.Column(db.String(50), unique=True, nullable=False)  # Login unique
     mot_de_passe = db.Column(db.String(255), nullable=False)  # Mot de passe hashé
-    role = db.Column(Enum(UserRole), nullable=False)  # Rôle de l'utilisateur
+    reset_token = db.Column(db.String(255), nullable=True)
+    reset_expires = db.Column(db.DateTime, nullable=True)
+    role = db.Column(Enum('ADMIN', 'CHAUFFEUR', 'MECANICIEN', 'CHARGE', name='role_enum'), nullable=True)
 
     def set_password(self, password):
         # Hash le mot de passe et le stocke

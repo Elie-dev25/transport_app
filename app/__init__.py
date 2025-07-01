@@ -30,5 +30,7 @@ def create_app():
     app.register_blueprint(chauffeur.bp)
     app.register_blueprint(mecanicien.bp)
     app.register_blueprint(charge_transport.bp)
+    from app.routes.admin_ajax import bp_ajax
+    app.register_blueprint(bp_ajax, url_prefix='/admin')
 
     return app  # Retourne l'application Flask prête à l'emploi

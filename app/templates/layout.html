@@ -4,13 +4,48 @@
     <meta charset="UTF-8">
     <title>{% block title %}Tableau de bord{% endblock %}</title>
     {% block head %}{% endblock %}
+    <!-- Ajout du CSS pour les notifications -->
+    <style>
+        .flash-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            padding: 15px 25px;
+            border-radius: 8px;
+            background: #4BB543;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            opacity: 0.95;
+            transition: opacity 0.5s;
+        }
+        .flash-message.danger { background: #d9534f; }
+    </style>
+    <script>
+        // Script pour masquer automatiquement la notification après 3 secondes
+        document.addEventListener('DOMContentLoaded', function() {
+            var flash = document.querySelector('.flash-message');
+            if (flash) {
+                setTimeout(function() {
+                    flash.style.display = 'none';
+                }, 3000);
+            }
+        });
+    </script>
 </head>
 <body>
     <!-- Layout principal de l'application -->
     <!-- Ce fichier définit la structure de base (header, footer, navigation) utilisée par toutes les pages. -->
 
     <!-- Layout template -->
-
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash-message {{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
     {% block content %}{% endblock %}
 </body>
 </html>

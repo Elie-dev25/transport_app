@@ -4,6 +4,7 @@
 {% block head %}
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard_admin.css') }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="{{ url_for('static', filename='js/dashboard_admin.js') }}"></script>
 {% endblock %}
 
@@ -190,11 +191,11 @@
                 Actions Rapides
             </h2>
             <div class="actions-grid">
-                <a href="{{ url_for('admin.ajouter_bus') }}" class="action-btn">
+                <a href="#" id="openAddBusModal" class="action-btn">
                     <i class="fas fa-plus-circle"></i>
                     <span>Ajouter un Bus</span>
                 </a>
-                <a href="{{ url_for('admin.ajouter_chauffeur') }}" class="action-btn">
+                <a href="#" id="openAddChauffeurModal" class="action-btn">
                     <i class="fas fa-user-plus"></i>
                     <span>Nouveau Chauffeur</span>
                 </a>
@@ -233,6 +234,160 @@
                 {% endfor %}
             </div>
         </div>
+
+        <!-- Modal for Add Bus Form -->
+        <div id="addBusModal">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h3><i class="fas fa-bus"></i> Ajouter un bus AED</h3>
+              <button type="button" id="closeAddBusModal" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+              <form id="addBusForm">
+                <div class="form-grid">
+                  <div class="form-group">
+                    <label>Numéro du bus :</label>
+                    <input type="text" name="numero" value="AED-" required>
+                  </div>
+                  <div class="form-group">
+                    <label>Niveau de carburant :</label>
+                    <input type="number" step="0.01" name="niveau_carburant" required>
+                  </div>
+                  <div class="form-group">
+                    <label>Niveau d'huile :</label>
+                    <input type="number" step="0.01" name="niveau_huile" required>
+                  </div>
+                  <div class="form-group">
+                    <label>Seuil critique d'huile :</label>
+                    <input type="number" step="0.01" name="seuil_critique_huile" required>
+                  </div>
+                  <div class="form-group">
+                    <label>État actuel du véhicule :</label>
+                    <select name="etat_vehicule" required>
+                      <option value="BON">Bonne</option>
+                      <option value="DEFAILLANT">Panne</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label>Nombre de places :</label>
+                    <input type="number" name="nombre_places" value="30" required>
+                  </div>
+                  <div class="form-group full-width">
+                    <label>Date de la dernière maintenance :</label>
+                    <input type="date" name="derniere_maintenance" required>
+                  </div>
+                </div>
+                <button type="submit" class="submit-btn">Ajouter</button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal for Add Chauffeur Form -->
+        <div id="addChauffeurModal">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h3><i class="fas fa-user-plus"></i> Ajouter un chauffeur</h3>
+              <button type="button" id="closeAddChauffeurModal" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+              <form id="addChauffeurForm">
+                <div class="form-grid">
+                  <div class="form-group">
+                    <label>Nom :</label>
+                    <input type="text" name="nom" required>
+                  </div>
+                  <div class="form-group">
+                    <label>Prénom :</label>
+                    <input type="text" name="prenom" required>
+                  </div>
+                  <div class="form-group">
+                    <label>Numéro de permis :</label>
+                    <input type="text" name="numero_permis" required>
+                  </div>
+                  <div class="form-group">
+                    <label>Téléphone :</label>
+                    <input type="text" name="telephone" required>
+                  </div>
+                </div>
+                <button type="submit" class="submit-btn">Ajouter</button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <script>
+        $(function() {
+          $('#openAddBusModal').on('click', function(e) {
+            e.preventDefault();
+            $('#addBusModal').addClass('show');
+          });
+          $('#closeAddBusModal').on('click', function() {
+            $('#addBusModal').removeClass('show');
+          });
+          // Fermer la modale si on clique en dehors du contenu
+          $('#addBusModal').on('click', function(e) {
+            if (e.target === this) {
+              $(this).removeClass('show');
+            }
+          });
+          $('#addBusForm').on('submit', function(e) {
+            e.preventDefault();
+            $.ajax({
+              url: '/admin/ajouter_bus_ajax',
+              method: 'POST',
+              data: $(this).serialize(),
+              success: function(resp) {
+                $('#addBusModal').removeClass('show');
+                // Affiche la notification
+                $('body').append('<div class="flash-message success">' + resp.message + '</div>');
+                setTimeout(function() { $('.flash-message.success').fadeOut(500, function() { $(this).remove(); }); }, 3000);
+                // Optionnel: rafraîchir la liste des bus ici
+              },
+              error: function(xhr) {
+                let msg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Erreur lors de l\'ajout';
+                $('body').append('<div class="flash-message danger">' + msg + '</div>');
+                setTimeout(function() { $('.flash-message.danger').fadeOut(500, function() { $(this).remove(); }); }, 3000);
+              }
+            });
+          });
+
+          // Ouvrir la modale chauffeur
+          $('#openAddChauffeurModal').on('click', function(e) {
+            e.preventDefault();
+            $('#addChauffeurModal').addClass('show');
+          });
+          // Fermer la modale chauffeur
+          $('#closeAddChauffeurModal').on('click', function() {
+            $('#addChauffeurModal').removeClass('show');
+          });
+          $('#addChauffeurModal').on('click', function(e) {
+            if (e.target === this) {
+              $(this).removeClass('show');
+            }
+          });
+          // Soumission AJAX
+          $('#addChauffeurForm').on('submit', function(e) {
+            e.preventDefault();
+            $.ajax({
+              url: '/admin/ajouter_chauffeur_ajax',
+              method: 'POST',
+              data: $(this).serialize(),
+              success: function(resp) {
+                $('#addChauffeurModal').removeClass('show');
+                $('body').append('<div class="flash-message success">' + resp.message + '</div>');
+                setTimeout(function() { $('.flash-message.success').fadeOut(500, function() { $(this).remove(); }); }, 3000);
+                // Optionnel: rafraîchir la liste des chauffeurs ici
+              },
+              error: function(xhr) {
+                let msg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Erreur lors de l\'ajout';
+                $('body').append('<div class="flash-message danger">' + msg + '</div>');
+                setTimeout(function() { $('.flash-message.danger').fadeOut(500, function() { $(this).remove(); }); }, 3000);
+              }
+            });
+          });
+        });
+        </script>
     </div>
 </div>
 

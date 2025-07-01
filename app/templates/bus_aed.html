@@ -1,0 +1,141 @@
+{% extends "layout.html" %}
+{% block title %}Bus AED{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard_admin.css') }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<!-- Mobile Toggle -->
+<button class="mobile-toggle" onclick="toggleSidebar()">
+    <i class="fas fa-bars"></i>
+</button>
+
+<!-- Overlay -->
+<div class="overlay" onclick="toggleSidebar()"></div>
+
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <div class="logo">UDM</div>
+        <div class="admin-info">
+            <h2>Admin Panel</h2>
+            <p>Transport Universitaire</p>
+        </div>
+    </div>
+    <nav class="nav-menu">
+        <div class="nav-item">
+            <a href="{{ url_for('admin.dashboard') }}" class="nav-link {% if active_page == 'accueil' %}active{% endif %}">
+                <i class="fas fa-tachometer-alt"></i>
+                Accueil
+            </a>
+        </div>
+        <div class="nav-item">
+            <a href="{{ url_for('admin.bus') }}" class="nav-link {% if active_page == 'bus' %}active{% endif %}">
+                <i class="fas fa-bus"></i>
+                Bus AED
+            </a>
+        </div>
+        <div class="nav-item">
+            <a href="{{ url_for('admin.chauffeurs') }}" class="nav-link {% if active_page == 'chauffeurs' %}active{% endif %}">
+                <i class="fas fa-user-tie"></i>
+                Chauffeurs
+            </a>
+        </div>
+        <div class="nav-item">
+            <a href="{{ url_for('admin.utilisateurs') }}" class="nav-link {% if active_page == 'utilisateurs' %}active{% endif %}">
+                <i class="fas fa-users"></i>
+                Utilisateurs
+            </a>
+        </div>
+        <div class="nav-item">
+            <a href="{{ url_for('admin.rapports') }}" class="nav-link {% if active_page == 'rapports' %}active{% endif %}">
+                <i class="fas fa-chart-bar"></i>
+                Rapports
+            </a>
+        </div>
+        <div class="nav-item">
+            <a href="{{ url_for('admin.parametres') }}" class="nav-link {% if active_page == 'parametres' %}active{% endif %}">
+                <i class="fas fa-cog"></i>
+                Paramètres
+            </a>
+        </div>
+        <div class="nav-item" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+            <a href="{{ url_for('auth.logout') }}" class="nav-link">
+                <i class="fas fa-sign-out-alt"></i>
+                Déconnexion
+            </a>
+        </div>
+    </nav>
+</div>
+
+<div class="main-content">
+    <div class="top-bar">
+        <h1 class="page-title">Liste des Bus AED</h1>
+        <a href="#" id="openAddBusModal" class="submit-btn" style="width:auto;min-width:unset;padding:10px 24px;font-size:15px;">+ Ajouter un Bus</a>
+    </div>
+    <div class="dashboard-content">
+        <table style="width:100%;background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(30,64,175,0.07);overflow:hidden;">
+            <thead style="background:linear-gradient(90deg,#1e3a8a,#2563eb);color:#fff;">
+                <tr>
+                    <th style="padding:14px;">Numéro</th>
+                    <th>Carburant</th>
+                    <th>Huile</th>
+                    <th>Seuil Huile</th>
+                    <th>État</th>
+                    <th>Places</th>
+                    <th>Dernière maintenance</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for bus in bus_list %}
+                <tr style="text-align:center;">
+                    <td style="padding:10px 0;">{{ bus.numero }}</td>
+                    <td>{{ bus.niveau_carburant }}</td>
+                    <td>{{ bus.niveau_huile }}</td>
+                    <td>{{ bus.seuil_critique_huile }}</td>
+                    <td>{{ bus.etat_vehicule }}</td>
+                    <td>{{ bus.nombre_places }}</td>
+                    <td>{{ bus.derniere_maintenance.strftime('%d/%m/%Y') if bus.derniere_maintenance else '' }}</td>
+                    <td>
+                        <button class="delete-bus-btn" data-id="{{ bus.id }}" title="Supprimer" style="background:none;border:none;cursor:pointer;">
+                            <i class="fas fa-trash" style="color:#ef4444;font-size:18px;"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="8" style="padding:20px;color:#64748b;">Aucun bus enregistré.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+<!-- Réutilise la modale d'ajout de bus du dashboard -->
+<script>
+$(function() {
+  $('.delete-bus-btn').on('click', function(e) {
+    e.preventDefault();
+    const busId = $(this).data('id');
+    if (confirm('Voulez-vous vraiment supprimer ce bus ?')) {
+      $.ajax({
+        url: '/admin/supprimer_bus_ajax/' + busId,
+        method: 'POST',
+        success: function(resp) {
+          if (resp.success) {
+            location.reload();
+          } else {
+            alert(resp.message || 'Erreur lors de la suppression');
+          }
+        },
+        error: function() {
+          alert('Erreur lors de la suppression');
+        }
+      });
+    }
+  });
+});
+</script>
+{% endblock %}

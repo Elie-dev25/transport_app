@@ -14,16 +14,16 @@ def login():
         user = Utilisateur.query.filter_by(login=form.login.data).first()  # Recherche l'utilisateur par login
         if user and user.check_password(form.mot_de_passe.data):  # Vérifie le mot de passe
             session['user_id'] = user.utilisateur_id  # Stocke l'ID utilisateur en session
-            session['user_role'] = user.role.value  # Stocke le rôle utilisateur en session
+            session['user_role'] = user.role  # Stocke le rôle utilisateur en session (plus de .value)
             flash('Connexion réussie.', 'success')  # Message de succès
             # Redirection selon le rôle de l'utilisateur
-            if user.role.value == "ADMIN":
+            if user.role == "ADMIN":
                 return redirect(url_for('admin.dashboard'))
-            elif user.role.value == "CHAUFFEUR":
+            elif user.role == "CHAUFFEUR":
                 return redirect(url_for('chauffeur.dashboard'))
-            elif user.role.value == "MECANICIEN":
+            elif user.role == "MECANICIEN":
                 return redirect(url_for('mecanicien.dashboard'))
-            elif user.role.value == "CHARGE":
+            elif user.role == "CHARGE":
                 return redirect(url_for('charge_transport.dashboard'))
         else:
             flash("Login ou mot de passe incorrect", "danger")  # Message d'erreur

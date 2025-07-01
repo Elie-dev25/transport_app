@@ -1,0 +1,185 @@
+{% extends "layout.html" %}
+{% block title %}Utilisateurs{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard_admin.css') }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<!-- Mobile Toggle -->
+<button class="mobile-toggle" onclick="toggleSidebar()">
+    <i class="fas fa-bars"></i>
+</button>
+
+<!-- Overlay -->
+<div class="overlay" onclick="toggleSidebar()"></div>
+
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <div class="logo">UDM</div>
+        <div class="admin-info">
+            <h2>Admin Panel</h2>
+            <p>Transport Universitaire</p>
+        </div>
+    </div>
+    <nav class="nav-menu">
+        <div class="nav-item">
+            <a href="{{ url_for('admin.dashboard') }}" class="nav-link {% if active_page == 'accueil' %}active{% endif %}"><i class="fas fa-tachometer-alt"></i> Accueil</a>
+        </div>
+        <div class="nav-item">
+            <a href="{{ url_for('admin.bus') }}" class="nav-link {% if active_page == 'bus' %}active{% endif %}"><i class="fas fa-bus"></i> Bus AED</a>
+        </div>
+        <div class="nav-item">
+            <a href="{{ url_for('admin.chauffeurs') }}" class="nav-link {% if active_page == 'chauffeurs' %}active{% endif %}"><i class="fas fa-user-tie"></i> Chauffeurs</a>
+        </div>
+        <div class="nav-item">
+            <a href="{{ url_for('admin.utilisateurs') }}" class="nav-link {% if active_page == 'utilisateurs' %}active{% endif %}"><i class="fas fa-users"></i> Utilisateurs</a>
+        </div>
+        <div class="nav-item">
+            <a href="{{ url_for('admin.rapports') }}" class="nav-link {% if active_page == 'rapports' %}active{% endif %}"><i class="fas fa-chart-bar"></i> Rapports</a>
+        </div>
+        <div class="nav-item">
+            <a href="{{ url_for('admin.parametres') }}" class="nav-link {% if active_page == 'parametres' %}active{% endif %}"><i class="fas fa-cog"></i> Paramètres</a>
+        </div>
+        <div class="nav-item" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+            <a href="{{ url_for('auth.logout') }}" class="nav-link"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
+        </div>
+    </nav>
+</div>
+
+<div class="main-content">
+    <div class="top-bar">
+        <h1 class="page-title">Liste des Utilisateurs</h1>
+        <a href="#" id="openAddUserModal" class="submit-btn" style="width:auto;min-width:unset;padding:10px 24px;font-size:15px;float:right;">+ Nouvel Utilisateur</a>
+    </div>
+    <div class="dashboard-content">
+        <table style="width:100%;background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(30,64,175,0.07);overflow:hidden;">
+            <thead style="background:linear-gradient(90deg,#1e3a8a,#2563eb);color:#fff;">
+                <tr>
+                    <th style="padding:14px;">Nom d'utilisateur</th>
+                    <th>Login</th>
+                    <th>Rôle</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in user_list %}
+                <tr style="text-align:center;">
+                    <td style="padding:10px 0;">{{ user.nom_utilisateur }}</td>
+                    <td>{{ user.login }}</td>
+                    <td>{{ user.role.value if user.role else '' }}</td>
+                    <td>
+                        <button class="delete-user-btn" data-id="{{ user.utilisateur_id }}" title="Supprimer" style="background:none;border:none;cursor:pointer;">
+                            <i class="fas fa-trash" style="color:#ef4444;font-size:18px;"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="4" style="padding:20px;color:#64748b;">Aucun utilisateur enregistré.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal pour ajout utilisateur -->
+<div id="addUserModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3><i class="fas fa-user-plus"></i> Ajouter un utilisateur</h3>
+      <button type="button" id="closeAddUserModal" class="close-btn">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="addUserForm">
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <label>Nom complet :</label>
+            <input type="text" name="nom_utilisateur" required>
+          </div>
+          <div class="form-group">
+            <label>Login :</label>
+            <input type="text" name="login" required>
+          </div>
+          <div class="form-group">
+            <label>Mot de passe :</label>
+            <input type="password" name="mot_de_passe" required>
+          </div>
+          <div class="form-group">
+            <label>Rôle :</label>
+            <select name="role" required>
+              <option value="ADMIN">Administrateur</option>
+              <option value="CHAUFFEUR">Chauffeur</option>
+              <option value="MECANICIEN">Mécanicien</option>
+              <option value="CHARGE">Chargé de transport</option>
+            </select>
+          </div>
+        </div>
+        <button type="submit" class="submit-btn">Ajouter</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+$(function() {
+  $('.delete-user-btn').on('click', function(e) {
+    e.preventDefault();
+    const userId = $(this).data('id');
+    if (confirm('Voulez-vous vraiment supprimer cet utilisateur ?')) {
+      $.ajax({
+        url: '/admin/supprimer_utilisateur_ajax/' + userId,
+        method: 'POST',
+        success: function(resp) {
+          if (resp.success) {
+            location.reload();
+          } else {
+            alert(resp.message || 'Erreur lors de la suppression');
+          }
+        },
+        error: function() {
+          alert('Erreur lors de la suppression');
+        }
+      });
+    }
+  });
+
+  // Ouverture de la modale d'ajout d'utilisateur
+  $('#openAddUserModal').on('click', function(e) {
+    e.preventDefault();
+    $('#addUserModal').addClass('show');
+  });
+  // Fermeture de la modale
+  $('#closeAddUserModal').on('click', function() {
+    $('#addUserModal').removeClass('show');
+  });
+  $('#addUserModal').on('click', function(e) {
+    if (e.target === this) {
+      $(this).removeClass('show');
+    }
+  });
+  // Soumission du formulaire d'ajout d'utilisateur
+  $('#addUserForm').on('submit', function(e) {
+    e.preventDefault();
+    $.ajax({
+      url: '/admin/ajouter_utilisateur_ajax',
+      method: 'POST',
+      data: $(this).serialize(),
+      success: function(resp) {
+        $('#addUserModal').removeClass('show');
+        $('body').append('<div class="flash-message success">' + resp.message + '</div>');
+        setTimeout(function() { $('.flash-message.success').fadeOut(500, function() { $(this).remove(); }); }, 3000);
+        location.reload();
+      },
+      error: function(xhr) {
+        let msg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Erreur lors de l\'ajout';
+        $('body').append('<div class="flash-message danger">' + msg + '</div>');
+        setTimeout(function() { $('.flash-message.danger').fadeOut(500, function() { $(this).remove(); }); }, 3000);
+      }
+    });
+  });
+});
+</script>
+{% endblock %}
