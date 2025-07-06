@@ -121,5 +121,11 @@ def ajouter_utilisateur_ajax():
         role=role
     )
     db.session.add(nouvel_utilisateur)
+    db.session.flush()  # Pour avoir l'ID
+    # Insertion automatique dans la table chargetransport si role == 'CHARGE'
+    if role == 'CHARGE':
+        from app.models.chargetransport import Chargetransport
+        nouveau_charge = Chargetransport(chargetransport_id=nouvel_utilisateur.utilisateur_id)
+        db.session.add(nouveau_charge)
     db.session.commit()
     return jsonify({'success': True, 'message': 'Utilisateur ajouté avec succès !'})

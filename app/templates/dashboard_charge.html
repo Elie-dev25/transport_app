@@ -108,6 +108,17 @@
         {% endfor %}
     </div>
 
+    <!-- Affichage des messages flash (succès/erreur) -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flashes">
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}" style="margin: 20px 0;">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
     <!-- Dashboard Content -->
     <div class="dashboard-content">
         <!-- Statistics Cards -->
@@ -184,7 +195,7 @@
                 Actions Rapides
             </h2>
             <div class="actions-grid ">
-                <a href="{{ url_for('charge_transport.depart_aed_banekane') }}" class="action-btn b1">
+                <a href="#" id="openDepartAedModal" class="action-btn b1">
                     <i class="fas fa-route "></i>
                     <span>Départ AED pour Banekane</span>
                 </a>
@@ -230,5 +241,72 @@
     </div>
 </div>
 
+<!-- Modal pour le formulaire Départ AED -->
+<div id="departAedModal" class="modal">
+  <div class="modal-overlay"></div>
+  <div class="modal-content animate-modal">
+    <div class="modal-header">
+      <h3><i class="fas fa-route"></i> Départ AED pour Banekane</h3>
+      <button type="button" id="closeDepartAedModal" class="close-btn">&times;</button>
+    </div>
+    <div class="modal-body">
+      {% if form.errors %}
+        <div class="alert alert-danger">
+          <ul>
+            {% for field, errors in form.errors.items() %}
+              {% for error in errors %}
+                <li>{{ form[field].label.text }} : {{ error }}</li>
+              {% endfor %}
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+      <form method="POST" id="departAedForm" action="">
+        {{ form.hidden_tag() }}
+        <div class="form-group">
+            {{ form.date_heure_depart.label(class_='form-label') }}
+            {{ form.date_heure_depart(class_='form-control modal-input', type='datetime-local') }}
+        </div>
+        <div class="form-group">
+            {{ form.point_depart.label(class_='form-label') }}
+            {{ form.point_depart(class_='form-control modal-input') }}
+        </div>
+        <div class="form-group">
+            {{ form.type_passagers.label(class_='form-label') }}
+            {{ form.type_passagers(class_='form-control modal-input') }}
+        </div>
+        <div class="form-group">
+            {{ form.nombre_places_occupees.label(class_='form-label') }}
+            {{ form.nombre_places_occupees(class_='form-control modal-input') }}
+        </div>
+        <div class="form-group">
+            {{ form.chauffeur_id.label(class_='form-label') }}
+            {{ form.chauffeur_id(class_='form-control modal-input') }}
+        </div>
+        <div class="form-group">
+            {{ form.numero_aed.label(class_='form-label') }}
+            {{ form.numero_aed(class_='form-control modal-input') }}
+        </div>
+        <button type="submit" class="btn btn-primary mt-3 modal-submit">{{ form.submit.label }}</button>
+      </form>
+    </div>
+  </div>
+</div>
+
 <script src="{{ url_for('static', filename='js/dashboard_charge.js') }}"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(function() {
+  $('#openDepartAedModal').on('click', function(e) {
+    e.preventDefault();
+    $('#departAedModal').addClass('show');
+  });
+  $('#closeDepartAedModal').on('click', function() {
+    $('#departAedModal').removeClass('show');
+  });
+  $('.modal-overlay').on('click', function() {
+    $('#departAedModal').removeClass('show');
+  });
+});
+</script>
 {% endblock %}

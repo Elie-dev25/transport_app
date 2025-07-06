@@ -3,6 +3,7 @@ from app.config import Config
 from app.database import db
 from flask_login import LoginManager  # Ajout pour Flask-Login
 
+
 # Fonction de création de l'application Flask
 # Initialise l'application, la configuration et enregistre les blueprints
 

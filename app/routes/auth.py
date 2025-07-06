@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, session
+from flask_login import login_user  # Ajouté en haut
 from app.forms.login_form import LoginForm
 from app.models.utilisateur import Utilisateur
 from app.database import db
@@ -13,6 +14,7 @@ def login():
     if form.validate_on_submit():  # Vérifie si le formulaire est soumis et valide
         user = Utilisateur.query.filter_by(login=form.login.data).first()  # Recherche l'utilisateur par login
         if user and user.check_password(form.mot_de_passe.data):  # Vérifie le mot de passe
+            login_user(user)  # Authentifie l'utilisateur avec Flask-Login
             session['user_id'] = user.utilisateur_id  # Stocke l'ID utilisateur en session
             session['user_role'] = user.role  # Stocke le rôle utilisateur en session (plus de .value)
             flash('Connexion réussie.', 'success')  # Message de succès
