@@ -1,20 +1,28 @@
 from flask import Flask
 from app.config import Config
-from app.database import db
-from flask_login import LoginManager  # Ajout pour Flask-Login
+from app.extensions import db, login_manager
 
 
 # Fonction de création de l'application Flask
 # Initialise l'application, la configuration et enregistre les blueprints
 
+import os
+
+
 def create_app():
     app = Flask(__name__)
-    app.config.from_object(Config)  # Charge la configuration depuis le fichier config.py
+
+    env = os.environ.get("FLASK_ENV", "development")
+    if env == "production":
+        from app.config import ProductionConfig as CurrentConfig
+    else:
+        from app.config import DevelopmentConfig as CurrentConfig
+
+    app.config.from_object(CurrentConfig)  # Charge la configuration adaptée
 
     db.init_app(app)  # Initialise la base de données avec l'application
 
     # Initialisation de Flask-Login
-    login_manager = LoginManager()
     login_manager.init_app(app)
 
     from app.models.utilisateur import Utilisateur

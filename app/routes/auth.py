@@ -17,7 +17,8 @@ def login():
             login_user(user)  # Authentifie l'utilisateur avec Flask-Login
             session['user_id'] = user.utilisateur_id  # Stocke l'ID utilisateur en session
             session['user_role'] = user.role  # Stocke le rôle utilisateur en session (plus de .value)
-            flash('Connexion réussie.', 'success')  # Message de succès
+            if user.role != 'CHARGE':
+                flash('Connexion réussie.', 'success')  # Message de succès
             # Redirection selon le rôle de l'utilisateur
             if user.role == "ADMIN":
                 return redirect(url_for('admin.dashboard'))

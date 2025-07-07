@@ -9,4 +9,16 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False  # Désactive le suivi des modifications SQLAlchemy (meilleure performance)
 
 
+class DevelopmentConfig(Config):
+    """Configuration pour le développement."""
+    DEBUG = True
+    ENV = "development"
+
+
+class ProductionConfig(Config):
+    """Configuration pour la production."""
+    DEBUG = False
+    ENV = "production"
+
+
 

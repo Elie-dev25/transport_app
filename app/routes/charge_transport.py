@@ -4,6 +4,7 @@ from app.forms.trajet_depart_form import TrajetDepartForm
 from app.models.chauffeur import Chauffeur
 from app.models.aed import AED
 from app.database import db
+from datetime import date
 
 # Création du blueprint pour le chargé de transport
 bp = Blueprint('charge_transport', __name__, url_prefix='/charge')
@@ -11,18 +12,25 @@ bp = Blueprint('charge_transport', __name__, url_prefix='/charge')
 # Route du tableau de bord chargé de transport
 @bp.route('/dashboard', methods=['GET', 'POST'])
 def dashboard():
-    # Exemple de stats fictives pour affichage
+    from app.models.trajet import Trajet
+    today = date.today()
+    # Nombre de trajets du jour enregistrés par CE chargé de transport
+    trajets_count = Trajet.query.filter(
+        db.func.date(Trajet.date_heure_depart) == today,
+        Trajet.enregistre_par == current_user.utilisateur_id  # id du chargé courant
+    ).count()
+    # Exemple d'autres stats (à ajuster plus tard)
     stats = {
         'bus_actifs': 12,
         'bus_en_maintenance': 2,
-        'trajets_du_jour': 8,
+        'trajets_jour': trajets_count,
+        'trajets_jour_change': 0,
         'chauffeurs_disponibles': 5
     }
     form = TrajetDepartForm()
     form.chauffeur_id.choices = [(c.chauffeur_id, f"{c.nom} {c.prenom}") for c in Chauffeur.query.all()]
     form.numero_aed.choices = [(a.numero, a.numero) for a in AED.query.all()]
     if form.validate_on_submit():
-        from app.models.trajet import Trajet
         from app.models.chargetransport import Chargetransport
         # Récupérer l'id du chargé de transport connecté
         chargeur = Chargetransport.query.get(current_user.utilisateur_id)

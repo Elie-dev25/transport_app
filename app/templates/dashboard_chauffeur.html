@@ -1,17 +1,64 @@
-<!-- Tableau de bord chauffeur -->
-<!-- Cette page affiche les informations et actions réservées au chauffeur (trajets, affectations, etc.). -->
-
-<!-- Chauffeur dashboard -->
 {% extends "layout.html" %}
 {% block title %}Dashboard Chauffeur{% endblock %}
 
 {% block head %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard_admin.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard_chauffeur.css') }}">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    <script src="{{ url_for('static', filename='js/dashboard_chauffeur.js') }}"></script>
 {% endblock %}
 
 {% block content %}
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <div class="logo">UDM</div>
+        <div class="admin-info">
+            <h2>Chauffeur AED Panel</h2>
+            <p>Transport Universitaire</p>
+        </div>
+    </div>
+    <nav class="nav-menu">
+        <div class="nav-item">
+            <a href="{{ url_for('chauffeur.dashboard') }}" class="nav-link{% if active_page == 'dashboard' %} active{% endif %}">
+                <i class="fas fa-tachometer-alt"></i> Tableau de Bord
+            </a>
+        </div>
+        <div class="nav-item">
+            <a href="{{ url_for('chauffeur.profil') }}" class="nav-link{% if active_page == 'profil' %} active{% endif %}">
+                <i class="fas fa-user"></i> Mon Profil
+            </a>
+        </div>
+        <div class="nav-item">
+            <a href="{{ url_for('chauffeur.trajets') }}" class="nav-link{% if active_page == 'trajets' %} active{% endif %}">
+                <i class="fas fa-history"></i> Mes Trajets
+            </a>
+        </div>
+        <div class="nav-item">
+            <a href="{{ url_for('chauffeur.semaine') }}" class="nav-link{% if active_page == 'semaine' %} active{% endif %}">
+                <i class="fas fa-calendar-week"></i> Vue Semaine
+            </a>
+        </div>
+        <div class="nav-item">
+            <a href="{{ url_for('chauffeur.trafic') }}" class="nav-link{% if active_page == 'trafic' %} active{% endif %}">
+                <i class="fas fa-chart-line"></i> Trafic Étudiants
+            </a>
+        </div>
+        <div class="nav-item" style="margin-top:20px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.1);">
+            <a href="{{ url_for('auth.logout') }}" class="nav-link">
+                <i class="fas fa-sign-out-alt"></i> Déconnexion
+            </a>
+        </div>
+    </nav>
+</div>
+
+<!-- Mobile Toggle -->
+<button class="mobile-toggle" onclick="toggleSidebar()">
+    <i class="fas fa-bars"></i>
+</button>
+<div class="overlay" onclick="toggleSidebar()"></div>
+
+<!-- Main Content -->
 <div class="main-content">
     <!-- Top Bar -->
     <div class="top-bar">
@@ -26,37 +73,198 @@
             <div class="user-menu">
                 <div class="user-avatar">{{ current_user.initials }}</div>
                 <div>
-                    <div style="font-weight: 600; font-size: 14px;">{{ current_user.nom_utilisateur }}</div>
-                    <div style="font-size: 12px; color: #64748b;">{{ current_user.login }}</div>
+                    <div style="font-weight:600;font-size:14px;">{{ current_user.nom_utilisateur }}</div>
+                    <div style="font-size:12px;color:#64748b;">{{ current_user.login }}</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Notification Panel -->
-    <div class="notification-panel" id="notificationPanel">
-        <div class="notification-header">
-            <h3>Notifications</h3>
-            <button onclick="toggleNotifications()" style="background: none; border: none; cursor: pointer; font-size: 16px;">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        {% for notif in notifications %}
-        <div class="notification-item">
-            <div class="notification-icon {{ notif.type }}">
-                <i class="{{ notif.icon }}"></i>
-            </div>
-            <div>
-                <div style="font-weight: 600; margin-bottom: 5px;">{{ notif.title }}</div>
-                <div style="font-size: 14px; color: #64748b;">{{ notif.time }}</div>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-
     <!-- Dashboard Content -->
     <div class="dashboard-content">
-        <!-- ...contenu spécifique chauffeur ici... -->
+        <!-- Statistiques -->
+        <div class="stats-grid">
+            <div class="stat-card success">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value">{{ stats.today_trips }}</div>
+                        <div class="stat-label">Trajets Aujourd'hui</div>
+                    </div>
+                    <div class="stat-icon green"><i class="fas fa-route"></i></div>
+                </div>
+                <div class="stat-change positive">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>+{{ stats.today_vs_yesterday }} vs hier</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value">{{ stats.people_transported }}</div>
+                        <div class="stat-label">Personnes Transportées</div>
+                    </div>
+                    <div class="stat-icon blue"><i class="fas fa-users"></i></div>
+                </div>
+                <div class="stat-change positive">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>+{{ stats.week_people }} cette semaine</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value">{{ stats.bus_code }}</div>
+                        <div class="stat-label">Bus Affecté</div>
+                    </div>
+                    <div class="stat-icon blue"><i class="fas fa-bus"></i></div>
+                </div>
+                <div class="stat-change positive">
+                    <i class="fas fa-check-circle"></i> <span>Opérationnel</span>
+                </div>
+            </div>
+            <div class="stat-card success">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value">{{ stats.status }}</div>
+                        <div class="stat-label">Statut Actuel</div>
+                    </div>
+                    <div class="stat-icon green"><i class="fas fa-check"></i></div>
+                </div>
+                <div class="stat-change positive">
+                    <i class="fas fa-clock"></i> <span>Semaine</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profil Personnel -->
+        <div class="profil-section">
+            <h2 class="section-title"><i class="fas fa-user"></i> Profil Personnel</h2>
+            <div class="profil-grid">
+                <div class="profil-item">
+                    <div class="profil-icon"><i class="fas fa-user"></i></div>
+                    <div class="profil-content">
+                        <h4>Nom et Prénom</h4>
+                        <p>{{ current_user.nom_utilisateur }}</p>
+                    </div>
+                </div>
+                <div class="profil-item">
+                    <div class="profil-icon"><i class="fas fa-id-card"></i></div>
+                    <div class="profil-content">
+                        <h4>Numéro de Permis</h4>
+                        <p>{{ current_user.permis }}</p>
+                    </div>
+                </div>
+                <div class="profil-item">
+                    <div class="profil-icon"><i class="fas fa-phone"></i></div>
+                    <div class="profil-content">
+                        <h4>Téléphone</h4>
+                        <p>{{ current_user.phone }}</p>
+                    </div>
+                </div>
+                <div class="profil-item">
+                    <div class="profil-icon"><i class="fas fa-calendar-check"></i></div>
+                    <div class="profil-content">
+                        <h4>Affectation Actuelle</h4>
+                        <span class="status-badge active">
+                            <i class="fas fa-circle"></i> {{ current_user.affectation }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Historique des Trajets -->
+        <div class="trajets-section">
+            <h2 class="section-title"><i class="fas fa-history"></i> Historique des Trajets AED</h2>
+            <div class="trajets-filters">
+                <div class="filter-btn active">Aujourd'hui</div>
+                <div class="filter-btn">Cette Semaine</div>
+                <div class="filter-btn">Ce Mois</div>
+                <div class="filter-btn">Tous</div>
+            </div>
+            <div class="trajets-list">
+                {% for trajet in trajets %}
+                <div class="trajet-card">
+                    <div class="trajet-header">
+                        <h4>🚍 {{ trajet.bus_code }} - {{ trajet.depart }} → {{ trajet.arrivee }}</h4>
+                        <span class="status-badge {{ trajet.status_class }}">{{ trajet.status }}</span>
+                    </div>
+                    <div class="trajet-info">
+                        <div class="trajet-detail"><i class="fas fa-clock"></i><span>{{ trajet.heure }}</span></div>
+                        <div class="trajet-detail"><i class="fas fa-calendar"></i><span>{{ trajet.date }}</span></div>
+                        <div class="trajet-detail"><i class="fas fa-map-marker-alt"></i><span>{{ trajet.depart }}</span></div>
+                        <div class="trajet-detail"><i class="fas fa-users"></i><span>{{ trajet.etudiants }} Étudiants</span></div>
+                        <div class="trajet-detail"><i class="fas fa-chair"></i><span>{{ trajet.places }}</span></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Vue Semaine -->
+        <div class="semaine-section">
+            <h2 class="section-title"><i class="fas fa-calendar-week"></i> Vue Semaine</h2>
+            <div class="semaine-grid">
+                {% for jour in semaine %}
+                <div class="jour-card">
+                    <div class="jour-header">
+                        <h3 class="jour-titre">{{ jour.nom }}</h3>
+                        <span class="jour-count">{{ jour.nb_trajets }} trajets</span>
+                    </div>
+                    {% for trajet in jour.trajets %}
+                    <div class="trajet-mini">
+                        <div class="trajet-time">{{ trajet.heure }}</div>
+                        <div>{{ trajet.depart }} → {{ trajet.arrivee }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Trafic Étudiants -->
+        <div class="trafic-section">
+            <h2 class="section-title"><i class="fas fa-chart-line"></i> Trafic Étudiants - Temps Réel</h2>
+            <div class="trafic-grid">
+                <div class="trafic-card arrived">
+                    <div class="trafic-number">{{ trafic.arrives }}</div>
+                    <div class="trafic-label">Arrivés Campus</div>
+                </div>
+                <div class="trafic-card departed">
+                    <div class="trafic-number">{{ trafic.partis }}</div>
+                    <div class="trafic-label">Partis Campus</div>
+                </div>
+                <div class="trafic-card current">
+                    <div class="trafic-number">{{ trafic.transit }}</div>
+                    <div class="trafic-label">En Transit</div>
+                </div>
+                <div class="trafic-card">
+                    <div class="trafic-number">{{ trafic.total }}</div>
+                    <div class="trafic-label">Total Aujourd'hui</div>
+                </div>
+            </div>
+        </div>
     </div>
+</div>
+
+<!-- Notification Panel -->
+<div class="notification-panel" id="notificationPanel">
+    <div class="notification-header">
+        <h3>Notifications</h3>
+        <button onclick="toggleNotifications()" style="background:none;border:none;cursor:pointer;font-size:16px;">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    {% for notif in notifications %}
+    <div class="notification-item">
+        <div class="notification-icon {{ notif.type }}">
+            <i class="{{ notif.icon }}"></i>
+        </div>
+        <div>
+            <div style="font-weight:600;margin-bottom:5px;">{{ notif.title }}</div>
+            <div style="font-size:14px;color:#64748b;">{{ notif.time }}</div>
+        </div>
+    </div>
+    {% endfor %}
 </div>
 {% endblock %}

@@ -52,20 +52,19 @@
             }
         });
 
-        // Update statistics periodically (simulation)
-        function updateStats() {
-            const statsValues = document.querySelectorAll('.stat-value');
-            statsValues.forEach(stat => {
-                const currentValue = parseInt(stat.textContent);
-                const change = Math.floor(Math.random() * 3) - 1; // -1, 0, or 1
-                if (change !== 0) {
-                    stat.textContent = Math.max(0, currentValue + change);
-                }
-            });
-        }
+        // (Désactivé) Update statistics periodically (simulation)
+// function updateStats() {
+//     const statsValues = document.querySelectorAll('.stat-value');
+//     statsValues.forEach(stat => {
+//         const currentValue = parseInt(stat.textContent);
+//         const change = Math.floor(Math.random() * 3) - 1; // -1, 0, or 1
+//         if (change !== 0) {
+//             stat.textContent = Math.max(0, currentValue + change);
+//         }
+//     });
+// }
 
-        // Update stats every 30 seconds
-        setInterval(updateStats, 30000);
+// setInterval(updateStats, 30000);
 
         // Real-time clock
         function updateClock() {

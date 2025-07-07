@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+{% block title %}Mes Trajets{% endblock %}
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard_chauffeur.css') }}">
+{% endblock %}
+{% block content %}
+<div class="main-content">
+    <h1>Mes Trajets</h1>
+    <div class="trajets-section">
+        <p>Voici la liste de vos trajets récents (exemple minimal).</p>
+        <!-- À personnaliser avec une vraie liste si besoin -->
+    </div>
+</div>
+{% endblock %}

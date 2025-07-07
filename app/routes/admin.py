@@ -6,26 +6,49 @@ from datetime import datetime
 # Création du blueprint pour l'administrateur
 bp = Blueprint('admin', __name__, url_prefix='/admin')
 
+from app.routes.common import role_required
+
+# Appliquer le décorateur rôle ADMIN à toutes les routes du blueprint
+
+def admin_only(view):
+    return role_required('ADMIN')(view)
+
+bp.before_request(lambda: None)  # Placeholder pour pouvoir ajouter le décorateur via dispatch
+
+
 # Route du tableau de bord administrateur
+@admin_only
 @bp.route('/dashboard')
 def dashboard():
-    # Exemple de stats fictives à adapter selon tes besoins
+    from datetime import date
+    from app.models.trajet import Trajet
+    today = date.today()
+    trajets_today = Trajet.query.filter(db.func.date(Trajet.date_heure_depart) == today).count()
+
     stats = {
         'bus_actifs': 0,
+        'bus_actifs_change': 0,
         'bus_inactifs': 0,
         'chauffeurs': 0,
-        'trajets': 0
+        'trajets_jour': trajets_today,
+        'trajets_jour_change': 0,
+        'bus_maintenance': 0,
+        'bus_maintenance_info': '',
+        'etudiants': 0,
+        'etudiants_change': 0
     }
     # Affiche le template HTML du dashboard admin
     return render_template('dashboard_admin.html', stats=stats)
 
 # Route pour la page Bus AED qui affiche la liste des bus depuis la base
+@admin_only
 @bp.route('/bus')
 def bus():
     bus_list = AED.query.order_by(AED.numero).all()
     return render_template('bus_aed.html', bus_list=bus_list)
 
 # Route pour la page Chauffeurs qui affiche la liste des chauffeurs depuis la base
+@admin_only
 @bp.route('/chauffeurs')
 def chauffeurs():
     from app.models.chauffeur import Chauffeur
@@ -33,6 +56,7 @@ def chauffeurs():
     return render_template('chauffeurs.html', chauffeur_list=chauffeur_list, active_page='chauffeurs')
 
 # Route pour la page Utilisateurs qui affiche la liste des utilisateurs depuis la base
+@admin_only
 @bp.route('/utilisateurs')
 def utilisateurs():
     from app.models.utilisateur import Utilisateur
@@ -40,18 +64,21 @@ def utilisateurs():
     return render_template('utilisateurs.html', user_list=user_list, active_page='utilisateurs')
 
 # Route placeholder pour la page Rapports (pour éviter les erreurs de lien)
+@admin_only
 @bp.route('/rapports')
 def rapports():
     # Affiche une page temporaire ou un message d'information
     return "Page Rapports en construction."
 
 # Route placeholder pour la page Paramètres (pour éviter les erreurs de lien)
+@admin_only
 @bp.route('/parametres')
 def parametres():
     # Affiche une page temporaire ou un message d'information
     return "Page Paramètres en construction."
 
 # Route pour la page Ajouter Bus qui gère l'affichage et la soumission du formulaire d'ajout d'un bus AED
+@admin_only
 @bp.route('/ajouter_bus', methods=['GET', 'POST'])
 def ajouter_bus():
     if request.method == 'POST':
@@ -86,24 +113,28 @@ def ajouter_bus():
     return render_template('ajouter_bus.html', next_num=next_num)
 
 # Route placeholder pour la page Ajouter Chauffeur (pour éviter les erreurs de lien)
+@admin_only
 @bp.route('/ajouter_chauffeur')
 def ajouter_chauffeur():
     # Affiche une page temporaire ou un message d'information
     return "Page Ajouter Chauffeur en construction."
 
 # Route placeholder pour la page Planifier Trajet (pour éviter les erreurs de lien)
+@admin_only
 @bp.route('/planifier_trajet')
 def planifier_trajet():
     # Affiche une page temporaire ou un message d'information
     return "Page Planifier Trajet en construction."
 
 # Route placeholder pour la page Générer Rapport (pour éviter les erreurs de lien)
+@admin_only
 @bp.route('/generer_rapport')
 def generer_rapport():
     # Affiche une page temporaire ou un message d'information
     return "Page Générer Rapport en construction."
 
 # Route pour supprimer un bus en AJAX via son id
+@admin_only
 @bp.route('/supprimer_bus_ajax/<int:bus_id>', methods=['POST'])
 def supprimer_bus_ajax(bus_id):
     bus = AED.query.get(bus_id)
@@ -114,6 +145,7 @@ def supprimer_bus_ajax(bus_id):
     return jsonify({'success': True, 'message': 'Bus supprimé avec succès.'})
 
 # Route pour supprimer un chauffeur en AJAX via son id
+@admin_only
 @bp.route('/supprimer_chauffeur_ajax/<int:chauffeur_id>', methods=['POST'])
 def supprimer_chauffeur_ajax(chauffeur_id):
     from app.models.chauffeur import Chauffeur
@@ -125,6 +157,7 @@ def supprimer_chauffeur_ajax(chauffeur_id):
     return jsonify({'success': True, 'message': 'Chauffeur supprimé avec succès.'})
 
 # Route pour supprimer un utilisateur en AJAX via son id
+@admin_only
 @bp.route('/supprimer_utilisateur_ajax/<int:user_id>', methods=['POST'])
 def supprimer_utilisateur_ajax(user_id):
     from app.models.utilisateur import Utilisateur
@@ -136,6 +169,7 @@ def supprimer_utilisateur_ajax(user_id):
     return jsonify({'success': True, 'message': 'Utilisateur supprimé avec succès.'})
 
 # Route du tableau de bord mécanicien
+@admin_only
 @bp.route('/dashboard_mecanicien')
 def dashboard_mecanicien():
     from app.models.aed import AED
