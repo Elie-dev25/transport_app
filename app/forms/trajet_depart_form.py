@@ -10,7 +10,7 @@ class TrajetDepartForm(FlaskForm):
         default=datetime.now,
         validators=[DataRequired()]
     )
-    point_depart = SelectField('Point de départ', choices=[('Mfetum', 'Mfetum'), ('Ancienne mairie', 'Ancienne mairie'), ('Campus', 'Campus')], validators=[DataRequired()])
+    point_depart = SelectField('Point de départ', choices=[('Mfetum', 'Mfetum'), ('Ancienne mairie', 'Ancienne mairie')], validators=[DataRequired()])
     type_passagers = SelectField('Type de passagers', choices=[('ETUDIANT', 'Étudiant'), ('PERSONNEL', 'Personnel'), ('MALADE', 'Malade')], validators=[DataRequired()])
     nombre_places_occupees = IntegerField('Nombre de places occupées', validators=[DataRequired(), NumberRange(min=0)])
     chauffeur_id = SelectField('Chauffeur', coerce=int, validators=[DataRequired()])

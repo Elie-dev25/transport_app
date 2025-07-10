@@ -38,8 +38,3 @@ def logout():
     session.clear()  # Vide la session
     flash('Déconnexion réussie.', 'info')  # Message d'information
     return redirect(url_for('auth.login'))  # Redirige vers la page de login
-
-# Route pour la page d'accueil
-@bp.route('/')
-def home():
-    return "Bienvenue sur la page d'accueil"

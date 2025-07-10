@@ -25,6 +25,15 @@ def create_app():
     # Initialisation de Flask-Login
     login_manager.init_app(app)
 
+    from flask import jsonify, request, redirect, url_for
+    from flask_login import LoginManager
+    # Handler pour AJAX : renvoie JSON au lieu de redirect si pas authentifié
+    @login_manager.unauthorized_handler
+    def unauthorized_callback():
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'success': False, 'message': 'Session expirée ou non authentifié.'}), 401
+        return redirect(url_for('auth.login'))
+
     from app.models.utilisateur import Utilisateur
     @login_manager.user_loader
     def load_user(user_id):
@@ -41,5 +50,10 @@ def create_app():
     app.register_blueprint(charge_transport.bp)
     from app.routes.admin_ajax import bp_ajax
     app.register_blueprint(bp_ajax, url_prefix='/admin')
+
+    @app.route('/')
+    def accueil():
+        from flask import render_template
+        return render_template('welcome.html')
 
     return app  # Retourne l'application Flask prête à l'emploi

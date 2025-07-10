@@ -1,10 +1,8 @@
-from flask import Flask, render_template
+from app import create_app
+from app.routes.auth import bp as auth_bp
 
-app = Flask(__name__)
+app = create_app()
 
-@app.route('/')
-def home():
-    return render_template('welcome.html')
 
 if __name__ == '__main__':
     app.run(debug=True)

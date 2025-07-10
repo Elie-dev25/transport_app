@@ -23,16 +23,19 @@ def dashboard():
     from datetime import date
     from app.models.trajet import Trajet
     today = date.today()
-    trajets_today = Trajet.query.filter(db.func.date(Trajet.date_heure_depart) == today).count()
+    trajets_jour_aed = Trajet.query.filter(db.func.date(Trajet.date_heure_depart) == today, Trajet.numero_aed != None).count()
+    trajets_jour_bus_agence = Trajet.query.filter(db.func.date(Trajet.date_heure_depart) == today, Trajet.immat_bus != None).count()
 
+    from app.models.chauffeur import Chauffeur
     stats = {
-        'bus_actifs': 0,
+        'bus_actifs': AED.query.filter_by(etat_vehicule='BON').count(),
         'bus_actifs_change': 0,
-        'bus_inactifs': 0,
-        'chauffeurs': 0,
-        'trajets_jour': trajets_today,
+        'bus_inactifs': AED.query.filter_by(etat_vehicule='DEFAILLANT').count(),
+        'chauffeurs': Chauffeur.query.count(),
+        'trajets_jour_aed': trajets_jour_aed,
+        'trajets_jour_bus_agence': trajets_jour_bus_agence,
         'trajets_jour_change': 0,
-        'bus_maintenance': 0,
+        'bus_maintenance': AED.query.filter_by(etat_vehicule='DEFAILLANT').count(),
         'bus_maintenance_info': '',
         'etudiants': 0,
         'etudiants_change': 0

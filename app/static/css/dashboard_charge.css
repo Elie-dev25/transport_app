@@ -11,7 +11,50 @@
             overflow-x: hidden;
         }
 
-        /* Sidebar */
+        /* Boutons radio type de bus (modale Banekane) */
+.type-bus-toggle {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+.type-bus-btn {
+  display: flex;
+  align-items: center;
+  background: #f8fbff;
+  border: 2px solid #01D758;
+  border-radius: 24px;
+  padding: 8px 18px;
+  cursor: pointer;
+  font-weight: 500;
+  color: #1e3a8a;
+  transition: background 0.18s, color 0.18s, border 0.18s;
+  box-shadow: 0 2px 8px rgba(1,215,88,0.07);
+  position: relative;
+}
+.type-bus-btn input[type="radio"] {
+  display: none;
+}
+.type-bus-btn span {
+  margin-left: 8px;
+  font-size: 15px;
+}
+.type-bus-btn input[type="radio"]:checked + span,
+.type-bus-btn input[type="radio"]:checked ~ span {
+  color: #fff;
+}
+.type-bus-btn input[type="radio"]:checked ~ span,
+.type-bus-btn input[type="radio"]:checked + span {
+  background: #01D758;
+  border-radius: 16px;
+  padding: 4px 12px;
+  color: #fff;
+}
+.type-bus-btn:hover {
+  background: #e8f4f8;
+  border-color: #00c04e;
+}
+
+/* Sidebar */
         .sidebar {
             position: fixed;
             left: 0;
@@ -481,113 +524,5 @@
             }
           
         }
-
-        /* Overlay pour mobile */
-        .overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 999;
-        }
-
-        .overlay.active {
-            display: block;
-        }
-
-        /* Modal Formulaire Départ AED (copie admin) */
-        #departAedModal {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(10px);
-            z-index: 10000;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-        }
-        #departAedModal.show {
-            opacity: 1;
-            pointer-events: auto;
-        }
-        #departAedModal .modal-content {
-            background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
-            padding: 0;
-            border-radius: 24px;
-            min-width: 420px;
-            max-width: 95vw;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.1);
-            position: relative;
-            transform: scale(0.9) translateY(50px);
-            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        #departAedModal.show .modal-content {
-            transform: scale(1) translateY(0);
-        }
-        .modal-header {
-            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
-            padding: 32px 36px 24px;
-            border-radius: 24px 24px 0 0;
-            position: relative;
-            overflow: hidden;
-        }
-        .modal-header::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -20%;
-            width: 200px;
-            height: 200px;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-            border-radius: 50%;
-        }
-        .modal-header h3 {
-            color: #ffffff;
-            font-size: 1.5rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            position: relative;
-            z-index: 2;
-        }
-        .modal-header h3 i {
-            font-size: 1.3rem;
-            color: #01D758;
-        }
-        .close-btn {
-            position: absolute;
-            top: 20px;
-            right: 24px;
-            background: rgba(255, 255, 255, 0.2);
-            border: none;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            font-size: 18px;
-            color: #ffffff;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-            z-index: 3;
-        }
-        .close-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: rotate(90deg);
-        }
-        .modal-body {
-            padding: 32px 36px 36px;
-        }
+            
+/* ================================================ */
