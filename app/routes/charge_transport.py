@@ -7,6 +7,7 @@ from app.models.aed import AED
 from app.models.busagence import Busagence
 from app.models.trajet import Trajet
 from app.database import db
+from app.utils.trafic import daily_student_trafic
 from datetime import date
 
 # Création du blueprint pour le chargé de transport
@@ -28,6 +29,9 @@ def dashboard():
         Trajet.enregistre_par == current_user.utilisateur_id,
         Trajet.immat_bus != None
     ).count()
+    # Statistiques trafic étudiants temps réel
+    trafic = daily_student_trafic()
+
     # Exemple d'autres stats (à ajuster plus tard)
     stats = {
         'bus_actifs': AED.query.filter_by(etat_vehicule='BON').count(),
@@ -36,7 +40,8 @@ def dashboard():
         'trajets_jour_aed': trajets_jour_aed,
         'trajets_jour_bus_agence': trajets_jour_bus_agence,
         'trajets_jour_change': 0,
-        'chauffeurs_disponibles': 5
+        'chauffeurs_disponibles': 5,
+        'etudiants': trafic['present']
     }
     form = TrajetDepartForm()
     form_bus = TrajetBusAgenceForm()
@@ -75,7 +80,7 @@ def dashboard():
         flash('Erreur dans le formulaire. Veuillez vérifier les champs.', 'danger')
     chauffeurs_list = Chauffeur.query.all()
     bus_agence_list = Busagence.query.all()
-    return render_template('dashboard_charge.html', stats=stats, form=form, form_bus=form_bus, form_banekane_retour=form_banekane_retour)
+    return render_template('dashboard_charge.html', stats=stats, trafic=trafic, form=form, form_bus=form_bus, form_banekane_retour=form_banekane_retour)
 
 # Route pour la gestion des bus
 @bp.route('/bus')

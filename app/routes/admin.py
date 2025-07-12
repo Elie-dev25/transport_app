@@ -40,8 +40,11 @@ def dashboard():
         'etudiants': 0,
         'etudiants_change': 0
     }
+    from app.utils.trafic import daily_student_trafic
+    trafic = daily_student_trafic()
+    stats['etudiants'] = trafic.get('present', 0)
     # Affiche le template HTML du dashboard admin
-    return render_template('dashboard_admin.html', stats=stats)
+    return render_template('dashboard_admin.html', stats=stats, trafic=trafic)
 
 # Route pour la page Bus AED qui affiche la liste des bus depuis la base
 @admin_only

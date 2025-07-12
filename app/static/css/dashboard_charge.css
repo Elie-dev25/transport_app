@@ -463,7 +463,60 @@
             font-size: 20px;
         }
 
-        /* Mobile Responsive */
+        /* Trafic Étudiants */
+.trafic-section {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+}
+
+.trafic-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.trafic-card {
+    padding: 30px;
+    border-radius: 15px;
+    border: 2px solid #e5e7eb;
+    text-align: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+}
+
+.trafic-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+}
+
+.trafic-number {
+    font-size: 36px;
+    font-weight: bold;
+    color: #1e3a8a;
+    margin-bottom: 8px;
+}
+
+.trafic-label {
+    font-size: 16px;
+    color: #64748b;
+}
+
+.trafic-card.arrived {
+    border-color: #10b981;
+}
+
+.trafic-card.present, .trafic-card.current {
+    border-color: #3b82f6;
+}
+
+.trafic-card.departed {
+    border-color: #ef4444;
+}
+
+/* Mobile Responsive */
         .mobile-toggle {
             display: none;
             position: fixed;

@@ -201,6 +201,7 @@
             </div>
         </div>
 
+       
         <!-- Quick Actions -->
         <div class="quick-actions">
             <h2 class="section-title">
@@ -227,30 +228,24 @@
             </div>
         </div>
 
-        <!-- État des Bus -->
-        <div class="quick-actions">
-            <h2 class="section-title">
-                <i class="fas fa-bus"></i>
-                État des Bus en Temps Réel
-            </h2>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
-                {% for bus in etat_bus %}
-                <div style="background: {{ bus.bg }}; border: 2px solid {{ bus.border }}; border-radius: 15px; padding: 20px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                        <strong>{{ bus.nom }}</strong>
-                        <span style="background: {{ bus.etat_bg }}; color: white; padding: 5px 10px; border-radius: 20px; font-size: 12px;">
-                            {{ bus.etat }}
-                        </span>
-                    </div>
-                    <div style="font-size: 14px; color: #64748b;">
-                        {% for info in bus.infos %}
-                        <div>{{ info }}</div>
-                        {% endfor %}
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
+         <!-- Trafic Étudiants - Temps Réel -->
+         <div class="trafic-section">
+          <h2 class="section-title"><i class="fas fa-chart-line"></i> Trafic Étudiants - Temps Réel</h2>
+          <div class="trafic-grid">
+              <div class="trafic-card arrived">
+                  <div class="trafic-number">{{ trafic.arrives }}</div>
+                  <div class="trafic-label">Arrivés au Campus</div>
+              </div>
+              <div class="trafic-card present">
+                  <div class="trafic-number">{{ trafic.present }}</div>
+                  <div class="trafic-label">Présents au Campus</div>
+              </div>
+              <div class="trafic-card departed">
+                  <div class="trafic-number">{{ trafic.partis }}</div>
+                  <div class="trafic-label">Partis du Campus</div>
+              </div>
+          </div>
+      </div>
 
         <!-- Modal for Add Bus Form -->
         <div id="addBusModal">
