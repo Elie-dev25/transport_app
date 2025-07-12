@@ -31,13 +31,14 @@ else console.error('Bouton #openDepartAedModal introuvable !');
             // Validation simple exemple :
             const dateHeure = document.getElementById('date_heure_depart').value;
             const pointDepart = document.getElementById('point_depart').value;
-            const nombrePlaces = document.getElementById('nombre_places_occupees').value;
-            if (!dateHeure || !pointDepart || !nombrePlaces) {
+            const nombrePlacesInput = form.querySelector('[name="nombre_places_occupees"]');
+            const nombrePlaces = nombrePlacesInput ? nombrePlacesInput.value : null;
+            if (!dateHeure || !pointDepart || (nombrePlacesInput && !nombrePlaces)) {
                 if (errorAlert) {
                     errorAlert.innerHTML = '<ul>' +
                         (!dateHeure ? '<li>Date et heure de départ : Ce champ est requis.</li>' : '') +
                         (!pointDepart ? '<li>Point de départ : Ce champ est requis.</li>' : '') +
-                        (!nombrePlaces ? '<li>Nombre de places : Ce champ est requis.</li>' : '') +
+                        (nombrePlacesInput && !nombrePlaces ? '<li>Nombre de places occupées : Ce champ est requis.</li>' : '') +
                         '</ul>';
                     errorAlert.style.display = 'block';
                 }
@@ -49,12 +50,10 @@ else console.error('Bouton #openDepartAedModal introuvable !');
             e.preventDefault();
             feedback.innerHTML = '<div class="loader"></div> <span style="margin-left:10px">Envoi en cours...</span>';
             const formData = new FormData(form);
-            fetch('', {
+            fetch(form.action, {  // au lieu de ''
                 method: 'POST',
                 body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
             }).then(response => response.json())
               .then(data => {
                 if (data.success) {

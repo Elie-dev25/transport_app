@@ -98,6 +98,41 @@ def rapports():
 def parametres():
     return render_template('parametres.html') if 'parametres.html' in globals() else "Page Paramètres (à implémenter)"
 
+# Route pour le départ AED (Ajax)
+@bp.route('/depart-aed', methods=['POST'])
+def depart_aed():
+    """Enregistrement d'un départ AED pour Banekane (AJAX, JSON)"""
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        form = TrajetDepartForm()
+        # Actualiser les choix dépendants de la BD
+        from app.models.chauffeur import Chauffeur
+        from app.models.aed import AED
+        form.chauffeur_id.choices = [(c.chauffeur_id, f"{c.nom} {c.prenom}") for c in Chauffeur.query.all()]
+        form.numero_aed.choices = [(a.numero, a.numero) for a in AED.query.all()]
+
+        if form.validate_on_submit():
+            try:
+                chargeur = current_user  # alias
+                trajet = Trajet(
+                    date_heure_depart=form.date_heure_depart.data,
+                    point_depart=form.point_depart.data,
+                    type_passagers=form.type_passagers.data,
+                    nombre_places_occupees=form.nombre_places_occupees.data,
+                    chauffeur_id=form.chauffeur_id.data,
+                    numero_aed=form.numero_aed.data,
+                    immat_bus=None,
+                    enregistre_par=chargeur.utilisateur_id
+                )
+                db.session.add(trajet)
+                db.session.commit()
+                return jsonify({'success': True, 'message': 'Départ AED enregistré !'})
+            except Exception as e:
+                db.session.rollback()
+                return jsonify({'success': False, 'message': f'Erreur : {e}'}), 500
+        else:
+            return jsonify({'success': False, 'message': 'Erreur dans le formulaire. Veuillez vérifier les champs.'}), 400
+    return jsonify({'success': False, 'message': 'Requête non autorisée.'}), 400
+
 # Route pour le départ AED Banekane
 @bp.route('/depart-aed-banekane')
 def depart_aed_banekane():
@@ -113,10 +148,12 @@ def depart_bus_agence():
         point_depart = request.form.get('point_depart')
         nom_agence = request.form.get('nom_agence')
         immat_bus = request.form.get('immat_bus')
-        nombre_places_bus = request.form.get('nombre_places', type=int)
         nom_chauffeur = request.form.get('nom_chauffeur')
+        places_occupees = request.form.get('nombre_places_occupees', type=int) or 0
+        # Valeur par défaut pour la capacité du bus (plus saisie côté formulaire)
+        nombre_places_bus = 50
         # Validation minimum
-        if not all([date_heure_depart, point_depart, nom_agence, immat_bus, nombre_places_bus, nom_chauffeur]):
+        if not all([date_heure_depart, point_depart, nom_agence, immat_bus, nom_chauffeur]):
             return jsonify({'success': False, 'message': 'Tous les champs sont obligatoires.'}), 400
         try:
             from datetime import datetime as dt
@@ -137,8 +174,8 @@ def depart_bus_agence():
             trajet = Trajet(
                 date_heure_depart=date_dt,
                 point_depart=point_depart,
-                type_passagers='EXTERNE',
-                nombre_places_occupees=0,
+                type_passagers=request.form.get('type_passagers', 'ETUDIANT'),
+                nombre_places_occupees=places_occupees,
                 chauffeur_id=None,
                 immat_bus=immat_bus,
                 enregistre_par=chargeur.chargetransport_id
@@ -165,8 +202,6 @@ def depart_banekane_retour():
         from app.models.aed import AED
         form.chauffeur_id.choices = [(c.chauffeur_id, f"{c.nom} {c.prenom}") for c in Chauffeur.query.all()]
         form.numero_aed.choices = [(a.numero, a.numero) for a in AED.query.all()]
-        print('DEBUG BANEKANE RETOUR - Form data:', form.data)
-        print('DEBUG BANEKANE RETOUR - Form errors:', form.errors)
         if form.validate_on_submit():
             from app.models.chargetransport import Chargetransport
             chargeur = Chargetransport.query.get(current_user.utilisateur_id)
@@ -214,7 +249,7 @@ def depart_banekane_retour():
                 trajet = Trajet(
                     date_heure_depart=form.date_heure_depart.data,
                     point_depart='Banekane',
-                    type_passagers='EXTERNE',
+                    type_passagers='ETUDIANT',
                     nombre_places_occupees=form.nombre_places_occupees.data,
                     chauffeur_id=None,
                     numero_aed=None,

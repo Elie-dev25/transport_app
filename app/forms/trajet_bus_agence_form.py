@@ -43,8 +43,10 @@ class TrajetBusAgenceForm(FlaskForm):
 
     type_passagers = SelectField(
         'Type de passagers',
-        choices=[('ETUDIANT', 'Étudiant'), ('PERSONNEL', 'Personnel')],
-        validators=[DataRequired()]
+        choices=[('ETUDIANT', 'Étudiant')],
+        default='ETUDIANT',
+        validators=[DataRequired()],
+        render_kw={'disabled': True}
     )
 
     nombre_places_occupees = IntegerField(

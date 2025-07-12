@@ -45,8 +45,9 @@ def dashboard():
                 {'heure': '08:30', 'depart': 'Gare', 'arrivee': 'Campus'}
             ]
         })
-    # Trafic fictif
-    trafic = {'arrives': 40, 'partis': 38, 'transit': 2, 'total': 78}
+    # Trafic réel pour les étudiants transportés aujourd'hui
+    from app.utils.trafic import daily_student_trafic
+    trafic = daily_student_trafic()
     return render_template(
         'dashboard_chauffeur.html',
         stats=stats, trajets=trajets, semaine=semaine, trafic=trafic,

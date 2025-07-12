@@ -264,12 +264,16 @@
         <div class="form-grid">
           <div class="form-group">{{ form_bus.nom_agence.label }}{{ form_bus.nom_agence() }}</div>
           <div class="form-group">{{ form_bus.immat_bus.label }}{{ form_bus.immat_bus() }}</div>
-          <div class="form-group">{{ form_bus.nombre_places.label }}{{ form_bus.nombre_places() }}</div>
           <div class="form-group">{{ form_bus.nom_chauffeur.label }}{{ form_bus.nom_chauffeur() }}</div>
+          <div class="form-group">{{ form_bus.nombre_places_occupees.label }}{{ form_bus.nombre_places_occupees() }}</div>
           <div class="form-group full-width">{{ form_bus.date_heure_depart.label }}{{ form_bus.date_heure_depart(type='datetime-local') }}</div>
           <div class="form-group">{{ form_bus.point_depart.label }}{{ form_bus.point_depart() }}</div>
-          <div class="form-group">{{ form_bus.type_passagers.label }}{{ form_bus.type_passagers() }}</div>
-          <div class="form-group">{{ form_bus.nombre_places_occupees.label }}{{ form_bus.nombre_places_occupees() }}</div>
+          <div class="form-group">
+            <label>Type de passagers</label>
+            <input type="text" class="form-control" value="Étudiant" readonly>
+            <input type="hidden" name="type_passagers" value="ETUDIANT">
+          </div>
+          
         </div>
         <button type="submit" class="submit-btn modal-submit">{{ form_bus.submit.label }}</button>
       </form>
@@ -362,7 +366,7 @@
     </div>
     <div class="modal-body">
       <div class="alert alert-danger" style="display:none;" id="departAedError"></div>
-      <form method="POST" id="departAedForm" class="modal-form" action="">
+      <form method="POST" id="departAedForm" class="modal-form" action="{{ url_for('charge_transport.depart_aed') }}">
         {{ form.hidden_tag() }}
         <div class="form-grid">
             <div class="form-group">
@@ -377,6 +381,7 @@
                 {{ form.type_passagers.label }}
                 {{ form.type_passagers() }}
             </div>
+
             <div class="form-group">
                 {{ form.nombre_places_occupees.label }}
                 {{ form.nombre_places_occupees() }}
