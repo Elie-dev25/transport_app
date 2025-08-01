@@ -1,0 +1,401 @@
+/* Modal détails bus - Style magnifique */
+#busDetailsModal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(5px);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    animation: fadeIn 0.3s ease-out;
+  }
+  
+  #busDetailsModal.show {
+    display: flex;
+  }
+  
+  #busDetailsModal .modal-content {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border-radius: 20px;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    animation: slideIn 0.3s ease-out;
+    border: 1px solid rgba(59, 130, 246, 0.1);
+  }
+  
+  #busDetailsModal .modal-header {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    padding: 20px 25px;
+    border-radius: 20px 20px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  #busDetailsModal .modal-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    animation: shimmer 3s infinite;
+  }
+  
+  #busDetailsModal .modal-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+  
+  #busDetailsModal .close-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+  }
+  
+  #busDetailsModal .close-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+  }
+  
+  #busDetailsModal .modal-body {
+    padding: 25px;
+  }
+  
+  #busDetailsModal .details-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+  }
+  
+  #busDetailsModal .details-list li {
+    padding: 15px 20px;
+    border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+    display: flex;
+    align-items: center;
+    transition: all 0.3s ease;
+    position: relative;
+  }
+  
+  #busDetailsModal .details-list li:last-child {
+    border-bottom: none;
+  }
+  
+  #busDetailsModal .details-list li:hover {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    transform: translateX(5px);
+  }
+  
+  #busDetailsModal .details-list li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  #busDetailsModal .details-list li:hover::before {
+    opacity: 1;
+  }
+  
+  #busDetailsModal .details-list li strong {
+    color: #1e40af;
+    font-weight: 600;
+    margin-right: 10px;
+    min-width: 140px;
+  }
+  
+  #busDetailsModal h4 {
+    color: #1e40af;
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 15px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #3b82f6;
+    position: relative;
+  }
+  
+  #busDetailsModal h4::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 50px;
+    height: 2px;
+    background: linear-gradient(135deg, #10b981, #059669);
+  }
+  
+  #busDetailsModal table {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  }
+  
+  #busDetailsModal table thead tr {
+    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  }
+  
+  #busDetailsModal table th {
+    color: #1e40af;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+  }
+  
+  #busDetailsModal table tbody tr {
+    transition: all 0.3s ease;
+  }
+  
+  #busDetailsModal table tbody tr:hover {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    transform: scale(1.02);
+  }
+  
+  #busDetailsModal table tbody tr:nth-child(even) {
+    background: rgba(59, 130, 246, 0.02);
+  }
+  
+  #busDetailsModal .indicator {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 8px;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.8);
+  }
+  
+  #busDetailsModal .indicator.green {
+    background: linear-gradient(135deg, #10b981, #059669);
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.3);
+  }
+  
+  #busDetailsModal .indicator.orange {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.3);
+  }
+  
+  #busDetailsModal .indicator.red {
+    background: #ef4444;
+  }
+
+  /* ----- Styles pour le formulaire "Ajouter document" ----- */
+  #docFormModal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(5px);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000; /* au-dessus de busDetailsModal */
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  #docFormModal.show {
+    display: flex;
+  }
+
+  #docFormModal .modal-content {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border-radius: 20px;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+    max-width: 450px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    animation: slideIn 0.3s ease-out;
+    border: 1px solid rgba(16, 185, 129, 0.1);
+  }
+
+  #docFormModal .modal-header {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    padding: 20px 25px;
+    border-radius: 20px 20px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  #docFormModal .modal-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+    animation: shimmer 3s infinite;
+  }
+
+  #docFormModal .close-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+  }
+
+  #docFormModal .close-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+  }
+
+  @media (max-width: 768px) {
+    #docFormModal .modal-content {
+      width: 95%;
+      margin: 10px;
+    }
+  }
+  
+  #busDetailsModal .submit-btn {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 24px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  #busDetailsModal .submit-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+  }
+  
+  #busDetailsModal .submit-btn:hover::before {
+    left: 100%;
+  }
+  
+  #busDetailsModal .submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+  }
+  
+  #busDetailsModal .submit-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  }
+  
+  #busDetailsModal p {
+    color: #64748b;
+    font-style: italic;
+    text-align: center;
+    padding: 20px;
+    background: rgba(100, 116, 139, 0.05);
+    border-radius: 12px;
+    border: 1px dashed rgba(100, 116, 139, 0.2);
+  }
+  
+  /* Animations */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-30px) scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+  
+  @keyframes shimmer {
+    0%, 100% {
+      transform: translateX(-100%) translateY(-100%) rotate(45deg);
+    }
+    50% {
+      transform: translateX(100%) translateY(100%) rotate(45deg);
+    }
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    #busDetailsModal .modal-content {
+      width: 95%;
+      margin: 10px;
+    }
+    
+    #busDetailsModal .modal-header {
+      padding: 15px 20px;
+    }
+    
+    #busDetailsModal .modal-body {
+      padding: 20px;
+    }
+    
+    #busDetailsModal .details-list li {
+      padding: 12px 15px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    
+    #busDetailsModal .details-list li strong {
+      margin-bottom: 5px;
+      min-width: auto;
+    }
+  }

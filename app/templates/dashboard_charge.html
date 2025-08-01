@@ -6,6 +6,8 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/form.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard_charge.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/student_trafic.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -149,7 +151,7 @@
                 <div class="stat-header">
                     <div>
                         <div class="stat-value">{{ stats.trajets_jour_bus_agence }}</div>
-                        <div class="stat-label">Trajets du Jour Bus Agence</div>
+                        <div class="stat-label">Trajets du Jour Prestataire</div>
                     </div>
                     <div class="stat-icon purple">
                         <i class="fas fa-bus-alt"></i>
@@ -201,16 +203,16 @@
         <div class="quick-actions">
             <h2 class="section-title">
                 <i class="fas fa-bolt"></i>
-                Actions Rapides
+                Enregistrer une navette
             </h2>
             <div class="actions-grid ">
                 <a href="#" id="openDepartAedModal" class="action-btn b1">
     <i class="fas fa-route"></i>
     <span>Départ AED pour Banekane</span>
 </a>
-                <a href="#" id="openDepartBusAgenceModal" class="action-btn">
+                <a href="#" id="openDepartPrestataireModal" class="action-btn">
                     <i class="fas fa-route"></i>
-                    <span>Départ Bus Agence</span>
+                    <span>Départ Prestataire</span>
                 </a>
                 <a href="#" id="openDepartBanekaneRetourModal" class="action-btn">
                     <i class="fas fa-route"></i>
@@ -244,19 +246,19 @@
 
 <!-- Modals -->
 
-<!-- Modal Départ Bus Agence -->
-<div id="departBusAgenceModal" class="modal">
+<!-- Modal Départ Prestataire -->
+<div id="departPrestataireModal" class="modal">
   <div class="modal-content">
-    <button type="button" id="closeDepartBusAgenceModal" class="close-btn"><i class="fas fa-times"></i></button>
+    <button type="button" id="closeDepartPrestataireModal" class="close-btn"><i class="fas fa-times"></i></button>
     <div class="modal-header">
-      <h3><i class="fas fa-route"></i> Départ Bus Agence</h3>
+      <h3><i class="fas fa-route"></i> Départ Prestataire</h3>
     </div>
     <div class="modal-body">
-      <div class="alert alert-danger" style="display:none;" id="departBusAgenceError"></div>
-      <form id="departBusAgenceForm" class="modal-form" method="post" action="{{ url_for('charge_transport.depart_bus_agence') }}">
+      <div class="alert alert-danger" style="display:none;" id="departPrestataireError"></div>
+      <form id="departPrestataireForm" class="modal-form" method="post" action="{{ url_for('charge_transport.depart_prestataire') }}">
         {{ form_bus.hidden_tag() }}
         <div class="form-grid">
-          <div class="form-group">{{ form_bus.nom_agence.label }}{{ form_bus.nom_agence() }}</div>
+          <div class="form-group">{{ form_bus.nom_prestataire.label }}{{ form_bus.nom_prestataire() }}</div>
           <div class="form-group">{{ form_bus.immat_bus.label }}{{ form_bus.immat_bus() }}</div>
           <div class="form-group">{{ form_bus.nom_chauffeur.label }}{{ form_bus.nom_chauffeur() }}</div>
           <div class="form-group">{{ form_bus.nombre_places_occupees.label }}{{ form_bus.nombre_places_occupees() }}</div>
@@ -267,17 +269,16 @@
             <input type="text" class="form-control" value="Étudiant" readonly>
             <input type="hidden" name="type_passagers" value="ETUDIANT">
           </div>
-          
         </div>
         <button type="submit" class="submit-btn modal-submit">{{ form_bus.submit.label }}</button>
       </form>
-      <div id="departBusAgenceFeedback"></div>
+      <div id="departPrestataireFeedback"></div>
     </div>
   </div>
 </div>
 
 
-<!-- End Modal Départ Bus Agence -->
+<!-- End Modal Départ Prestataire -->
 
 <!-- Modal Départ de Banekane Retour -->
 <div id="departBanekaneRetourModal" class="modal">
@@ -320,16 +321,20 @@
             {{ form_banekane_retour.type_passagers.label }}
             {{ form_banekane_retour.type_passagers(class_='form-control') }}
           </div>
-          <!-- Champs spécifiques Agence -->
-          <div class="form-group agence-only">
+          <div class="form-group aed-only">
+            {{ form_banekane_retour.kilometrage_actuel.label }}
+            {{ form_banekane_retour.kilometrage_actuel(class_='form-control') }}
+          </div>
+          <!-- Champs spécifiques Prestataire -->
+          <div class="form-group prestataire-only">
             {{ form_banekane_retour.nom_agence.label }}
             {{ form_banekane_retour.nom_agence(class_='form-control') }}
           </div>
-          <div class="form-group agence-only">
+          <div class="form-group prestataire-only">
             {{ form_banekane_retour.immat_bus.label }}
             {{ form_banekane_retour.immat_bus(class_='form-control') }}
           </div>
-          <div class="form-group agence-only">
+          <div class="form-group prestataire-only">
             {{ form_banekane_retour.nom_chauffeur_agence.label }}
             {{ form_banekane_retour.nom_chauffeur_agence(class_='form-control') }}
           </div>
@@ -387,6 +392,10 @@
             <div class="form-group">
                 {{ form.numero_aed.label }}
                 {{ form.numero_aed() }}
+            </div>
+            <div class="form-group">
+                {{ form.kilometrage_actuel.label }}
+                {{ form.kilometrage_actuel() }}
             </div>
         </div>
         <button type="submit" class="submit-btn modal-submit">{{ form.submit.label }}</button>

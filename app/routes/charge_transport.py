@@ -1,10 +1,10 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import current_user
 from app.forms.trajet_depart_form import TrajetDepartForm
-from app.forms.trajet_bus_agence_form import TrajetBusAgenceForm
+from app.forms.trajet_prestataire_form import TrajetPrestataireForm
 from app.models.chauffeur import Chauffeur
 from app.models.aed import AED
-from app.models.busagence import Busagence
+from app.models.prestataire import Prestataire
 from app.models.trajet import Trajet
 from app.database import db
 from app.utils.trafic import daily_student_trafic
@@ -24,7 +24,7 @@ def dashboard():
         Trajet.enregistre_par == current_user.utilisateur_id,
         Trajet.numero_aed != None
     ).count()
-    trajets_jour_bus_agence = Trajet.query.filter(
+    trajets_jour_prestataire = Trajet.query.filter(
         db.func.date(Trajet.date_heure_depart) == today,
         Trajet.enregistre_par == current_user.utilisateur_id,
         Trajet.immat_bus != None
@@ -38,13 +38,13 @@ def dashboard():
         'bus_en_maintenance': AED.query.filter_by(etat_vehicule='DEFAILLANT').count(),
         'bus_maintenance': AED.query.filter_by(etat_vehicule='DEFAILLANT').count(),
         'trajets_jour_aed': trajets_jour_aed,
-        'trajets_jour_bus_agence': trajets_jour_bus_agence,
+        'trajets_jour_prestataire': trajets_jour_prestataire,
         'trajets_jour_change': 0,
         'chauffeurs_disponibles': 5,
         'etudiants': trafic['present']
     }
     form = TrajetDepartForm()
-    form_bus = TrajetBusAgenceForm()
+    form_bus = TrajetPrestataireForm()
     # Initialisation du formulaire Banekane retour
     from app.forms.trajet_banekane_retour_form import TrajetBanekaneRetourForm
     form_banekane_retour = TrajetBanekaneRetourForm()
@@ -79,7 +79,7 @@ def dashboard():
     elif request.method == 'POST':
         flash('Erreur dans le formulaire. Veuillez vérifier les champs.', 'danger')
     chauffeurs_list = Chauffeur.query.all()
-    bus_agence_list = Busagence.query.all()
+    prestataire_list = Prestataire.query.all()
     return render_template('dashboard_charge.html', stats=stats, trafic=trafic, form=form, form_bus=form_bus, form_banekane_retour=form_banekane_retour)
 
 # Route pour la gestion des bus
@@ -129,8 +129,13 @@ def depart_aed():
                     enregistre_par=chargeur.utilisateur_id
                 )
                 db.session.add(trajet)
+                # Mettre à jour le kilométrage du véhicule AED sélectionné
+                aed = AED.query.filter_by(numero=form.numero_aed.data).first()
+                if aed:
+                    aed.kilometrage = form.kilometrage_actuel.data
+                    db.session.add(aed)
                 db.session.commit()
-                return jsonify({'success': True, 'message': 'Départ AED enregistré !'})
+                return jsonify({'success': True, 'message': 'Départ AED enregistré et kilométrage mis à jour !'})
             except Exception as e:
                 db.session.rollback()
                 return jsonify({'success': False, 'message': f'Erreur : {e}'}), 500
@@ -145,13 +150,13 @@ def depart_aed_banekane():
     return "Page Départ AED Banekane (à implémenter)"
 
 # Route pour le départ Bus Agence
-@bp.route('/depart-bus-agence', methods=['POST'])
-def depart_bus_agence():
+@bp.route('/depart-prestataire', methods=['POST'])
+def depart_prestataire():
     """Enregistrement d'un départ Bus Agence via soumission AJAX."""
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         date_heure_depart = request.form.get('date_heure_depart')
         point_depart = request.form.get('point_depart')
-        nom_agence = request.form.get('nom_agence')
+        nom_prestataire = request.form.get('nom_agence')
         immat_bus = request.form.get('immat_bus')
         nom_chauffeur = request.form.get('nom_chauffeur')
         places_occupees = request.form.get('nombre_places_occupees', type=int) or 0
@@ -166,13 +171,13 @@ def depart_bus_agence():
             from app.models.chargetransport import Chargetransport
             chargeur = Chargetransport.query.get(current_user.utilisateur_id)
             # Insérer ou mettre à jour Bus Agence
-            bus = Busagence.query.get(immat_bus)
+            bus = Prestataire.query.get(immat_bus)
             if not bus:
-                bus = Busagence(immatriculation=immat_bus, nom_agence=nom_agence,
+                bus = Prestataire(immatriculation=immat_bus, nom_prestataire=nom_prestataire,
                                  nombre_places=nombre_places_bus, nom_chauffeur=nom_chauffeur)
                 db.session.add(bus)
             else:
-                bus.nom_agence = nom_agence
+                bus.nom_prestataire = nom_prestataire
                 bus.nombre_places = nombre_places_bus
                 bus.nom_chauffeur = nom_chauffeur
 
@@ -187,7 +192,7 @@ def depart_bus_agence():
             )
             db.session.add(trajet)
             db.session.commit()
-            return jsonify({'success': True, 'message': 'Départ Bus Agence enregistré !'})
+            return jsonify({'success': True, 'message': 'Départ Prestataire enregistré !'})
         except Exception as e:
             db.session.rollback()
             return jsonify({'success': False, 'message': f'Erreur : {e}'}), 500
@@ -227,25 +232,31 @@ def depart_banekane_retour():
                 )
                 try:
                     db.session.add(trajet)
+                    # Mettre à jour le kilométrage du véhicule AED sélectionné si fourni
+                    if form.kilometrage_actuel.data is not None:
+                        aed = AED.query.filter_by(numero=form.numero_aed.data).first()
+                        if aed:
+                            aed.kilometrage = form.kilometrage_actuel.data
+                            db.session.add(aed)
                     db.session.commit()
-                    return jsonify({'success': True, 'message': 'Départ de Banekane (retour) enregistré !'})
+                    return jsonify({'success': True, 'message': 'Départ de Banekane (retour) enregistré et kilométrage mis à jour !'})
                 except Exception as e:
                     db.session.rollback()
                     return jsonify({'success': False, 'message': f'Erreur : {e}'}), 500
-            else:  # Bus Agence
+            else:  # Prestataire
                 immat = form.immat_bus.data.strip()
                 if immat:
-                    bus = Busagence.query.get(immat)
+                    bus = Prestataire.query.get(immat)
                     if not bus:
-                        bus = Busagence(
+                        bus = Prestataire(
                             immatriculation=immat,
-                            nom_agence=form.nom_agence.data,
+                            nom_prestataire=form.nom_agence.data,
                             nombre_places=form.nombre_places_occupees.data or 50,
                             nom_chauffeur=form.nom_chauffeur_agence.data or ''
                         )
                         db.session.add(bus)
                     else:
-                        bus.nom_agence = form.nom_agence.data
+                        bus.nom_prestataire = form.nom_agence.data
                         bus.nombre_places = form.nombre_places_occupees.data or bus.nombre_places
                         bus.nom_chauffeur = form.nom_chauffeur_agence.data or bus.nom_chauffeur
                     immat_bus_value = immat

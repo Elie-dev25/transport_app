@@ -7,6 +7,7 @@
 
 {% block head %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/mecanicien_dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
 {% endblock %}
@@ -53,9 +54,11 @@
                 <tr>
                     <th style="padding:14px;">Numéro AED</th>
                     <th>État</th>
-                    <th>Niveau d'huile</th>
-                    <th>Seuil critique</th>
-                    <th>Huile (visuel)</th>
+                    <th>Kilométrage</th>
+                    <th>Type Huile</th>
+                    <th>Km Critique Huile</th>
+                    <th>Km Restant</th>
+                    <th>Statut Huile</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -64,8 +67,22 @@
                 <tr style="text-align:center;">
                     <td style="padding:10px 0;">{{ bus.numero }}</td>
                     <td>{{ bus.etat_vehicule }}</td>
-                    <td>{{ bus.niveau_huile }}</td>
-                    <td>{{ bus.seuil_critique_huile }}</td>
+                    <td>{{ bus.kilometrage if bus.kilometrage else '-' }} {{ 'km' if bus.kilometrage else '' }}</td>
+                    <td>{{ bus.type_huile if bus.type_huile else '-' }}</td>
+                    <td>{{ bus.km_critique_huile if bus.km_critique_huile else '-' }} {{ 'km' if bus.km_critique_huile else '' }}</td>
+                    <td>
+                        {% if bus.km_restant is not none %}
+                            {% if bus.km_restant <= 0 %}
+                                <span style="color:#ef4444;font-weight:bold;">URGENT</span>
+                            {% elif bus.km_restant <= 1000 %}
+                                <span style="color:#eab308;font-weight:bold;">{{ bus.km_restant }} km</span>
+                            {% else %}
+                                <span style="color:#22c55e;">{{ bus.km_restant }} km</span>
+                            {% endif %}
+                        {% else %}
+                            <span style="color:#94a3b8;">-</span>
+                        {% endif %}
+                    </td>
                     <td>
                         <div style="width:90px;height:16px;background:#f1f5f9;border-radius:8px;overflow:hidden;display:inline-block;vertical-align:middle;">
                             <div style="width:100%;height:100%;background:{{ bus.color }};"></div>

@@ -15,4 +15,9 @@ class TrajetDepartForm(FlaskForm):
     nombre_places_occupees = IntegerField('Nombre de places occupées', validators=[DataRequired(), NumberRange(min=0)])
     chauffeur_id = SelectField('Chauffeur', coerce=int, validators=[DataRequired()])
     numero_aed = SelectField('Numéro AED', validators=[DataRequired()])
+    kilometrage_actuel = IntegerField(
+        'Kilométrage actuel du véhicule (km)',
+        validators=[DataRequired(), NumberRange(min=0, max=999999)],
+        render_kw={'placeholder': 'Ex: 15200'}
+    )
     submit = SubmitField('Enregistrer le départ')

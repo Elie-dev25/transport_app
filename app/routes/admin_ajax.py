@@ -12,21 +12,29 @@ bp_ajax = Blueprint('admin_ajax', __name__)
 @bp_ajax.route('/ajouter_bus_ajax', methods=['POST'])
 def ajouter_bus_ajax():
     numero = request.form.get('numero')
-    niveau_carburant = request.form.get('niveau_carburant')
-    niveau_huile = request.form.get('niveau_huile')
-    seuil_critique_huile = request.form.get('seuil_critique_huile')
+    kilometrage = request.form.get('kilometrage')
+    type_huile = request.form.get('type_huile')
+    km_critique_huile = request.form.get('km_critique_huile')
+    km_critique_carburant = request.form.get('km_critique_carburant')
+    date_derniere_vidange = request.form.get('date_derniere_vidange')
     etat_vehicule = request.form.get('etat_vehicule')
     nombre_places = request.form.get('nombre_places')
     derniere_maintenance = request.form.get('derniere_maintenance')
 
-    if not all([numero, niveau_carburant, niveau_huile, seuil_critique_huile, etat_vehicule, nombre_places, derniere_maintenance]):
+    # Tous les champs du formulaire sont requis
+    if not all([
+        numero, kilometrage, type_huile, km_critique_huile, km_critique_carburant,
+        date_derniere_vidange, etat_vehicule, nombre_places, derniere_maintenance
+    ]):
         return jsonify({'success': False, 'message': 'Tous les champs sont obligatoires.'}), 400
 
     nouveau_aed = AED(
         numero=numero,
-        niveau_carburant=float(niveau_carburant),
-        niveau_huile=float(niveau_huile),
-        seuil_critique_huile=float(seuil_critique_huile),
+        kilometrage=int(kilometrage),
+        type_huile=type_huile,
+        km_critique_huile=int(km_critique_huile),
+        km_critique_carburant=int(km_critique_carburant),
+        date_derniere_vidange=datetime.strptime(date_derniere_vidange, '%Y-%m-%d').date(),
         etat_vehicule=etat_vehicule,
         nombre_places=int(nombre_places),
         derniere_maintenance=datetime.strptime(derniere_maintenance, '%Y-%m-%d').date()

@@ -1,0 +1,54 @@
+{# Utilisation :
+   {% set page_title = "Titre de la page" %}
+   {% include "_topbar_admin.html" %}
+#}
+<div class="top-bar" style="display:flex;justify-content:space-between;align-items:center;">
+    <h1 class="page-title">{{ page_title }}</h1>
+    <div class="top-bar-actions" style="display:flex;align-items:center;gap:20px;">
+        <div class="notification-bell" style="position:relative;cursor:pointer;" onclick="toggleNotifications()">
+            <i class="fas fa-bell"></i>
+            <span id="alertCount" class="notification-badge" style="display:none;position:absolute;top:-6px;right:-6px;background:#ef4444;color:#fff;border-radius:50%;padding:2px 6px;font-size:12px;"></span>
+        </div>
+        <div class="user-menu" style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+            <div class="user-avatar">{{ current_user.initials }}</div>
+            <div>
+                <div style="font-weight:600;font-size:14px;">{{ current_user.nom_utilisateur }}</div>
+                <div style="font-size:12px;color:#64748b;">{{ current_user.login }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Panneau notifications -->
+<div id="alertPanel" style="display:none;position:fixed;top:60px;right:25px;z-index:11000;width:300px;background:#fff;border-radius:12px;box-shadow:0 10px 25px rgba(0,0,0,.15);">
+    <ul id="alertList" style="list-style:none;margin:0;padding:10px;"></ul>
+</div>
+
+<script>
+function toggleNotifications(){
+    $('#alertPanel').toggle();
+}
+function refreshAlerts(){
+    $.get('/admin/documents_alerts_ajax', function(resp){
+        if(resp.success){
+            const alerts = resp.alerts || [];
+            $('#alertCount').text(alerts.length);
+            if(alerts.length){
+                $('#alertCount').show();
+                const items = alerts.map(a=>{
+                    const cls = a.status==='RED' ? 'red' : 'orange';
+                    return `<li style=\"margin:8px 0;font-size:14px;\"><span class='indicator ${cls}'></span>Bus ${a.numero_aed} – ${a.type_document}<br><small style='color:#64748b'>${a.reste} restant (exp. ${a.date_expiration})</small></li>`;
+                }).join('');
+                $('#alertList').html(items);
+            }else{
+                $('#alertCount').hide();
+                $('#alertList').html('<li style="padding:10px;color:#64748b">Aucune alerte</li>');
+            }
+        }
+    });
+}
+$(function(){
+    refreshAlerts();
+    setInterval(refreshAlerts, 30000);
+});
+</script>

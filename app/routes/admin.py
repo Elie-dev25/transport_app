@@ -139,6 +139,93 @@ def generer_rapport():
     # Affiche une page temporaire ou un message d'information
     return "Page Générer Rapport en construction."
 
+# Route pour obtenir les détails d'un bus AED en AJAX
+@admin_only
+@bp.route('/details_bus_ajax/<int:bus_id>', methods=['GET'])
+def details_bus_ajax(bus_id):
+    bus = AED.query.get(bus_id)
+    if not bus:
+        return jsonify({'success': False, 'message': 'Bus introuvable.'}), 404
+    data = {
+        'id': bus.id,
+        'numero': bus.numero,
+        'kilometrage': bus.kilometrage,
+        'type_huile': bus.type_huile,
+        'km_critique_huile': bus.km_critique_huile,
+        'km_critique_carburant': bus.km_critique_carburant,
+        'date_derniere_vidange': bus.date_derniere_vidange.strftime('%d/%m/%Y') if bus.date_derniere_vidange else '',
+        'etat_vehicule': bus.etat_vehicule,
+        'nombre_places': bus.nombre_places,
+        'derniere_maintenance': bus.derniere_maintenance.strftime('%d/%m/%Y') if bus.derniere_maintenance else ''
+    }
+    # Récupérer les documents administratifs liés
+    from app.models.document_aed import DocumentAED
+    docs = DocumentAED.query.filter_by(numero_aed=bus.numero).all()
+    docs_data = []
+    for d in docs:
+        if d.date_expiration:
+            pct = ((d.date_expiration - datetime.utcnow().date()).days / max((d.date_expiration - d.date_debut).days, 1)) * 100
+            if pct <= 10:
+                status = 'RED'
+            elif pct <= 30:
+                status = 'ORANGE'
+            else:
+                status = 'GREEN'
+        else:
+            status = 'GREEN'
+        docs_data.append({
+            'type_document': d.type_document,
+            'date_debut': d.date_debut.strftime('%d/%m/%Y'),
+            'date_expiration': d.date_expiration.strftime('%d/%m/%Y') if d.date_expiration else '',
+            'status': status
+        })
+    return jsonify({'success': True, 'bus': data, 'documents': docs_data})
+
+# Route pour ajouter ou mettre à jour un document administratif d'un AED
+@admin_only
+@bp.route('/ajouter_document_aed_ajax/<int:bus_id>', methods=['POST'])
+def ajouter_document_aed_ajax(bus_id):
+    from app.models.document_aed import DocumentAED
+    bus = AED.query.get(bus_id)
+    if not bus:
+        return jsonify({'success': False, 'message': 'Bus introuvable.'}), 404
+    # Accepte JSON ou formulaire url-encodé
+    if request.is_json:
+        data = request.get_json(silent=True) or {}
+    else:
+        data = request.form
+    type_doc = data.get('type_document')
+    date_debut = data.get('date_debut')
+    date_expiration = data.get('date_expiration')
+    from datetime import datetime
+    if not type_doc or not date_debut:
+        return jsonify({'success': False, 'message': 'Champs manquants.'}), 400
+    # convert date strings to date objects
+    try:
+        date_debut_dt = datetime.strptime(date_debut, '%Y-%m-%d').date()
+    except ValueError:
+        return jsonify({'success': False, 'message': 'Date début invalide'}), 400
+    date_exp_dt = None
+    if date_expiration:
+        try:
+            date_exp_dt = datetime.strptime(date_expiration, '%Y-%m-%d').date()
+        except ValueError:
+            return jsonify({'success': False, 'message': 'Date expiration invalide'}), 400
+
+    doc = DocumentAED(
+        numero_aed=bus.numero,
+        type_document=type_doc,
+        date_debut=date_debut_dt,
+        date_expiration=date_exp_dt
+    )
+    try:
+        db.session.add(doc)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+    return jsonify({'success': True, 'message': 'Document ajouté.'})
+
 # Route pour supprimer un bus en AJAX via son id
 @admin_only
 @bp.route('/supprimer_bus_ajax/<int:bus_id>', methods=['POST'])
@@ -146,8 +233,26 @@ def supprimer_bus_ajax(bus_id):
     bus = AED.query.get(bus_id)
     if not bus:
         return jsonify({'success': False, 'message': 'Bus introuvable.'}), 404
-    db.session.delete(bus)
-    db.session.commit()
+
+    # Détacher ce bus de tous les trajets avant suppression pour éviter les contraintes FK.
+    from app.models.trajet import Trajet
+
+    Trajet.query.filter_by(numero_aed=bus.numero).update({'numero_aed': None})
+    db.session.commit()  # Valider le détachement des FK avant suppression
+
+    # Supprimer tous les documents administratifs liés à ce bus
+    from app.models.document_aed import DocumentAED
+    DocumentAED.query.filter_by(numero_aed=bus.numero).delete()
+
+    try:
+        db.session.delete(bus)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        import traceback
+        print('Erreur suppression bus:', traceback.format_exc())
+        return jsonify({'success': False, 'message': f'Erreur serveur : {str(e)}'}), 500
+
     return jsonify({'success': True, 'message': 'Bus supprimé avec succès.'})
 
 # Route pour supprimer un chauffeur en AJAX via son id
@@ -170,12 +275,56 @@ def supprimer_utilisateur_ajax(user_id):
     user = Utilisateur.query.get(user_id)
     if not user:
         return jsonify({'success': False, 'message': 'Utilisateur introuvable.'}), 404
-    db.session.delete(user)
-    db.session.commit()
+
+    # Supprimer les enregistrements dépendants 
+    from app.models.chargetransport import Chargetransport
+    ct = Chargetransport.query.get(user_id)
+    if ct:
+        db.session.delete(ct)
+
+    try:
+        db.session.delete(user)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f'Erreur serveur : {str(e)}'}), 500
+
     return jsonify({'success': True, 'message': 'Utilisateur supprimé avec succès.'})
 
 # Route du tableau de bord mécanicien
 @admin_only
+@bp.route('/documents_alerts_ajax', methods=['GET'])
+@admin_only
+def documents_alerts_ajax():
+    """Retourne les documents dont l'expiration est comprise entre 20% et 30% du temps restant."""
+    from app.models.document_aed import DocumentAED
+    alerts = []
+    today = datetime.utcnow().date()
+    docs = DocumentAED.query.filter(DocumentAED.date_expiration != None).all()
+    for d in docs:
+        total_days = max((d.date_expiration - d.date_debut).days, 1)
+        remaining_days = (d.date_expiration - today).days
+        pct = remaining_days / total_days * 100
+        if pct <= 30:
+            status = 'RED' if pct<=10 else 'ORANGE'
+        # construire durée lisible
+        if remaining_days >= 60:
+            reste = f"{round(remaining_days/30)} mois"
+        elif remaining_days >= 14:
+            reste = f"{round(remaining_days/7)} semaines"
+        else:
+            reste = f"{remaining_days} jours"
+        alerts.append({
+                'type_document': d.type_document,
+                'numero_aed': d.numero_aed,
+                'date_expiration': d.date_expiration.strftime('%d/%m/%Y'),
+                'pourcentage_restant': round(pct,1),
+                'reste': reste,
+                'status': status
+            })
+    return jsonify({'success': True, 'alerts': alerts})
+
+
 @bp.route('/dashboard_mecanicien')
 def dashboard_mecanicien():
     from app.models.aed import AED

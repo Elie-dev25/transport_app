@@ -3,8 +3,23 @@
 
 {% block head %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard_admin.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modale.css') }}">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+      .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);align-items:center;justify-content:center;z-index:9999;}
+#docFormModal{z-index:10000;}
+      .modal.show{display:flex;}
+      .modal-content{background:#fff;border-radius:10px;padding:20px;box-shadow:0 4px 24px rgba(0,0,0,0.2);max-height:80%;overflow:auto;}
+      .details-list{list-style:none;padding:0;margin:0;}
+      .details-list li{margin:6px 0;}
+      .indicator{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:6px;}
+      .green{background:#10b981;}
+      .orange{background:#f59e0b;}
+      .red{background:#ef4444;}
+      .close-btn{background:none;border:none;font-size:24px;cursor:pointer;}
+    </style>
 {% endblock %}
 
 {% block content %}
@@ -14,76 +29,34 @@
 </button>
 
 <!-- Overlay -->
+
+
+    
+<!-- Panel -->
+<div id="alertPanel" style="display:none;position:fixed;top:60px;right:25px;z-index:11000;width:300px;background:#fff;border-radius:12px;box-shadow:0 10px 25px rgba(0,0,0,.15);">
+    <ul id="alertList" style="list-style:none;margin:0;padding:10px;"></ul>
+</div>
 <div class="overlay" onclick="toggleSidebar()"></div>
 
 <!-- Sidebar -->
-<div class="sidebar" id="sidebar">
-    <div class="sidebar-header">
-        <div class="logo">UDM</div>
-        <div class="admin-info">
-            <h2>Admin Panel</h2>
-            <p>Transport Universitaire</p>
-        </div>
-    </div>
-    <nav class="nav-menu">
-        <div class="nav-item">
-            <a href="{{ url_for('admin.dashboard') }}" class="nav-link {% if active_page == 'accueil' %}active{% endif %}">
-                <i class="fas fa-tachometer-alt"></i>
-                Accueil
-            </a>
-        </div>
-        <div class="nav-item">
-            <a href="{{ url_for('admin.bus') }}" class="nav-link {% if active_page == 'bus' %}active{% endif %}">
-                <i class="fas fa-bus"></i>
-                Bus AED
-            </a>
-        </div>
-        <div class="nav-item">
-            <a href="{{ url_for('admin.chauffeurs') }}" class="nav-link {% if active_page == 'chauffeurs' %}active{% endif %}">
-                <i class="fas fa-user-tie"></i>
-                Chauffeurs
-            </a>
-        </div>
-        <div class="nav-item">
-            <a href="{{ url_for('admin.utilisateurs') }}" class="nav-link {% if active_page == 'utilisateurs' %}active{% endif %}">
-                <i class="fas fa-users"></i>
-                Utilisateurs
-            </a>
-        </div>
-        <div class="nav-item">
-            <a href="{{ url_for('admin.rapports') }}" class="nav-link {% if active_page == 'rapports' %}active{% endif %}">
-                <i class="fas fa-chart-bar"></i>
-                Rapports
-            </a>
-        </div>
-        <div class="nav-item">
-            <a href="{{ url_for('admin.parametres') }}" class="nav-link {% if active_page == 'parametres' %}active{% endif %}">
-                <i class="fas fa-cog"></i>
-                Paramètres
-            </a>
-        </div>
-        <div class="nav-item" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
-            <a href="{{ url_for('auth.logout') }}" class="nav-link">
-                <i class="fas fa-sign-out-alt"></i>
-                Déconnexion
-            </a>
-        </div>
-    </nav>
-</div>
+{% include '_sidebar_admin.html' %}
 
 <div class="main-content">
-    <div class="top-bar">
-        <h1 class="page-title">Liste des Bus AED</h1>
-        <a href="#" id="openAddBusModal" class="submit-btn" style="width:auto;min-width:unset;padding:10px 24px;font-size:15px;">+ Ajouter un Bus</a>
-    </div>
+    {% set page_title = 'Liste des Bus AED' %}
+{% include '_topbar_admin.html' %}
+
+               
+
     <div class="dashboard-content">
         <table style="width:100%;background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(30,64,175,0.07);overflow:hidden;">
             <thead style="background:linear-gradient(90deg,#1e3a8a,#2563eb);color:#fff;">
                 <tr>
                     <th style="padding:14px;">Numéro</th>
-                    <th>Carburant</th>
-                    <th>Huile</th>
-                    <th>Seuil Huile</th>
+                    <th>Kilométrage</th>
+                    <th>Type Huile</th>
+                    <th>Km Critique Huile</th>
+                    <th>Km Critique Carburant</th>
+                    <th>Dernière Vidange</th>
                     <th>État</th>
                     <th>Places</th>
                     <th>Dernière maintenance</th>
@@ -93,49 +66,220 @@
             <tbody>
                 {% for bus in bus_list %}
                 <tr style="text-align:center;">
-                    <td style="padding:10px 0;">{{ bus.numero }}</td>
-                    <td>{{ bus.niveau_carburant }}</td>
-                    <td>{{ bus.niveau_huile }}</td>
-                    <td>{{ bus.seuil_critique_huile }}</td>
+                    <td style="padding:10px 0;">
+                        {{ bus.numero }}
+                        {% if not bus.kilometrage or not bus.type_huile or not bus.km_critique_huile or not bus.km_critique_carburant or not bus.date_derniere_vidange %}
+                            <i class="fas fa-exclamation-triangle" style="color:#f59e0b;margin-left:5px;" title="Données incomplètes - Nécessite mise à jour"></i>
+                        {% endif %}
+                    </td>
+                    <td>{{ bus.kilometrage if bus.kilometrage else '-' }} {{ 'km' if bus.kilometrage else '' }}</td>
+                    <td>{{ bus.type_huile if bus.type_huile else '-' }}</td>
+                    <td>{{ bus.km_critique_huile if bus.km_critique_huile else '-' }} {{ 'km' if bus.km_critique_huile else '' }}</td>
+                    <td>{{ bus.km_critique_carburant if bus.km_critique_carburant else '-' }} {{ 'km' if bus.km_critique_carburant else '' }}</td>
+                    <td>{{ bus.date_derniere_vidange.strftime('%d/%m/%Y') if bus.date_derniere_vidange else '-' }}</td>
                     <td>{{ bus.etat_vehicule }}</td>
                     <td>{{ bus.nombre_places }}</td>
                     <td>{{ bus.derniere_maintenance.strftime('%d/%m/%Y') if bus.derniere_maintenance else '' }}</td>
                     <td>
+                        <button class="view-bus-btn" data-id="{{ bus.id }}" title="Détails" style="background:none;border:none;cursor:pointer;margin-right:6px;">
+                            <i class="fas fa-eye" style="color:#2563eb;font-size:18px;"></i>
+                        </button>
                         <button class="delete-bus-btn" data-id="{{ bus.id }}" title="Supprimer" style="background:none;border:none;cursor:pointer;">
                             <i class="fas fa-trash" style="color:#ef4444;font-size:18px;"></i>
                         </button>
                     </td>
                 </tr>
                 {% else %}
-                <tr><td colspan="8" style="padding:20px;color:#64748b;">Aucun bus enregistré.</td></tr>
+                <tr><td colspan="10" style="padding:20px;color:#64748b;">Aucun bus enregistré.</td></tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 </div>
+
+<!-- Modal formulaire document -->
+<div id="docFormModal" class="modal">
+  <div class="modal-content" style="max-width:500px;">
+    <div class="modal-header"><h3>Ajouter un document administratif</h3><button type="button" id="closeDocFormModal" class="close-btn">&times;</button></div>
+    <div class="modal-body">
+      <form id="docForm">
+        <div class="form-group">
+          <label>Type de document</label>
+          <select name="type_document" required>
+            <option value="">-- Choisir --</option>
+            <option value="ASSURANCE">Assurance</option>
+            <option value="VISITE_TECHNIQUE">Visite Technique</option>
+            <option value="VIGNETTE">Vignette</option>
+            <option value="FICHE_TECHNIQUE">Fiche Technique</option>
+            <option value="CARTE_GRISE">Carte Grise</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Date début</label><input type="date" name="date_debut" required></div>
+        <div class="form-group" id="dateExpGroup"><label>Date expiration</label><input type="date" name="date_expiration"></div>
+        <div style="text-align:right;margin-top:12px;">
+          <button type="submit" class="submit-btn">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal détails bus -->
+<div id="busDetailsModal" class="modal">
+  <div class="modal-content" style="max-width:500px;">
+    <div class="modal-header">
+      <h3>Détails du Bus</h3>
+      <button type="button" id="closeBusDetailsModal" class="close-btn">&times;</button>
+    </div>
+    <div class="modal-body" id="busDetailsBody">
+      <!-- Contenu injecté via JS -->
+    </div>
+  </div>
+</div>
+
 <!-- Réutilise la modale d'ajout de bus du dashboard -->
 <script>
+
 $(function() {
-  $('.delete-bus-btn').on('click', function(e) {
+  // Gestion des alertes de documents
+  function refreshAlerts(){
+      $.get('/admin/documents_alerts_ajax', function(resp){
+          if(resp.success){
+              const alerts = resp.alerts || [];
+              $('#alertCount').text(alerts.length);
+              if(alerts.length){
+                  $('#alertCount').show();
+                  const items = alerts.map(a=>{
+                      const cls = a.status==='RED' ? 'red' : 'orange';
+                      return `<li style="margin:8px 0;font-size:14px;"><span class='indicator ${cls}'></span>Bus ${a.numero_aed} – ${a.type_document}<br><small style='color:#64748b'>${a.reste} restant (exp. ${a.date_expiration})</small></li>`;
+                  }).join('');
+                  $('#alertList').html(items);
+              }else{
+                  $('#alertCount').hide();
+                  $('#alertList').html('<li style="padding:10px;color:#64748b">Aucune alerte</li>');
+              }
+          }
+      });
+  }
+  refreshAlerts();
+  setInterval(refreshAlerts, 30000);
+  $('.notification-bell').on('click', function(){ $('#alertPanel').toggle(); });
+  $(document).on('click', '.delete-bus-btn', function(e) {
     e.preventDefault();
     const busId = $(this).data('id');
-    if (confirm('Voulez-vous vraiment supprimer ce bus ?')) {
-      $.ajax({
-        url: '/admin/supprimer_bus_ajax/' + busId,
-        method: 'POST',
-        success: function(resp) {
-          if (resp.success) {
-            location.reload();
-          } else {
-            alert(resp.message || 'Erreur lors de la suppression');
+    Swal.fire({
+      title: 'Êtes-vous sûr ?',
+      text: "Cette action est irréversible !",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Oui, supprimer',
+      cancelButtonText: 'Annuler'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        $.ajax({
+          url: '/admin/supprimer_bus_ajax/' + busId,
+          method: 'POST',
+          success: function(resp) {
+            if (resp.success) {
+              location.reload();
+            } else {
+              alert(resp.message || 'Erreur lors de la suppression');
+            }
+          },
+          error: function() {
+            alert('Erreur lors de la suppression');
           }
-        },
-        error: function() {
-          alert('Erreur lors de la suppression');
-        }
-      });
-    }
+        });
+      }
+    });
   });
+
+  $(document).on('click', '.view-bus-btn', function(e) {
+    e.preventDefault();
+    const busId = $(this).data('id');
+    window.selectedBusId = busId;
+    $.ajax({
+      url: '/admin/details_bus_ajax/' + busId,
+      method: 'GET',
+      success: function(resp) {
+        if (resp.success) {
+          const b = resp.bus;
+          let docsHtml = '';
+          if(resp.documents && resp.documents.length){
+            docsHtml = '<h4 style="margin-top:12px;">Documents administratifs</h4>'+
+                        '<table style="width:100%;border-collapse:collapse;font-size:14px;margin-top:6px;">'+
+                        '<thead><tr style="background:#f3f4f6;"><th style="padding:6px 8px;text-align:left;">Type</th><th style="padding:6px 8px;text-align:left;">Début</th><th style="padding:6px 8px;text-align:left;">Expiration</th></tr></thead><tbody>'+
+                        resp.documents.map(d=>{
+                            let cls='green';
+                            if(d.status==='ORANGE') cls='orange';
+                            else if(d.status==='RED') cls='red';
+                            return `<tr><td style='padding:6px 8px;'><span class='indicator ${cls}'></span>${d.type_document}</td><td style='padding:6px 8px;'>${d.date_debut}</td><td style='padding:6px 8px;'>${d.date_expiration}</td></tr>`;
+                        }).join('')+
+                        '</tbody></table>';
+          }else{
+            docsHtml = '<p style="margin-top:12px;color:#64748b;">Aucun document administratif enregistré.</p>';
+          }
+          const html = `<ul class="details-list">
+              <li><strong>Numéro :</strong> ${b.numero}</li>
+              <li><strong>Kilométrage :</strong> ${b.kilometrage || '-'} ${b.kilometrage ? 'km' : ''}</li>
+              <li><strong>Type d'huile :</strong> ${b.type_huile || '-'}</li>
+              <li><strong>Km critique huile :</strong> ${b.km_critique_huile || '-'} ${b.km_critique_huile ? 'km' : ''}</li>
+              <li><strong>Km critique carburant :</strong> ${b.km_critique_carburant || '-'} ${b.km_critique_carburant ? 'km' : ''}</li>
+              <li><strong>Dernière vidange :</strong> ${b.date_derniere_vidange || '-'}</li>
+              <li><strong>État :</strong> ${b.etat_vehicule}</li>
+              <li><strong>Places :</strong> ${b.nombre_places}</li>
+              <li><strong>Dernière maintenance :</strong> ${b.derniere_maintenance || '-'}</li>
+            </ul>${docsHtml}
+            <div style="text-align:right;margin-top:16px;">
+              <button id="updateAdminBtn" class="submit-btn" style="padding:8px 16px;">Mettre à jour</button>
+            </div>`;
+          $('#busDetailsBody').html(html);
+          // attach click after injection
+          $('#updateAdminBtn').on('click', function(){
+            $('#busDetailsModal').removeClass('show');
+            $('#docFormModal').addClass('show');
+          });
+          $('#busDetailsModal').addClass('show');
+        } else {
+          Swal.fire('Erreur', resp.message || 'Impossible de charger les détails', 'error');
+        }
+      },
+      error: function() {
+        Swal.fire('Erreur', 'Impossible de charger les détails', 'error');
+      }
+    });
+  });
+  // Soumission formulaire document
+  // Masquer la date de fin si Carte Grise
+$('select[name="type_document"]').on('change', function(){
+  if($(this).val()==='CARTE_GRISE'){
+    $('#dateExpGroup').hide();
+    $('#dateExpGroup input').val('');
+  }else{
+    $('#dateExpGroup').show();
+  }
+}).trigger('change');
+
+$('#docForm').on('submit', function(e){
+    e.preventDefault();
+    const formData = $(this).serialize();
+    $.post('/admin/ajouter_document_aed_ajax/'+window.selectedBusId, formData, function(resp){
+      if(resp.success){
+        Swal.fire('Succès', resp.message, 'success');
+        $('#docFormModal').removeClass('show');
+      }else{
+        Swal.fire('Erreur', resp.message, 'error');
+      }
+    });
+  });
+
+  $('#closeDocFormModal').on('click', function(){ $('#docFormModal').removeClass('show'); });
+
+  // Gestion de la fermeture du modal détails
+  $('#closeBusDetailsModal').on('click', function(){ $('#busDetailsModal').removeClass('show'); });
+  $('#busDetailsModal').on('click', function(e){ if(e.target === this){ $(this).removeClass('show'); }});
 });
 </script>
 {% endblock %}

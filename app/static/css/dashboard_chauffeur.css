@@ -11,7 +11,7 @@ body {
     overflow-x: hidden;
 }
 
-/* Sidebar */
+/* Sidebar styles déplacés vers sidebar.css */
 .sidebar {
     position: fixed;
     left: 0;
@@ -538,7 +538,7 @@ body {
     min-width: 60px;
 }
 
-/* Trafic Étudiants */
+/* Trafic Étudiants styles déplacés vers student_trafic.css */
 .trafic-section {
     background: #ffffff;
     border-radius: 20px;

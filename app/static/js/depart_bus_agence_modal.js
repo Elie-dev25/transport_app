@@ -1,11 +1,11 @@
-// AJAX submit for Départ Bus Agence modal
-
 document.addEventListener('DOMContentLoaded', function() {
-    const openBtn = document.getElementById('openDepartBusAgenceModal');
-    const modal = document.getElementById('departBusAgenceModal');
-    const closeBtn = document.getElementById('closeDepartBusAgenceModal');
-    const form = document.getElementById('departBusAgenceForm');
-    const feedback = document.getElementById('departBusAgenceFeedback');
+// AJAX submit for Départ Prestataire modal
+
+    const openBtn = document.getElementById('openDepartPrestataireModal');
+    const modal = document.getElementById('departPrestataireModal');
+    const closeBtn = document.getElementById('closeDepartPrestataireModal');
+    const form = document.getElementById('departPrestataireForm');
+    const feedback = document.getElementById('departPrestataireFeedback');
 
     if (openBtn) {
         openBtn.addEventListener('click', function(e) {

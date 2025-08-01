@@ -1,6 +1,6 @@
 from app.database import db
 from app.models.chargetransport import Chargetransport  # Assure la déclaration de la table pour les FK
-from app.models.busagence import Busagence
+from app.models.prestataire import Prestataire
 from datetime import datetime
 
 class Trajet(db.Model):
@@ -12,7 +12,7 @@ class Trajet(db.Model):
     nombre_places_occupees = db.Column(db.Integer, nullable=False)
     chauffeur_id = db.Column(db.Integer, db.ForeignKey('chauffeur.chauffeur_id'), nullable=True)
     numero_aed = db.Column(db.String(50), db.ForeignKey('aed.numero'))
-    immat_bus = db.Column(db.String(20), db.ForeignKey('busagence.immatriculation'))
+    immat_bus = db.Column(db.String(20), db.ForeignKey('prestataire.immatriculation'))
     enregistre_par = db.Column(db.Integer, db.ForeignKey('chargetransport.chargetransport_id'), nullable=False)
 
     # Relation pour accéder au chargé de transport

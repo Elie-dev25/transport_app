@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.aed-only').forEach(el => {
             el.style.display = 'none';
         });
-        document.querySelectorAll('.agence-only').forEach(el => {
+        document.querySelectorAll('.prestataire-only').forEach(el => {
             el.style.display = 'none';
         });
         // Afficher uniquement ceux du type sélectionné
@@ -52,8 +52,8 @@ document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.aed-only').forEach(el => {
                 el.style.display = '';
             });
-        } else if (typeBus === 'AGENCE') {
-            document.querySelectorAll('.agence-only').forEach(el => {
+        } else if (typeBus === 'PRESTATAIRE') {
+            document.querySelectorAll('.prestataire-only').forEach(el => {
                 el.style.display = '';
             });
         }

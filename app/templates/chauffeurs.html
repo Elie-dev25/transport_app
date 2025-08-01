@@ -17,45 +17,14 @@
 <div class="overlay" onclick="toggleSidebar()"></div>
 
 <!-- Sidebar -->
-<div class="sidebar" id="sidebar">
-    <div class="sidebar-header">
-        <div class="logo">UDM</div>
-        <div class="admin-info">
-            <h2>Admin Panel</h2>
-            <p>Transport Universitaire</p>
-        </div>
-    </div>
-    <nav class="nav-menu">
-        <div class="nav-item">
-            <a href="{{ url_for('admin.dashboard') }}" class="nav-link {% if active_page == 'accueil' %}active{% endif %}"><i class="fas fa-tachometer-alt"></i> Accueil</a>
-        </div>
-        <div class="nav-item">
-            <a href="{{ url_for('admin.bus') }}" class="nav-link {% if active_page == 'bus' %}active{% endif %}"><i class="fas fa-bus"></i> Bus AED</a>
-        </div>
-        <div class="nav-item">
-            <a href="{{ url_for('admin.chauffeurs') }}" class="nav-link {% if active_page == 'chauffeurs' %}active{% endif %}"><i class="fas fa-user-tie"></i> Chauffeurs</a>
-        </div>
-        <div class="nav-item">
-            <a href="{{ url_for('admin.utilisateurs') }}" class="nav-link {% if active_page == 'utilisateurs' %}active{% endif %}"><i class="fas fa-users"></i> Utilisateurs</a>
-        </div>
-        <div class="nav-item">
-            <a href="{{ url_for('admin.rapports') }}" class="nav-link {% if active_page == 'rapports' %}active{% endif %}"><i class="fas fa-chart-bar"></i> Rapports</a>
-        </div>
-        <div class="nav-item">
-            <a href="{{ url_for('admin.parametres') }}" class="nav-link {% if active_page == 'parametres' %}active{% endif %}"><i class="fas fa-cog"></i> Paramètres</a>
-        </div>
-        <div class="nav-item" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
-            <a href="{{ url_for('auth.logout') }}" class="nav-link"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
-        </div>
-    </nav>
-</div>
+{% include '_sidebar_admin.html' %}
 
 <div class="main-content">
-    <div class="top-bar">
-        <h1 class="page-title">Liste des Chauffeurs</h1>
-        <a href="#" id="openAddChauffeurModal" class="submit-btn" style="width:auto;min-width:unset;padding:10px 24px;font-size:15px;">+ Nouveau Chauffeur</a>
-    </div>
+    {% set page_title = 'Liste des Chauffeurs' %}
+    {% include '_topbar_admin.html' %}
     <div class="dashboard-content">
+
+        
         <table style="width:100%;background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(30,64,175,0.07);overflow:hidden;">
             <thead style="background:linear-gradient(90deg,#1e3a8a,#2563eb);color:#fff;">
                 <tr>

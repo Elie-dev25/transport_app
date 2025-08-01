@@ -54,7 +54,7 @@
   border-color: #00c04e;
 }
 
-/* Sidebar */
+/* Sidebar styles déplacés vers sidebar.css */
         .sidebar {
             position: fixed;
             left: 0;

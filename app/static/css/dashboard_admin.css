@@ -4,14 +4,20 @@
             box-sizing: border-box;
         }
 
+        html {
+            height: auto !important;
+            overflow-y: auto !important;
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #f8fbff 0%, #e8f4f8 100%);
             color: #2c3e50;
             overflow-x: hidden;
+            overflow-y: auto;
         }
 
-        /* Sidebar */
+        /* Sidebar styles déplacés vers sidebar.css */
         .sidebar {
             position: fixed;
             left: 0;
@@ -107,8 +113,11 @@
         /* Main Content */
         .main-content {
             margin-left: 280px;
-            min-height: 100vh;
+            padding-top: 100px;
+            height: auto;
+            overflow-y: visible;
             transition: margin-left 0.3s ease;
+            margin-top: 0 !important;
         }
 
         /* Top Bar */
@@ -119,9 +128,11 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            position: sticky;
+            position: fixed;
+            left: 280px;
             top: 0;
-            z-index: 900;
+            width: calc(100% - 280px);
+            z-index: 1200;
         }
 
         .page-title {
@@ -268,7 +279,8 @@
 
         /* Dashboard Content */
         .dashboard-content {
-            padding: 30px;
+            padding: 8px 24px 24px 24px;
+            margin-top: 0 !important;
         }
 
         .stats-grid {
@@ -420,7 +432,7 @@
             font-size: 20px;
         }
 
-        /* Trafic Étudiants */
+        /* Trafic Étudiants styles déplacés vers student_trafic.css */
         .trafic-section {
             background: #ffffff;
             border-radius: 20px;
