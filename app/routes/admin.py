@@ -1,3 +1,4 @@
+
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from app.models.aed import AED
 from app.database import db  # Ajout de l'import manquant
@@ -325,8 +326,19 @@ def documents_alerts_ajax():
     return jsonify({'success': True, 'alerts': alerts})
 
 
-@bp.route('/dashboard_mecanicien')
 def dashboard_mecanicien():
     from app.models.aed import AED
     bus_list = AED.query.order_by(AED.numero).all()
     return render_template('dashboard_mecanicien.html', bus_list=bus_list)
+
+# Route pour la page Vidange
+@admin_only
+@bp.route('/vidange')
+def vidange():
+    return render_template('vidange.html')
+
+# Route pour la page Carburation
+@admin_only
+@bp.route('/carburation')
+def carburation():
+    return render_template('carburation.html')

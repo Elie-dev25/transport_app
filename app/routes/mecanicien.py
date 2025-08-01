@@ -12,20 +12,25 @@ def dashboard():
     bus_list = AED.query.order_by(AED.numero).all()
     bus_infos = []
     for bus in bus_list:
-        niveau = bus.niveau_huile
-        seuil = bus.seuil_critique_huile
-        if niveau == seuil:
-            color = '#ef4444'  # rouge
-        elif seuil - 40 <= niveau < seuil:
-            color = '#eab308'  # jaune
+        niveau = bus.kilometrage or 0
+        seuil = bus.km_critique_huile or 0
+        if seuil > 0:
+            if niveau >= seuil:
+                color = '#ef4444'  # rouge
+            elif seuil - 500 <= niveau < seuil:
+                color = '#eab308'  # jaune
+            else:
+                color = '#22c55e'  # vert
         else:
-            color = '#22c55e'  # vert
+            color = '#22c55e'  # vert par défaut si pas de seuil
+        km_restant = (bus.km_critique_huile or 0) - (bus.kilometrage or 0)
         bus_infos.append({
             'id': bus.id,
             'numero': bus.numero,
             'etat_vehicule': bus.etat_vehicule,
-            'niveau_huile': bus.niveau_huile,
-            'seuil_critique_huile': bus.seuil_critique_huile,
+            'kilometrage': bus.kilometrage,
+            'km_critique_huile': bus.km_critique_huile,
+            'km_restant': km_restant,
             'color': color
         })
     return render_template('dashboard_mecanicien.html', bus_list=bus_infos)

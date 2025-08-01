@@ -1,0 +1,24 @@
+{% extends "layout.html" %}
+{% block title %}Vidange{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard_admin.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modale.css') }}">
+{% endblock %}
+
+{% block content %}
+<!-- Sidebar -->
+{% include '_sidebar_admin.html' %}
+
+<div class="main-content">
+    {% set page_title = 'Gestion des Vidanges' %}
+    {% include '_topbar_admin.html' %}
+    <div class="dashboard-content">
+        <h2 class="section-title"><i class="fas fa-oil-can"></i> Gestion des Vidanges</h2>
+        <div style="background:#fff;padding:32px 24px;border-radius:12px;box-shadow:0 4px 24px rgba(30,64,175,0.07);margin-top:18px;">
+            <p style="color:#64748b;font-size:18px;">Bienvenue sur la page de gestion des vidanges. Ici, vous pourrez consulter, planifier et enregistrer les opérations de vidange pour chaque bus AED.</p>
+            <!-- Contenu à compléter selon besoins -->
+        </div>
+    </div>
+</div>
+{% endblock %}
