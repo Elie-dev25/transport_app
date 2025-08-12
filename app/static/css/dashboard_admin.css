@@ -1,3 +1,15 @@
+/* Voyants colorés pour états (ex: vidange, alertes) */
+.indicator {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+.green { background: #10b981; }
+.orange { background: #f59e0b; }
+.red { background: #ef4444; }
 * {
             margin: 0;
             padding: 0;

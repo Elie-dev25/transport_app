@@ -3,6 +3,8 @@
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from app.models.aed import AED
+from app.models.vidange import Vidange
+from app.services.gestion_vidange import get_vidange_history
 from app.database import db  # Ajout de l'import manquant
 from datetime import datetime
 
@@ -399,14 +401,52 @@ def dashboard_mecanicien():
     bus_list = AED.query.order_by(AED.numero).all()
     return render_template('dashboard_mecanicien.html', bus_list=bus_list)
 
-# Route pour la page Vidange
+
+
 @admin_only
 @bp.route('/vidange')
 def vidange():
-    return render_template('vidange.html')
+    # --- Tableau d'état vidange ---
+    bus_list = AED.query.order_by(AED.numero).all()
+    bus_vidange = []
+    for bus in bus_list:
+        voyant = 'green'
+        if bus.kilometrage is not None and bus.km_critique_huile is not None:
+            seuil = 0.1 * (bus.km_critique_huile - (bus.kilometrage or 0))
+            reste = (bus.km_critique_huile or 0) - (bus.kilometrage or 0)
+            if reste <= 0:
+                voyant = 'red'
+            elif reste <= seuil:
+                voyant = 'orange'
+        bus_vidange.append({
+            'id': bus.id,
+            'numero': bus.numero,
+            'kilometrage': bus.kilometrage,
+            'km_critique_huile': bus.km_critique_huile,
+            'date_derniere_vidange': bus.date_derniere_vidange,
+            'voyant': voyant
+        })
+
+    # --- Historique des vidanges ---
+    # Récupérer tous les numéros AED distincts pour le filtre
+    numeros_aed = [bus.numero for bus in bus_list]
+    selected_numero = request.args.get('numero_aed')
+    if selected_numero:
+        historique_vidange = get_vidange_history(selected_numero)
+    else:
+        historique_vidange = get_vidange_history()
+
+    return render_template(
+        'vidange.html',
+        active_page='vidange',
+        bus_vidange=bus_vidange,
+        historique_vidange=historique_vidange,
+        numeros_aed=numeros_aed,
+        selected_numero=selected_numero
+    )
 
 # Route pour la page Carburation
 @admin_only
 @bp.route('/carburation')
 def carburation():
-    return render_template('carburation.html')
+    return render_template('carburation.html', active_page='carburation')

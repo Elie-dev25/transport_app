@@ -1,0 +1,406 @@
+/* Bouton action spécifique pour la page vidange */
+.action-btn {
+    padding: 6px 14px;
+    font-size: 13px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+    color: #fff;
+    border: none;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(30, 64, 175, 0.08);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.2s, transform 0.2s;
+}
+
+.action-btn i {
+    font-size: 15px;
+    margin-right: 4px;
+}
+
+.action-btn:hover {
+    background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+    transform: translateY(-2px) scale(1.04);
+    color: #fff;
+}
+/* Ligne d'en-tête bleue pour la liste AED (pour <tr>) */
+.aed-list-title-row {
+    background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%) !important;
+}
+/* Styles spécifiques pour la page Vidange */
+/* .vidange-container {
+    background: #ffffff;
+    padding: 32px 24px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(30, 64, 175, 0.07);
+    margin-top: 18px;
+    border: 1px solid rgba(59, 130, 246, 0.05);
+    transition: all 0.3s ease;
+} */
+ 
+/* .vidange-container:hover {
+    box-shadow: 0 15px 40px rgba(30, 64, 175, 0.12);
+    transform: translateY(-2px);
+} */
+
+/* .vidange-welcome {
+    color: #64748b;
+    font-size: 18px;
+    line-height: 1.6;
+    margin-bottom: 24px;
+    padding: 20px;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    border-radius: 12px;
+    border-left: 4px solid #01D758;
+    position: relative;
+} */
+
+/* .vidange-welcome::before {
+    content: '🛢️';
+    position: absolute;
+    left: -10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #ffffff;
+    padding: 8px;
+    border-radius: 50%;
+    box-shadow: 0 4px 12px rgba(1, 215, 88, 0.2);
+} */
+
+/* Tableaux améliorés */
+.vidange-table {
+    width: 100%;
+    margin-top: 24px;
+    background: #f9fafb;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(59, 130, 246, 0.1);
+}
+
+
+.vidange-table thead {
+    background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+}
+
+/* Titre bleu spécifique pour la liste AED */
+.aed-list-title {
+    background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%) !important;
+    color: #fff !important;
+    border-radius: 16px 16px 0 0;
+    padding: 18px 16px;
+    font-size: 18px;
+    font-weight: 700;
+    text-align: center;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    box-shadow: 0 2px 8px rgba(30, 64, 175, 0.08);
+}
+
+.vidange-table th {
+    padding: 18px 16px;
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-align: center;
+    position: relative;
+}
+
+.vidange-table th:first-child {
+    text-align: left;
+}
+
+.vidange-table th::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 2px;
+    background: #01D758;
+    transition: width 0.3s ease;
+}
+
+.vidange-table th:hover::after {
+    width: 60%;
+}
+
+.vidange-table tbody tr {
+    text-align: center;
+    transition: all 0.3s ease;
+    border-bottom: 1px solid rgba(59, 130, 246, 0.05);
+}
+
+.vidange-table tbody tr:hover {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    transform: scale(1.01);
+    box-shadow: 0 4px 15px rgba(245, 158, 11, 0.15);
+}
+
+.vidange-table tbody tr:nth-child(even) {
+    background: rgba(59, 130, 246, 0.02);
+}
+
+.vidange-table tbody tr:nth-child(even):hover {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+}
+
+.vidange-table td {
+    padding: 16px;
+    color: #374151;
+    font-weight: 500;
+    vertical-align: middle;
+}
+
+.vidange-table td:first-child {
+    text-align: left;
+    font-weight: 600;
+    color: #1e40af;
+}
+
+/* Indicateurs d'état améliorés */
+.vidange-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.vidange-indicator .indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 0;
+    vertical-align: middle;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.8);
+    animation: pulse 2s infinite;
+}
+
+.vidange-indicator.green {
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    color: #065f46;
+    border: 1px solid #10b981;
+}
+
+.vidange-indicator.green .indicator {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3);
+}
+
+.vidange-indicator.orange {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    color: #92400e;
+    border: 1px solid #f59e0b;
+}
+
+.vidange-indicator.orange .indicator {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.3);
+}
+
+.vidange-indicator.red {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    color: #991b1b;
+    border: 1px solid #ef4444;
+}
+
+.vidange-indicator.red .indicator {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.3);
+}
+
+/* Section historique */
+.historique-section {
+    margin-top: 05px;
+}
+
+.historique-section .section-title {
+    margin-bottom: 24px;
+    color: #1e40af;
+    font-size: 24px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.historique-section .section-title i {
+    color: #01D758;
+    font-size: 22px;
+}
+
+/* Filtre amélioré */
+.vidange-filter {
+    margin-bottom: 24px;
+    padding: 20px;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    border-radius: 16px;
+    border: 1px solid rgba(59, 130, 246, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.vidange-filter label {
+    font-weight: 600;
+    color: #374151;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.vidange-filter label i {
+    color: #1e40af;
+    font-size: 16px;
+}
+
+.vidange-filter select {
+    padding: 10px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 14px;
+    background: #ffffff;
+    color: #374151;
+    transition: all 0.3s ease;
+    font-family: inherit;
+    min-width: 150px;
+    cursor: pointer;
+}
+
+.vidange-filter select:focus {
+    border-color: #1e40af;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+    transform: translateY(-1px);
+}
+
+.vidange-filter select:hover {
+    border-color: #9ca3af;
+}
+
+/* Message d'état vide */
+.empty-state {
+    color: #64748b;
+    padding: 40px 16px;
+    text-align: center;
+    font-style: italic;
+    background: rgba(100, 116, 139, 0.05);
+    border-radius: 12px;
+    border: 2px dashed rgba(100, 116, 139, 0.2);
+    margin: 20px 0;
+}
+
+.empty-state::before {
+    content: '📋';
+    display: block;
+    font-size: 32px;
+    margin-bottom: 12px;
+    opacity: 0.6;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .vidange-container {
+        padding: 20px 16px;
+        margin: 16px;
+    }
+    
+    .vidange-table {
+        font-size: 14px;
+    }
+    
+    .vidange-table th,
+    .vidange-table td {
+        padding: 12px 8px;
+    }
+    
+    .vidange-filter {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+    
+    .vidange-filter select {
+        width: 100%;
+    }
+    
+    .vidange-indicator {
+        font-size: 12px;
+        padding: 4px 8px;
+    }
+}
+
+/* Animations */
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(255, 255, 255, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+    }
+}
+
+/* Hover effects pour les tableaux */
+.vidange-table tbody tr:hover td {
+    color: #1e40af;
+    font-weight: 600;
+}
+
+.vidange-table tbody tr:hover td:first-child {
+    color: #01D758;
+}
+
+/* Styles pour les données importantes */
+.kilometrage-data {
+    font-weight: 600;
+    color: #1e40af;
+    background: rgba(30, 64, 175, 0.05);
+    padding: 4px 8px;
+    border-radius: 6px;
+    display: inline-block;
+}
+
+.date-data {
+    color: #059669;
+    font-weight: 500;
+}
+
+.type-huile-data {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    color: #92400e;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Effet de survol pour les conteneurs */
+.vidange-container:hover .vidange-welcome {
+    border-left-color: #01D758;
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+}
+
+/* Transition pour tous les éléments interactifs */
+.vidange-container * {
+    transition: all 0.3s ease;
+} 

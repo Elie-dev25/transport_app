@@ -2,22 +2,101 @@
 {% block title %}Vidange{% endblock %}
 
 {% block head %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard_admin.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/modale.css') }}">
+ <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+ <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard_admin.css') }}">
+ <link rel="stylesheet" href="{{ url_for('static', filename='css/vidange.css') }}">
+ <link rel="stylesheet" href="{{ url_for('static', filename='css/modale.css') }}">
 {% endblock %}
+
 
 {% block content %}
 <!-- Sidebar -->
 {% include '_sidebar_admin.html' %}
 
-<div class="main-content">
+<div class="main-content vidange-container">
     {% set page_title = 'Gestion des Vidanges' %}
     {% include '_topbar_admin.html' %}
     <div class="dashboard-content">
-        <h2 class="section-title"><i class="fas fa-oil-can"></i> Gestion des Vidanges</h2>
-        <div style="background:#fff;padding:32px 24px;border-radius:12px;box-shadow:0 4px 24px rgba(30,64,175,0.07);margin-top:18px;">
-            <p style="color:#64748b;font-size:18px;">Bienvenue sur la page de gestion des vidanges. Ici, vous pourrez consulter, planifier et enregistrer les opérations de vidange pour chaque bus AED.</p>
-            <!-- Contenu à compléter selon besoins -->
+       
+        <div class="vidange-welcome">
+            <table class="vidange-table">
+                <thead>
+                    <tr class="aed-list-title-row">
+                        <th style="padding:10px;">Numéro</th>
+                        <th>Kilométrage</th>
+                        <th>Km Critique Vidange</th>
+                        <th>Dernière Vidange</th>
+                        <th>État Vidange</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for bus in bus_vidange %}
+                    <tr style="text-align:center;">
+                        <td>{{ bus.numero }}</td>
+                        <td>{{ bus.kilometrage or '-' }}</td>
+                        <td>{{ bus.km_critique_huile or '-' }}</td>
+                        <td>{{ bus.date_derniere_vidange.strftime('%d/%m/%Y') if bus.date_derniere_vidange else '-' }}</td>
+                        <td style="text-align:left;">
+                            <span class="indicator {{ bus.voyant }}" style="display:inline-block;width:16px;height:16px;border-radius:50%;margin-right:8px;vertical-align:middle;"></span>
+                            <span style="vertical-align:middle;">
+                            {% if bus.voyant == 'green' %}OK{% elif bus.voyant == 'orange' %}Bientôt à faire{% else %}À faire !{% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="action-btn" title="Effectuer une vidange" onclick="window.location.href='/effectuer_vidange/{{ bus.id }}'">
+                                <i class="fas fa-oil-can"></i> Effectuer une vidange
+                            </button>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="6" style="color:#64748b;padding:16px;">Aucun bus enregistré.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+{# --- Historique des Vidanges --- #}
+<div class="main-content historique-section">
+    <div class="dashboard-content">
+        <h2 class="section-title"><i class="fas fa-history"></i> Historique des Vidanges</h2>
+        <form method="get" class="vidange-filter">
+            <label for="numero_aed"><i class="fas fa-bus"></i> Filtrer par numéro AED :</label>
+            <select name="numero_aed" id="numero_aed" onchange="this.form.submit()">
+                <option value="">Tous</option>
+                {% for numero in numeros_aed %}
+                    <option value="{{ numero }}" {% if numero == selected_numero %}selected{% endif %}>{{ numero }}</option>
+                {% endfor %}
+            </select>
+        </form>
+        <div>
+            <table class="vidange-table">
+                <thead>
+                    <tr>
+                        <th>Numéro AED</th>
+                        <th>Date Vidange</th>
+                        <th>Kilométrage</th>
+                        <th>Type d'huile</th>
+                        <th>Remarque</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for v in historique_vidange %}
+                    <tr>
+                        <td>{{ v.aed.numero }}</td>
+                        <td>{{ v.date_vidange.strftime('%d/%m/%Y') }}</td>
+                        <td>{{ v.kilometrage }}</td>
+                        <td>{{ v.type_huile or '-' }}</td>
+                        <td>{{ v.remarque or '-' }}</td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="5" class="empty-state">Aucune vidange enregistrée.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
