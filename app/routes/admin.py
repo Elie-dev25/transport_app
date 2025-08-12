@@ -1,4 +1,6 @@
 
+
+
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from app.models.aed import AED
 from app.database import db  # Ajout de l'import manquant
@@ -14,7 +16,59 @@ from app.routes.common import role_required
 def admin_only(view):
     return role_required('ADMIN')(view)
 
+
 bp.before_request(lambda: None)  # Placeholder pour pouvoir ajouter le décorateur via dispatch
+
+
+# Route AJAX pour ajouter un bus AED depuis le dashboard (après les imports et la déclaration du blueprint)
+@admin_only
+@bp.route('/ajouter_bus_ajax', methods=['POST'])
+def ajouter_bus_ajax():
+    numero = request.form.get('numero')
+    kilometrage = request.form.get('kilometrage')
+    type_huile = request.form.get('type_huile')
+    capacite_plein_carburant = request.form.get('capacite_plein_carburant')
+    date_derniere_vidange = request.form.get('date_derniere_vidange')
+    etat_vehicule = request.form.get('etat_vehicule')
+    nombre_places = request.form.get('nombre_places')
+    derniere_maintenance = request.form.get('derniere_maintenance')
+
+    if not all([numero, kilometrage, type_huile, capacite_plein_carburant, date_derniere_vidange, etat_vehicule, nombre_places, derniere_maintenance]):
+        return jsonify({'success': False, 'message': 'Tous les champs sont obligatoires.'}), 400
+
+
+    kilometrage_val = float(kilometrage)
+    capacite_val = float(capacite_plein_carburant)
+
+    # Calculs selon la nouvelle règle
+    if type_huile.upper() == 'QUARTZ':
+        km_critique_huile = kilometrage_val + 700
+    elif type_huile.upper() == 'RUBIA':
+        km_critique_huile = kilometrage_val + 600
+    else:
+        km_critique_huile = kilometrage_val
+
+    km_critique_carburant = kilometrage_val + capacite_val
+
+    try:
+        nouveau_aed = AED(
+            numero=numero,
+            kilometrage=float(kilometrage),
+            type_huile=type_huile,
+            km_critique_huile=km_critique_huile,
+            km_critique_carburant=km_critique_carburant,
+            capacite_plein_carburant=km_critique_carburant,
+            date_derniere_vidange=datetime.strptime(date_derniere_vidange, '%Y-%m-%d').date(),
+            etat_vehicule=etat_vehicule,
+            nombre_places=int(nombre_places),
+            derniere_maintenance=datetime.strptime(derniere_maintenance, '%Y-%m-%d').date()
+        )
+        db.session.add(nouveau_aed)
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Bus AED ajouté avec succès !'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f'Erreur serveur : {str(e)}'}), 500
 
 
 # Route du tableau de bord administrateur
@@ -88,24 +142,38 @@ def parametres():
 @admin_only
 @bp.route('/ajouter_bus', methods=['GET', 'POST'])
 def ajouter_bus():
+
     if request.method == 'POST':
         numero = request.form.get('numero')
-        niveau_carburant = request.form.get('niveau_carburant')
-        niveau_huile = request.form.get('niveau_huile')
-        seuil_critique_huile = request.form.get('seuil_critique_huile')
+        kilometrage = request.form.get('kilometrage')
+        type_huile = request.form.get('type_huile')
+        capacite_plein_carburant = request.form.get('capacite_plein_carburant')
+        date_derniere_vidange = request.form.get('date_derniere_vidange')
         etat_vehicule = request.form.get('etat_vehicule')
         nombre_places = request.form.get('nombre_places')
         derniere_maintenance = request.form.get('derniere_maintenance')
 
-        if not all([numero, niveau_carburant, niveau_huile, seuil_critique_huile, etat_vehicule, nombre_places, derniere_maintenance]):
+        if not all([numero, kilometrage, type_huile, capacite_plein_carburant, date_derniere_vidange, etat_vehicule, nombre_places, derniere_maintenance]):
             flash('Tous les champs sont obligatoires.', 'danger')
             return render_template('ajouter_bus.html', next_num=numero)
 
+        # Calcul automatique des km critiques
+        if type_huile.upper() == 'QUARTZ':
+            km_critique_huile = 700
+        elif type_huile.upper() == 'RUBIA':
+            km_critique_huile = 600
+        else:
+            km_critique_huile = 0
+
+        km_critique_carburant = float(capacite_plein_carburant)
+
         nouveau_aed = AED(
             numero=numero,
-            niveau_carburant=float(niveau_carburant),
-            niveau_huile=float(niveau_huile),
-            seuil_critique_huile=float(seuil_critique_huile),
+            kilometrage=float(kilometrage),
+            type_huile=type_huile,
+            km_critique_huile=km_critique_huile,
+            km_critique_carburant=km_critique_carburant,
+            date_derniere_vidange=datetime.strptime(date_derniere_vidange, '%Y-%m-%d').date(),
             etat_vehicule=etat_vehicule,
             nombre_places=int(nombre_places),
             derniere_maintenance=datetime.strptime(derniere_maintenance, '%Y-%m-%d').date()

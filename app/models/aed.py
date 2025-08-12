@@ -12,4 +12,5 @@ class AED(db.Model):
     type_huile = db.Column(Enum('QUARTZ', 'RUBIA', name='typehuileenum'), nullable=True)
     km_critique_huile = db.Column(db.Integer, nullable=True)
     km_critique_carburant = db.Column(db.Integer, nullable=True)
+    capacite_plein_carburant = db.Column(db.Integer, nullable=True)
     date_derniere_vidange = db.Column(db.Date, nullable=True)

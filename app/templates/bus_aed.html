@@ -53,13 +53,13 @@
                 <tr>
                     <th style="padding:14px;">Numéro</th>
                     <th>Kilométrage</th>
-                    <th>Type Huile</th>
-                    <th>Km Critique Huile</th>
-                    <th>Km Critique Carburant</th>
-                    <th>Dernière Vidange</th>
+                    <!-- <th>Type Huile</th> -->
+                    <!-- <th>Km Critique Huile</th> -->
+                    <!-- <th>Km Critique Carburant</th> -->
+                    <!-- <th>Dernière Vidange</th> -->
                     <th>État</th>
                     <th>Places</th>
-                    <th>Dernière maintenance</th>
+                    <!-- <th>Dernière maintenance</th> -->
                     <th>Action</th>
                 </tr>
             </thead>
@@ -73,13 +73,13 @@
                         {% endif %}
                     </td>
                     <td>{{ bus.kilometrage if bus.kilometrage else '-' }} {{ 'km' if bus.kilometrage else '' }}</td>
-                    <td>{{ bus.type_huile if bus.type_huile else '-' }}</td>
-                    <td>{{ bus.km_critique_huile if bus.km_critique_huile else '-' }} {{ 'km' if bus.km_critique_huile else '' }}</td>
-                    <td>{{ bus.km_critique_carburant if bus.km_critique_carburant else '-' }} {{ 'km' if bus.km_critique_carburant else '' }}</td>
-                    <td>{{ bus.date_derniere_vidange.strftime('%d/%m/%Y') if bus.date_derniere_vidange else '-' }}</td>
+                    <!-- <td>{{ bus.type_huile if bus.type_huile else '-' }}</td> -->
+                    <!-- <td>{{ bus.km_critique_huile if bus.km_critique_huile else '-' }} {{ 'km' if bus.km_critique_huile else '' }}</td> -->
+                    <!-- <td>{{ bus.km_critique_carburant if bus.km_critique_carburant else '-' }} {{ 'km' if bus.km_critique_carburant else '' }}</td> -->
+                    <!-- <td>{{ bus.date_derniere_vidange.strftime('%d/%m/%Y') if bus.date_derniere_vidange else '-' }}</td> -->
                     <td>{{ bus.etat_vehicule }}</td>
                     <td>{{ bus.nombre_places }}</td>
-                    <td>{{ bus.derniere_maintenance.strftime('%d/%m/%Y') if bus.derniere_maintenance else '' }}</td>
+                    <!-- <td>{{ bus.derniere_maintenance.strftime('%d/%m/%Y') if bus.derniere_maintenance else '' }}</td> -->
                     <td>
                         <button class="view-bus-btn" data-id="{{ bus.id }}" title="Détails" style="background:none;border:none;cursor:pointer;margin-right:6px;">
                             <i class="fas fa-eye" style="color:#2563eb;font-size:18px;"></i>

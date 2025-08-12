@@ -80,6 +80,8 @@
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
+            font-size: 15px;
+            font-weight: 500;
         }
 
         .nav-link::before {
@@ -104,10 +106,17 @@
         }
 
         .nav-link i {
-            margin-right: 15px;
+            margin-right: 20px;
             width: 20px;
             text-align: center;
             font-size: 16px;
+            flex-shrink: 0;
+            opacity: 0.9;
+        }
+
+        .nav-link span {
+            flex: 1;
+            margin-left: 5px;
         }
 
         /* Main Content */
