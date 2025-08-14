@@ -1,9 +1,11 @@
-from flask import Blueprint, render_template, request, jsonify
+from flask import Blueprint, render_template, request, jsonify, url_for
 from app.models.aed import AED
-from app.models.vidange import Vidange
-from app.services.gestion_vidange import get_vidange_history
 from app.database import db
-from datetime import datetime
+from app.services.gestion_vidange import (
+    get_vidange_history,
+    build_bus_vidange_list,
+    enregistrer_vidange_common,
+)
 import unicodedata
 
 # Création du blueprint pour le mécanicien
@@ -47,6 +49,48 @@ def marquer_defaillant(aed_id):
     aed.etat_vehicule = 'Défaillant'
     db.session.commit()
     return jsonify({'success': True, 'etat': aed.etat_vehicule})
+
+# Route pour la page Vidange (accessible aux mécaniciens)
+@bp.route('/vidange')
+def vidange():
+    # --- Tableau d'état vidange (via service partagé) ---
+    bus_vidange = build_bus_vidange_list()
+    bus_list = AED.query.order_by(AED.numero).all()
+
+    # --- Historique des vidanges ---
+    numeros_aed = [bus.numero for bus in bus_list]
+    selected_numero = request.args.get('numero_aed')
+    if selected_numero:
+        historique_vidange = get_vidange_history(selected_numero)
+    else:
+        historique_vidange = get_vidange_history()
+
+    return render_template(
+        'vidange.html',
+        active_page='vidange',
+        bus_vidange=bus_vidange,
+        historique_vidange=historique_vidange,
+        numeros_aed=numeros_aed,
+        selected_numero=selected_numero,
+        post_url=url_for('mecanicien.enregistrer_vidange')
+    )
+
+# Route pour enregistrer une vidange (accessible aux mécaniciens)
+@bp.route('/enregistrer_vidange', methods=['POST'])
+def enregistrer_vidange():
+    data = request.get_json() or {}
+    try:
+        payload = enregistrer_vidange_common(data)
+        return jsonify(payload)
+    except ValueError as ve:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(ve)}), 400
+    except LookupError as le:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(le)}), 404
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 # Route AJAX pour marquer comme réparé
 @bp.route('/aed/<int:aed_id>/repare', methods=['POST'])

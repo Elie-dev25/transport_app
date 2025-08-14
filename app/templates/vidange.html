@@ -208,7 +208,7 @@ document.addEventListener('DOMContentLoaded', function () {
         };
         if (csrfToken) headers['X-CSRFToken'] = csrfToken;
 
-        fetch('/admin/enregistrer_vidange', {
+        fetch('{{ post_url }}', {
             method: 'POST',
             headers: headers,
             body: JSON.stringify({

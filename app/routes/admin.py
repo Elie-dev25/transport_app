@@ -1,7 +1,11 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from app.models.aed import AED
 from app.models.vidange import Vidange
-from app.services.gestion_vidange import get_vidange_history
+from app.services.gestion_vidange import (
+    get_vidange_history,
+    build_bus_vidange_list,
+    enregistrer_vidange_common,
+)
 from app.database import db  # Ajout de l'import manquant
 from datetime import datetime
 
@@ -403,26 +407,9 @@ def dashboard_mecanicien():
 @admin_only
 @bp.route('/vidange')
 def vidange():
-    # --- Tableau d'état vidange ---
+    # --- Tableau d'état vidange (via service partagé) ---
+    bus_vidange = build_bus_vidange_list()
     bus_list = AED.query.order_by(AED.numero).all()
-    bus_vidange = []
-    for bus in bus_list:
-        voyant = 'green'
-        if bus.kilometrage is not None and bus.km_critique_huile is not None:
-            seuil = 0.1 * (bus.km_critique_huile - (bus.kilometrage or 0))
-            reste = (bus.km_critique_huile or 0) - (bus.kilometrage or 0)
-            if reste <= 0:
-                voyant = 'red'
-            elif reste <= seuil:
-                voyant = 'orange'
-        bus_vidange.append({
-            'id': bus.id,
-            'numero': bus.numero,
-            'kilometrage': bus.kilometrage,
-            'km_critique_huile': bus.km_critique_huile,
-            'date_derniere_vidange': bus.date_derniere_vidange,
-            'voyant': voyant
-        })
 
     # --- Historique des vidanges ---
     # Récupérer tous les numéros AED distincts pour le filtre
@@ -439,94 +426,27 @@ def vidange():
         bus_vidange=bus_vidange,
         historique_vidange=historique_vidange,
         numeros_aed=numeros_aed,
-        selected_numero=selected_numero
+        selected_numero=selected_numero,
+        post_url=url_for('admin.enregistrer_vidange')
     )
 
 # Enregistrer une vidange 
 @admin_only
 @bp.route('/enregistrer_vidange', methods=['POST'])
 def enregistrer_vidange():
-    data = request.get_json()
-    aed_id = data.get('aed_id')
-    kilometrage = data.get('kilometrage')
-    type_huile = data.get('type_huile')
-    remarque = data.get('remarque')
-
-    # Validation basique
-    if not all([aed_id, kilometrage, type_huile]):
-        return jsonify({'success': False, 'message': 'Champs manquants.'}), 400
-
+    data = request.get_json() or {}
     try:
-        # Cast et vérifications
-        aed_id_int = int(aed_id)
-        km_int = int(kilometrage)
-        
-        # Validation du kilométrage
-        if km_int < 0:
-            return jsonify({'success': False, 'message': 'Le kilométrage ne peut pas être négatif.'}), 400
-        
-        type_norm = (type_huile or '').upper()
-        if type_norm not in ('QUARTZ', 'RUBIA'):
-            return jsonify({'success': False, 'message': "Type d'huile invalide."}), 400
-
-        # Récupérer le bus
-        bus = AED.query.get(aed_id_int)
-        if not bus:
-            return jsonify({'success': False, 'message': 'Bus introuvable.'}), 404
-        
-        # Validation : le nouveau kilométrage doit être supérieur à l'ancien
-        if bus.kilometrage is not None and km_int <= bus.kilometrage:
-            return jsonify({'success': False, 'message': f'Le kilométrage saisi ({km_int} km) doit être supérieur au kilométrage actuel ({bus.kilometrage} km).'}), 400
-
-        # Enregistrer la vidange
-        vidange = Vidange(
-            aed_id=aed_id_int,
-            date_vidange=datetime.utcnow().date(),
-            kilometrage=km_int,
-            type_huile=type_norm,
-            remarque=remarque
-        )
-        db.session.add(vidange)
-
-        # Mettre à jour l'état du bus (kilométrage, type d'huile, km critique huile, date dernière vidange)
-        bus.kilometrage = km_int
-        bus.type_huile = type_norm
-        if type_norm == 'QUARTZ':
-            bus.km_critique_huile = km_int + 700
-        elif type_norm == 'RUBIA':
-            bus.km_critique_huile = km_int + 600
-        # Date dernière vidange
-        bus.date_derniere_vidange = datetime.utcnow().date()
-
-        # Commit unique
-        db.session.commit()
-        
-        # Recalculer le voyant pour la réponse
-        voyant = 'green'
-        if bus.kilometrage is not None and bus.km_critique_huile is not None:
-            seuil = 0.1 * (bus.km_critique_huile - bus.kilometrage)
-            reste = bus.km_critique_huile - bus.kilometrage
-            if reste <= 0:
-                voyant = 'red'
-            elif reste <= seuil:
-                voyant = 'orange'
-        
-        return jsonify({
-            'success': True,
-            'bus_updated': {
-                'id': bus.id,
-                'numero': bus.numero,
-                'kilometrage': bus.kilometrage,
-                'km_critique_huile': bus.km_critique_huile,
-                'date_derniere_vidange': bus.date_derniere_vidange.strftime('%d/%m/%Y'),
-                'voyant': voyant
-            }
-        })
+        payload = enregistrer_vidange_common(data)
+        return jsonify(payload)
+    except ValueError as ve:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(ve)}), 400
+    except LookupError as le:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(le)}), 404
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
-
-
 
 
 # Route pour la page Carburation
