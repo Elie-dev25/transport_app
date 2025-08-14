@@ -1,6 +1,3 @@
-
-
-
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from app.models.aed import AED
 from app.models.vidange import Vidange
@@ -11,13 +8,12 @@ from datetime import datetime
 # Création du blueprint pour l'administrateur
 bp = Blueprint('admin', __name__, url_prefix='/admin')
 
+
 from app.routes.common import role_required
 
-# Appliquer le décorateur rôle ADMIN à toutes les routes du blueprint
-
+# Définition du décorateur admin_only avant toute utilisation
 def admin_only(view):
     return role_required('ADMIN')(view)
-
 
 bp.before_request(lambda: None)  # Placeholder pour pouvoir ajouter le décorateur via dispatch
 
@@ -71,6 +67,7 @@ def ajouter_bus_ajax():
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': f'Erreur serveur : {str(e)}'}), 500
+
 
 
 # Route du tableau de bord administrateur
@@ -444,6 +441,35 @@ def vidange():
         numeros_aed=numeros_aed,
         selected_numero=selected_numero
     )
+
+# Enregistrer une vidange 
+@admin_only
+@bp.route('/enregistrer_vidange', methods=['POST'])
+def enregistrer_vidange():
+    data = request.get_json()
+    aed_id = data.get('aed_id')
+    kilometrage = data.get('kilometrage')
+    type_huile = data.get('type_huile')
+    remarque = data.get('remarque')
+    if not all([aed_id, kilometrage, type_huile]):
+        return jsonify({'success': False, 'message': 'Champs manquants.'}), 400
+    try:
+        vidange = Vidange(
+            aed_id=aed_id,
+            date_vidange=datetime.utcnow().date(),
+            kilometrage=int(kilometrage),
+            type_huile=type_huile,
+            remarque=remarque
+        )
+        db.session.add(vidange)
+        db.session.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+
 
 # Route pour la page Carburation
 @admin_only

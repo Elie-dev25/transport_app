@@ -6,8 +6,9 @@
  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard_admin.css') }}">
  <link rel="stylesheet" href="{{ url_for('static', filename='css/vidange.css') }}">
  <link rel="stylesheet" href="{{ url_for('static', filename='css/modale.css') }}">
+ {# Optional: expose CSRF token to JS if you use Flask-WTF or similar #}
+ <meta name="csrf-token" content="{{ csrf_token() if csrf_token is defined else '' }}">
 {% endblock %}
-
 
 {% block content %}
 <!-- Sidebar -->
@@ -32,19 +33,20 @@
                 </thead>
                 <tbody>
                 {% for bus in bus_vidange %}
-                    <tr style="text-align:center;">
+                    <tr style="text-align:center;" data-bus-id="{{ bus.id }}">
                         <td>{{ bus.numero }}</td>
                         <td>{{ bus.kilometrage or '-' }}</td>
                         <td>{{ bus.km_critique_huile or '-' }}</td>
                         <td>{{ bus.date_derniere_vidange.strftime('%d/%m/%Y') if bus.date_derniere_vidange else '-' }}</td>
                         <td style="text-align:left;">
-                            <span class="indicator {{ bus.voyant }}" style="display:inline-block;width:16px;height:16px;border-radius:50%;margin-right:8px;vertical-align:middle;"></span>
+                            <span class="indicator {{ bus.voyant }}" aria-hidden="true" style="display:inline-block;width:16px;height:16px;border-radius:50%;margin-right:8px;vertical-align:middle;"></span>
                             <span style="vertical-align:middle;">
                             {% if bus.voyant == 'green' %}OK{% elif bus.voyant == 'orange' %}Bientôt à faire{% else %}À faire !{% endif %}
                             </span>
                         </td>
                         <td>
-                            <button class="action-btn" title="Effectuer une vidange" onclick="window.location.href='/effectuer_vidange/{{ bus.id }}'">
+                            <button class="action-btn" title="Effectuer une vidange" type="button"
+                                onclick="openVidangeModal('{{ bus.id }}', '{{ bus.numero }}', '{{ (current_user.nom_utilisateur ~ ' ' ~ current_user.prenom)|e }}')">
                                 <i class="fas fa-oil-can"></i> Effectuer une vidange
                             </button>
                         </td>
@@ -58,6 +60,181 @@
     </div>
 </div>
 
+
+{# --- Modales (only once, outside the loop) --- #}
+<div id="ficheVidangeModal" class="modal" aria-hidden="true">
+    <div class="modal-content">
+        <button class="close" aria-label="Fermer" onclick="closeVidangeModal()">&times;</button>
+        <h2 style="margin-bottom:18px;">Fiche de Vidange</h2>
+        <div id="fiche-vidange-content">
+            <div class="fiche-vidange-form">
+                <div style="margin-bottom:18px;">
+                    <strong>Numéro de demande :</strong> <span id="fiche-numero-demande">-</span>
+                </div>
+                <div style="margin-bottom:18px;">
+                    <strong>Date et heure :</strong> <span id="fiche-date-heure">-</span>
+                </div>
+                <div style="margin-bottom:18px;">
+                    <strong>Demandeur :</strong> <span id="fiche-demandeur">-</span>
+                </div>
+                <div style="margin-bottom:18px;">
+                    <strong>Numéro du véhicule :</strong> <span id="fiche-numero-vehicule">-</span>
+                </div>
+                <div style="display:flex;gap:32px;margin-top:32px;justify-content:center;">
+                    <div style="text-align:center;">
+                        <strong>Signature Responsable 1</strong>
+                        <div class="signature-line"></div>
+                    </div>
+                    <div style="text-align:center;">
+                        <strong>Signature Responsable 2</strong>
+                        <div class="signature-line"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div style="display:flex;gap:16px;justify-content:center;margin-top:24px;">
+            <button class="action-btn" onclick="printFicheVidange()"><i class="fas fa-print"></i> Imprimer</button>
+            <button class="action-btn" onclick="openFormulaireVidange(null)"><i class="fas fa-check"></i> Confirmer la vidange</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modale formulaire de confirmation vidange (single instance) -->
+<div id="formulaireVidangeModal" class="modal" aria-hidden="true">
+    <div class="modal-content">
+        <button class="close" aria-label="Fermer" onclick="closeFormulaireVidangeModal()">&times;</button>
+        <h2 style="margin-bottom:18px;">Formulaire de confirmation vidange</h2>
+        <form id="formulaire-vidange">
+            <input type="hidden" id="aed_id_hidden" name="aed_id_hidden">
+            <div style="margin-bottom:18px;">
+                <label for="numero_aed">Numéro AED :</label>
+                <input type="text" id="numero_aed" name="numero_aed" readonly style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;background:#f3f4f6;">
+            </div>
+            <div style="margin-bottom:18px;">
+                <label for="kilometrage">Kilométrage :</label>
+                <input type="number" id="kilometrage" name="kilometrage" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
+            </div>
+            <div style="margin-bottom:18px;">
+                <label for="type_huile">Type d'huile :</label>
+                <select id="type_huile" name="type_huile" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
+                    <option value="QUARTZ">QUARTZ</option>
+                    <option value="RUBIA">RUBIA</option>
+                </select>
+            </div>
+            <div style="margin-bottom:18px;">
+                <label for="remarque">Remarque :</label>
+                <textarea id="remarque" name="remarque" rows="3" style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;"></textarea>
+            </div>
+            <button type="submit" class="action-btn" style="width:100%;margin-top:12px;"><i class="fas fa-save"></i> Enregistrer la vidange</button>
+        </form>
+    </div>
+</div>
+
+<script>
+// single shared state
+let currentBusId = null;
+let currentNumeroVehicule = null;
+
+function openVidangeModal(busId, numeroVehicule, demandeurNom) {
+    currentBusId = busId || null;
+    currentNumeroVehicule = numeroVehicule || '';
+
+    // Fill fiche
+    document.getElementById('fiche-numero-demande').textContent = 'DEM-' + (new Date()).getTime();
+    const now = new Date();
+    document.getElementById('fiche-date-heure').textContent = now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
+    document.getElementById('fiche-demandeur').textContent = demandeurNom || '-';
+    document.getElementById('fiche-numero-vehicule').textContent = currentNumeroVehicule || '-';
+
+    // show modal
+    document.getElementById('ficheVidangeModal').classList.add('show');
+    document.getElementById('ficheVidangeModal').setAttribute('aria-hidden', 'false');
+}
+
+function closeVidangeModal() {
+    document.getElementById('ficheVidangeModal').classList.remove('show');
+    document.getElementById('ficheVidangeModal').setAttribute('aria-hidden', 'true');
+}
+
+function openFormulaireVidange(busId = null) {
+    // if called from fiche, the currentBusId is set; otherwise use provided one
+    const aedId = busId || currentBusId;
+    if (!aedId) {
+        alert('Erreur : aucun véhicule sélectionné. Veuillez ouvrir la fiche de vidange avant de confirmer.');
+        return;
+    }
+    document.getElementById('numero_aed').value = currentNumeroVehicule || '';
+    document.getElementById('aed_id_hidden').value = aedId;
+    document.getElementById('formulaireVidangeModal').classList.add('show');
+    document.getElementById('formulaireVidangeModal').setAttribute('aria-hidden', 'false');
+}
+
+function closeFormulaireVidangeModal() {
+    document.getElementById('formulaireVidangeModal').classList.remove('show');
+    document.getElementById('formulaireVidangeModal').setAttribute('aria-hidden', 'true');
+}
+
+function printFicheVidange() {
+    // Use a new window to avoid breaking SPA state
+    const content = document.getElementById('fiche-vidange-content').innerHTML;
+    const w = window.open('', '_blank');
+    w.document.write('<html><head><title>Fiche Vidange</title>');
+    // you can link a print-specific css file if you have one
+    w.document.write('</head><body>');
+    w.document.write(content);
+    w.document.write('</body></html>');
+    w.document.close();
+    w.focus();
+    setTimeout(() => { w.print(); w.close(); }, 300);
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('formulaire-vidange');
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const kilometrage = document.getElementById('kilometrage').value;
+        const type_huile = document.getElementById('type_huile').value;
+        const remarque = document.getElementById('remarque').value;
+        const aed_id = document.getElementById('aed_id_hidden').value;
+        if (!aed_id) {
+            alert("Erreur : aucun véhicule sélectionné. Veuillez ouvrir la fiche de vidange avant de confirmer.");
+            return;
+        }
+
+        // Prepare CSRF header if available
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+        if (csrfToken) headers['X-CSRFToken'] = csrfToken;
+
+        fetch('/admin/enregistrer_vidange', {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify({
+                aed_id: aed_id,
+                kilometrage: kilometrage,
+                type_huile: type_huile,
+                remarque: remarque
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Vidange enregistrée avec succès !');
+                closeFormulaireVidangeModal();
+                closeVidangeModal();
+                window.location.reload();
+            } else {
+                alert('Erreur lors de l\'enregistrement de la vidange.');
+            }
+        })
+        .catch(() => {
+            alert('Erreur serveur.');
+        });
+    });
+});
+</script>
 
 {# --- Historique des Vidanges --- #}
 <div class="main-content historique-section">
