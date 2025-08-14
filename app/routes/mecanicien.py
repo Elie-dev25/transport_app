@@ -1,6 +1,9 @@
 from flask import Blueprint, render_template, request, jsonify
 from app.models.aed import AED
+from app.models.vidange import Vidange
+from app.services.gestion_vidange import get_vidange_history
 from app.database import db
+from datetime import datetime
 import unicodedata
 
 # Création du blueprint pour le mécanicien

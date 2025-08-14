@@ -112,7 +112,7 @@
             </div>
             <div style="margin-bottom:18px;">
                 <label for="kilometrage">Kilométrage :</label>
-                <input type="number" id="kilometrage" name="kilometrage" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
+                <input type="number" id="kilometrage" name="kilometrage" min="0" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
             </div>
             <div style="margin-bottom:18px;">
                 <label for="type_huile">Type d'huile :</label>
@@ -222,9 +222,40 @@ document.addEventListener('DOMContentLoaded', function () {
         .then(data => {
             if (data.success) {
                 alert('Vidange enregistrée avec succès !');
+                
+                // Mettre à jour la ligne du tableau si les données sont retournées
+                if (data.bus_updated) {
+                    const busRow = document.querySelector(`tr[data-bus-id="${data.bus_updated.id}"]`);
+                    if (busRow) {
+                        const cells = busRow.querySelectorAll('td');
+                        if (cells.length >= 5) {
+                            // Mettre à jour kilométrage (colonne 1)
+                            cells[1].textContent = data.bus_updated.kilometrage || '-';
+                            // Mettre à jour km critique huile (colonne 2)
+                            cells[2].textContent = data.bus_updated.km_critique_huile || '-';
+                            // Mettre à jour dernière vidange (colonne 3)
+                            cells[3].textContent = data.bus_updated.date_derniere_vidange || '-';
+                            // Mettre à jour voyant (colonne 4)
+                            const indicator = cells[4].querySelector('.indicator');
+                            if (indicator) {
+                                indicator.className = `indicator ${data.bus_updated.voyant}`;
+                            }
+                            const statusText = cells[4].querySelector('span:last-child');
+                            if (statusText) {
+                                if (data.bus_updated.voyant === 'green') {
+                                    statusText.textContent = 'OK';
+                                } else if (data.bus_updated.voyant === 'orange') {
+                                    statusText.textContent = 'Bientôt à faire';
+                                } else {
+                                    statusText.textContent = 'À faire !';
+                                }
+                            }
+                        }
+                    }
+                }
+                
                 closeFormulaireVidangeModal();
                 closeVidangeModal();
-                window.location.reload();
             } else {
                 alert('Erreur lors de l\'enregistrement de la vidange.');
             }
