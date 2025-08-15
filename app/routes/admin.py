@@ -6,6 +6,11 @@ from app.services.gestion_vidange import (
     build_bus_vidange_list,
     enregistrer_vidange_common,
 )
+from app.services.gestion_carburation import (
+    get_carburation_history,
+    build_bus_carburation_list,
+    enregistrer_carburation_common,
+)
 from app.database import db  # Ajout de l'import manquant
 from datetime import datetime
 
@@ -50,6 +55,9 @@ def ajouter_bus_ajax():
     else:
         km_critique_huile = kilometrage_val
 
+    # Carburant:
+    # - capacite_plein_carburant: capacité (en km) d'autonomie après un plein
+    # - km_critique_carburant: kilométrage critique = kilometrage actuel + capacité
     km_critique_carburant = kilometrage_val + capacite_val
 
     try:
@@ -59,7 +67,7 @@ def ajouter_bus_ajax():
             type_huile=type_huile,
             km_critique_huile=km_critique_huile,
             km_critique_carburant=km_critique_carburant,
-            capacite_plein_carburant=km_critique_carburant,
+            capacite_plein_carburant=capacite_val,
             date_derniere_vidange=datetime.strptime(date_derniere_vidange, '%Y-%m-%d').date(),
             etat_vehicule=etat_vehicule,
             nombre_places=int(nombre_places),
@@ -168,7 +176,11 @@ def ajouter_bus():
         else:
             km_critique_huile = 0
 
-        km_critique_carburant = float(capacite_plein_carburant)
+        # Carburant:
+        # - capacite_plein_carburant est la capacité (en km) d'autonomie après un plein
+        # - km_critique_carburant = kilometrage actuel + capacité
+        cap_val = float(capacite_plein_carburant)
+        km_critique_carburant = float(kilometrage) + cap_val
 
         nouveau_aed = AED(
             numero=numero,
@@ -176,6 +188,7 @@ def ajouter_bus():
             type_huile=type_huile,
             km_critique_huile=km_critique_huile,
             km_critique_carburant=km_critique_carburant,
+            capacite_plein_carburant=cap_val,
             date_derniere_vidange=datetime.strptime(date_derniere_vidange, '%Y-%m-%d').date(),
             etat_vehicule=etat_vehicule,
             nombre_places=int(nombre_places),
@@ -453,4 +466,43 @@ def enregistrer_vidange():
 @admin_only
 @bp.route('/carburation')
 def carburation():
-    return render_template('carburation.html', active_page='carburation')
+    # --- Tableau d'état carburation (via service partagé) ---
+    bus_carburation = build_bus_carburation_list()
+    bus_list = AED.query.order_by(AED.numero).all()
+
+    # --- Historique des carburations ---
+    # Récupérer tous les numéros AED distincts pour le filtre
+    numeros_aed = [bus.numero for bus in bus_list]
+    selected_numero = request.args.get('numero_aed')
+    if selected_numero:
+        historique_carburation = get_carburation_history(selected_numero)
+    else:
+        historique_carburation = get_carburation_history()
+
+    return render_template(
+        'carburation.html',
+        active_page='carburation',
+        bus_carburation=bus_carburation,
+        historique_carburation=historique_carburation,
+        numeros_aed=numeros_aed,
+        selected_numero=selected_numero,
+        post_url=url_for('admin.enregistrer_carburation')
+    )
+
+# Enregistrer une carburation
+@admin_only
+@bp.route('/enregistrer_carburation', methods=['POST'])
+def enregistrer_carburation():
+    data = request.get_json() or {}
+    try:
+        payload = enregistrer_carburation_common(data)
+        return jsonify(payload)
+    except ValueError as ve:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(ve)}), 400
+    except LookupError as le:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(le)}), 404
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500

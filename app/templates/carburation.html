@@ -2,9 +2,11 @@
 {% block title %}Carburation{% endblock %}
 
 {% block head %}
- <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard_admin.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/vidanges.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modale.css') }}">
+    <script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
 {% endblock %}
 
 {% block content %}
@@ -14,11 +16,237 @@
 <div class="main-content">
     {% set page_title = 'Gestion de la Carburation' %}
     {% include '_topbar_admin.html' %}
-    <div class="dashboard-content">
-        <h2 class="section-title"><i class="fas fa-gas-pump"></i> Gestion de la Carburation</h2>
-        <div style="background:#fff;padding:32px 24px;border-radius:12px;box-shadow:0 4px 24px rgba(30,64,175,0.07);margin-top:18px;">
-            <p style="color:#64748b;font-size:18px;">Bienvenue sur la page de gestion de la carburation. Ici, vous pourrez bientôt consulter, planifier et enregistrer les opérations de carburation pour chaque bus AED.</p>
+    
+    <div class="vidange-container">
+        <div class="vidange-header">
+            <h1 class="vidange-title">
+                <i class="fas fa-gas-pump"></i>
+                Gestion de la Carburation
+            </h1>
+        </div>
+
+        <!-- Tableau des AED -->
+        <div class="vidange-table-container">
+            <table class="vidange-table">
+                <thead>
+                    <tr>
+                        <th>Numéro AED</th>
+                        <th>Capacité Plein (km)</th>
+                        <th>Kilométrage Actuel</th>
+                        <th>État Carburant</th>
+                        <th>Km Restant</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for bus in bus_carburation %}
+                    <tr>
+                        <td><strong>{{ bus.numero }}</strong></td>
+                        <td>{{ bus.capacite_plein_carburant if bus.capacite_plein_carburant else '-' }} km</td>
+                        <td>{{ bus.kilometrage if bus.kilometrage else '-' }} km</td>
+                        <td>
+                            <span class="voyant-indicator voyant-{{ bus.voyant }}"></span>
+                            {% if bus.voyant == 'green' %}Bon
+                            {% elif bus.voyant == 'orange' %}Attention
+                            {% else %}Critique
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if bus.km_restant_carburant is not none %}
+                                {% if bus.km_restant_carburant <= 0 %}
+                                    <span class="status-badge status-critical">URGENT</span>
+                                {% elif bus.km_restant_carburant <= 100 %}
+                                    <span class="status-badge status-warning">{{ bus.km_restant_carburant }} km</span>
+                                {% else %}
+                                    <span class="status-badge status-ok">{{ bus.km_restant_carburant }} km</span>
+                                {% endif %}
+                            {% else %}
+                                <span style="color:#94a3b8;">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button class="btn-action btn-carburation"
+                                    data-aed-id="{{ bus.id }}"
+                                    data-numero="{{ bus.numero|e }}"
+                                    data-effectue-par="{{ (current_user.nom_utilisateur ~ ' ' ~ current_user.prenom)|e }}">
+                                <i class="fas fa-gas-pump"></i>
+                                Effectuer Carburation
+                            </button>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 40px; color: #6b7280;">
+                            Aucun bus AED enregistré.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Historique des carburations -->
+        <div class="historique-section">
+            <div class="historique-header">
+                <h2 class="historique-title">
+                    <i class="fas fa-history"></i>
+                    Historique des Carburations
+                </h2>
+                <div class="historique-filter">
+                    <select onchange="filterHistorique(this.value)">
+                        <option value="">Tous les bus</option>
+                        {% for numero in numeros_aed %}
+                        <option value="{{ numero }}" {% if selected_numero == numero %}selected{% endif %}>
+                            AED {{ numero }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <table class="historique-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Numéro AED</th>
+                        <th>Kilométrage</th>
+                        <th>Quantité (L)</th>
+                        <th>Prix Unitaire</th>
+                        <th>Coût Total</th>
+                        <th>Remarque</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for carburation in historique_carburation %}
+                    <tr>
+                        <td>{{ carburation.date_carburation.strftime('%d/%m/%Y') }}</td>
+                        <td><strong>{{ carburation.aed.numero }}</strong></td>
+                        <td>{{ carburation.kilometrage }} km</td>
+                        <td>{{ carburation.quantite_litres }} L</td>
+                        <td>{{ carburation.prix_unitaire }} FCFA/L</td>
+                        <td><strong>{{ carburation.cout_total }} FCFA</strong></td>
+                        <td>{{ carburation.remarque if carburation.remarque else '-' }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 20px; color: #6b7280;">
+                            Aucun historique de carburation disponible.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
+
+<!-- Modale de carburation -->
+<div id="carburationModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">
+                <i class="fas fa-gas-pump"></i>
+                Fiche de Carburation
+            </h3>
+            <button class="modal-close" type="button" data-close-carburation="1" onclick="closeCarburationModal()" aria-label="Fermer">&times;</button>
+        </div>
+        
+        <form id="carburationForm">
+            <div class="form-group">
+                <label class="form-label">Numéro AED</label>
+                <input type="text" id="modalNumeroAED" class="form-input" readonly>
+                <input type="hidden" id="modalAedId">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Kilométrage actuel *</label>
+                <input type="number" id="modalKilometrage" class="form-input" required min="0">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Quantité (Litres) *</label>
+                <input type="number" id="modalQuantite" class="form-input" required min="0" step="0.1">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Prix unitaire (FCFA/L) *</label>
+                <input type="number" id="modalPrixUnitaire" class="form-input" required min="0">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Coût total (FCFA)</label>
+                <input type="number" id="modalCoutTotal" class="form-input" readonly>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Effectué par</label>
+                <input type="text" id="modalEffectuePar" class="form-input" readonly>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Remarque</label>
+                <textarea id="modalRemarque" class="form-textarea" placeholder="Remarque optionnelle..."></textarea>
+            </div>
+            
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" onclick="closeCarburationModal()">Annuler</button>
+                <button type="submit" class="btn-primary">Confirmer la Carburation</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Soumission du formulaire (logique métier)
+document.getElementById('carburationForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const data = {
+        aed_id: document.getElementById('modalAedId').value,
+        kilometrage: document.getElementById('modalKilometrage').value,
+        quantite_litres: document.getElementById('modalQuantite').value,
+        prix_unitaire: document.getElementById('modalPrixUnitaire').value,
+        cout_total: document.getElementById('modalCoutTotal').value,
+        remarque: document.getElementById('modalRemarque').value
+    };
+    
+    fetch('{{ post_url }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Mettre à jour la ligne du tableau
+            updateBusRow(data.bus_updated);
+            closeCarburationModal();
+            // Recharger la page pour mettre à jour l'historique
+            location.reload();
+        } else {
+            alert('Erreur: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        alert('Erreur de communication avec le serveur');
+    });
+});
+
+function updateBusRow(bus) {
+    // Logique de mise à jour de la ligne du tableau (similaire à vidange.html)
+    const rows = document.querySelectorAll('.vidange-table tbody tr');
+    rows.forEach(row => {
+        const numeroCell = row.querySelector('td:first-child strong');
+        if (numeroCell && numeroCell.textContent === bus.numero) {
+            // Mettre à jour les cellules de la ligne
+            const cells = row.querySelectorAll('td');
+            if (cells[2]) cells[2].textContent = bus.kilometrage + ' km';
+            // Mettre à jour l'état carburant et autres cellules selon les données
+        }
+    });
+}
+</script>
 {% endblock %}

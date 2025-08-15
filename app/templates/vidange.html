@@ -8,6 +8,7 @@
  <link rel="stylesheet" href="{{ url_for('static', filename='css/modale.css') }}">
  {# Optional: expose CSRF token to JS if you use Flask-WTF or similar #}
  <meta name="csrf-token" content="{{ csrf_token() if csrf_token is defined else '' }}">
+ <script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
 {% endblock %}
 
 {% block content %}
@@ -46,7 +47,10 @@
                         </td>
                         <td>
                             <button class="action-btn" title="Effectuer une vidange" type="button"
-                                onclick="openVidangeModal('{{ bus.id }}', '{{ bus.numero }}', '{{ (current_user.nom_utilisateur ~ ' ' ~ current_user.prenom)|e }}')">
+                                data-open-vidange="1"
+                                data-bus-id="{{ bus.id }}"
+                                data-numero="{{ bus.numero|e }}"
+                                data-demandeur="{{ (current_user.nom_utilisateur ~ ' ' ~ current_user.prenom)|e }}">
                                 <i class="fas fa-oil-can"></i> Effectuer une vidange
                             </button>
                         </td>
@@ -131,63 +135,6 @@
 </div>
 
 <script>
-// single shared state
-let currentBusId = null;
-let currentNumeroVehicule = null;
-
-function openVidangeModal(busId, numeroVehicule, demandeurNom) {
-    currentBusId = busId || null;
-    currentNumeroVehicule = numeroVehicule || '';
-
-    // Fill fiche
-    document.getElementById('fiche-numero-demande').textContent = 'DEM-' + (new Date()).getTime();
-    const now = new Date();
-    document.getElementById('fiche-date-heure').textContent = now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
-    document.getElementById('fiche-demandeur').textContent = demandeurNom || '-';
-    document.getElementById('fiche-numero-vehicule').textContent = currentNumeroVehicule || '-';
-
-    // show modal
-    document.getElementById('ficheVidangeModal').classList.add('show');
-    document.getElementById('ficheVidangeModal').setAttribute('aria-hidden', 'false');
-}
-
-function closeVidangeModal() {
-    document.getElementById('ficheVidangeModal').classList.remove('show');
-    document.getElementById('ficheVidangeModal').setAttribute('aria-hidden', 'true');
-}
-
-function openFormulaireVidange(busId = null) {
-    // if called from fiche, the currentBusId is set; otherwise use provided one
-    const aedId = busId || currentBusId;
-    if (!aedId) {
-        alert('Erreur : aucun véhicule sélectionné. Veuillez ouvrir la fiche de vidange avant de confirmer.');
-        return;
-    }
-    document.getElementById('numero_aed').value = currentNumeroVehicule || '';
-    document.getElementById('aed_id_hidden').value = aedId;
-    document.getElementById('formulaireVidangeModal').classList.add('show');
-    document.getElementById('formulaireVidangeModal').setAttribute('aria-hidden', 'false');
-}
-
-function closeFormulaireVidangeModal() {
-    document.getElementById('formulaireVidangeModal').classList.remove('show');
-    document.getElementById('formulaireVidangeModal').setAttribute('aria-hidden', 'true');
-}
-
-function printFicheVidange() {
-    // Use a new window to avoid breaking SPA state
-    const content = document.getElementById('fiche-vidange-content').innerHTML;
-    const w = window.open('', '_blank');
-    w.document.write('<html><head><title>Fiche Vidange</title>');
-    // you can link a print-specific css file if you have one
-    w.document.write('</head><body>');
-    w.document.write(content);
-    w.document.write('</body></html>');
-    w.document.close();
-    w.focus();
-    setTimeout(() => { w.print(); w.close(); }, 300);
-}
-
 document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('formulaire-vidange');
     form.addEventListener('submit', function(e) {
