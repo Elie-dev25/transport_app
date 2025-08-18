@@ -31,10 +31,10 @@
                 <thead>
                     <tr>
                         <th>Numéro AED</th>
-                        <th>Capacité Plein (km)</th>
                         <th>Kilométrage Actuel</th>
-                        <th>État Carburant</th>
+                        <th>État Réservoir</th>
                         <th>Km Restant</th>
+                        <th>Niveau carburant (L)</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -42,7 +42,6 @@
                     {% for bus in bus_carburation %}
                     <tr>
                         <td><strong>{{ bus.numero }}</strong></td>
-                        <td>{{ bus.capacite_plein_carburant if bus.capacite_plein_carburant else '-' }} km</td>
                         <td>{{ bus.kilometrage if bus.kilometrage else '-' }} km</td>
                         <td>
                             <span class="voyant-indicator voyant-{{ bus.voyant }}"></span>
@@ -65,9 +64,14 @@
                             {% endif %}
                         </td>
                         <td>
+                            {{ bus.niveau_carburant_litres if bus.niveau_carburant_litres is not none else '-' }}
+                            {% if bus.niveau_carburant_litres is not none %} L{% endif %}
+                        </td>
+                        <td>
                             <button class="btn-action btn-carburation"
                                     data-aed-id="{{ bus.id }}"
                                     data-numero="{{ bus.numero|e }}"
+                                    data-immatriculation="{{ bus.immatriculation|default('', true)|e }}"
                                     data-effectue-par="{{ (current_user.nom_utilisateur ~ ' ' ~ current_user.prenom)|e }}">
                                 <i class="fas fa-gas-pump"></i>
                                 Effectuer Carburation
@@ -92,8 +96,8 @@
                     <i class="fas fa-history"></i>
                     Historique des Carburations
                 </h2>
-                <div class="historique-filter">
-                    <select onchange="filterHistorique(this.value)">
+                <div class="historique-filter" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                    <select id="carb_numero_select" onchange="filterHistorique(this.value)">
                         <option value="">Tous les bus</option>
                         {% for numero in numeros_aed %}
                         <option value="{{ numero }}" {% if selected_numero == numero %}selected{% endif %}>
@@ -101,150 +105,305 @@
                         </option>
                         {% endfor %}
                     </select>
+                    <input type="date" id="carb_date_debut" value="{{ selected_date_debut or '' }}" onchange="filterHistorique(document.getElementById('carb_numero_select').value)" />
+                    <span>au</span>
+                    <input type="date" id="carb_date_fin" value="{{ selected_date_fin or '' }}" onchange="filterHistorique(document.getElementById('carb_numero_select').value)" />
+                    <button type="button" title="Effacer filtres" aria-label="Effacer filtres" onclick="clearHistoriqueFilters()" style="border:none;background:transparent;color:#ef4444;width:24px;height:24px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;">
+                        <i class="fas fa-times" style="font-size:14px;"></i>
+                    </button>
+                    <span id="carb_loader" style="display:none;align-items:center;gap:6px;color:#6b7280;">
+                        <i class="fas fa-spinner fa-spin"></i> Chargement...
+                    </span>
                 </div>
             </div>
             
-            <table class="historique-table">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Numéro AED</th>
-                        <th>Kilométrage</th>
-                        <th>Quantité (L)</th>
-                        <th>Prix Unitaire</th>
-                        <th>Coût Total</th>
-                        <th>Remarque</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for carburation in historique_carburation %}
-                    <tr>
-                        <td>{{ carburation.date_carburation.strftime('%d/%m/%Y') }}</td>
-                        <td><strong>{{ carburation.aed.numero }}</strong></td>
-                        <td>{{ carburation.kilometrage }} km</td>
-                        <td>{{ carburation.quantite_litres }} L</td>
-                        <td>{{ carburation.prix_unitaire }} FCFA/L</td>
-                        <td><strong>{{ carburation.cout_total }} FCFA</strong></td>
-                        <td>{{ carburation.remarque if carburation.remarque else '-' }}</td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="7" style="text-align: center; padding: 20px; color: #6b7280;">
-                            Aucun historique de carburation disponible.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            <div class="historique-table-container" style="max-height: 400px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 8px;">
+                <table class="historique-table" style="margin: 0;">
+                    <thead style="position: sticky; top: 0; background: #f9fafb; z-index: 10;">
+                        <tr>
+                            <th>Date</th>
+                            <th>Numéro AED</th>
+                            <th>Kilométrage</th>
+                            <th>Quantité (L)</th>
+                            <th>Prix Unitaire</th>
+                            <th>Coût Total</th>
+                            <th>Remarque</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historique-carb-body">
+                        {% for carburation in historique_carburation %}
+                        <tr>
+                            <td>{{ carburation.date_carburation.strftime('%d/%m/%Y') }}</td>
+                            <td><strong>{{ carburation.aed.numero }}</strong></td>
+                            <td>{{ carburation.kilometrage }} km</td>
+                            <td>{{ carburation.quantite_litres }} L</td>
+                            <td>{{ carburation.prix_unitaire }} FCFA/L</td>
+                            <td><strong>{{ carburation.cout_total }} FCFA</strong></td>
+                            <td>{{ carburation.remarque if carburation.remarque else '-' }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 20px; color: #6b7280;">
+                                Aucun historique de carburation disponible.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- Modale de carburation -->
-<div id="carburationModal" class="modal-overlay" style="display: none;">
+{# --- Modales (2 étapes) --- #}
+<!-- 1) Fiche de carburation -->
+<div id="ficheCarburationModal" class="modal" aria-hidden="true">
     <div class="modal-content">
-        <div class="modal-header">
-            <h3 class="modal-title">
-                <i class="fas fa-gas-pump"></i>
-                Fiche de Carburation
-            </h3>
-            <button class="modal-close" type="button" data-close-carburation="1" onclick="closeCarburationModal()" aria-label="Fermer">&times;</button>
+        <button class="close" aria-label="Fermer" onclick="closeCarburationFiche()">&times;</button>
+        <h2 style="margin-bottom:18px;"><i class="fas fa-gas-pump"></i> Fiche de Carburation</h2>
+        <div id="fiche-carburation-content">
+            <div class="fiche-vidange-form">
+                <div style="margin-bottom:12px;">
+                    <strong>Date et heure :</strong> <span id="fiche-carburation-date-heure">-</span>
+                </div>
+                <div style="margin-bottom:12px;">
+                    <strong>Opérateur :</strong> <span id="fiche-carburation-operateur">-</span>
+                </div>
+                <div style="margin-bottom:12px;">
+                    <strong>Numéro du véhicule :</strong> <span id="fiche-carburation-numero">-</span>
+                </div>
+                <div style="margin-bottom:12px;">
+                    <strong>Immatriculation :</strong> <span id="fiche-carburation-immatriculation">-</span>
+                </div>
+                <div style="display:flex;gap:32px;margin-top:24px;justify-content:center;">
+                    <div style="text-align:center;">
+                        <strong>Signature Responsable 1</strong>
+                        <div class="signature-line"></div>
+                    </div>
+                    <div style="text-align:center;">
+                        <strong>Signature Responsable 2</strong>
+                        <div class="signature-line"></div>
+                    </div>
+                </div>
+            </div>
         </div>
-        
-        <form id="carburationForm">
-            <div class="form-group">
-                <label class="form-label">Numéro AED</label>
-                <input type="text" id="modalNumeroAED" class="form-input" readonly>
-                <input type="hidden" id="modalAedId">
+        <div style="display:flex;gap:12px;justify-content:center;margin-top:20px;">
+            <button class="action-btn" onclick="openFormulaireCarburation()"><i class="fas fa-check"></i> Confirmer la carburation</button>
+            <button class="action-btn" style="background:#6b7280;" onclick="printCarburationFiche()"><i class="fas fa-print"></i> Imprimer</button>
+        </div>
+    </div>
+    
+    <!-- Variables cachées pour transfert -->
+    <input type="hidden" id="carburation_aed_id_hidden" />
+    <input type="hidden" id="carburation_numero_hidden" />
+    <input type="hidden" id="carburation_operateur_hidden" />
+</div>
+
+<!-- 2) Formulaire de confirmation carburation -->
+<div id="formulaireCarburationModal" class="modal" aria-hidden="true">
+    <div class="modal-content">
+        <button class="close" aria-label="Fermer" onclick="closeFormulaireCarburation()">&times;</button>
+        <h2 style="margin-bottom:18px;">Formulaire de confirmation carburation</h2>
+        <form id="formulaire-carburation">
+            <input type="hidden" id="aed_id_hidden" name="aed_id_hidden">
+            <div style="margin-bottom:12px;">
+                <label for="numero_aed">Numéro AED :</label>
+                <input type="text" id="numero_aed" name="numero_aed" readonly style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;background:#f3f4f6;">
             </div>
-            
-            <div class="form-group">
-                <label class="form-label">Kilométrage actuel *</label>
-                <input type="number" id="modalKilometrage" class="form-input" required min="0">
+            <div style="margin-bottom:12px;">
+                <label for="kilometrage_input">Kilométrage :</label>
+                <input type="number" id="kilometrage_input" name="kilometrage_input" min="0" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
             </div>
-            
-            <div class="form-group">
-                <label class="form-label">Quantité (Litres) *</label>
-                <input type="number" id="modalQuantite" class="form-input" required min="0" step="0.1">
+            <div style="margin-bottom:12px;display:flex;gap:12px;">
+                <div style="flex:1;">
+                    <label for="quantite_input">Quantité (L) :</label>
+                    <input type="number" id="quantite_input" name="quantite_input" step="0.1" min="0" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
+                </div>
+                <div style="flex:1;">
+                    <label for="prix_unitaire_input">Prix unitaire (FCFA/L) :</label>
+                    <input type="number" id="prix_unitaire_input" name="prix_unitaire_input" step="0.01" min="0" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
+                </div>
             </div>
-            
-            <div class="form-group">
-                <label class="form-label">Prix unitaire (FCFA/L) *</label>
-                <input type="number" id="modalPrixUnitaire" class="form-input" required min="0">
+            <div style="margin-bottom:12px;">
+                <label for="cout_total_input">Coût total (FCFA) :</label>
+                <input type="number" id="cout_total_input" name="cout_total_input" readonly style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;background:#f3f4f6;">
             </div>
-            
-            <div class="form-group">
-                <label class="form-label">Coût total (FCFA)</label>
-                <input type="number" id="modalCoutTotal" class="form-input" readonly>
+            <div style="margin-bottom:12px;">
+                <label for="remarque_input">Remarque :</label>
+                <textarea id="remarque_input" name="remarque_input" rows="3" style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;"></textarea>
             </div>
-            
-            <div class="form-group">
-                <label class="form-label">Effectué par</label>
-                <input type="text" id="modalEffectuePar" class="form-input" readonly>
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label">Remarque</label>
-                <textarea id="modalRemarque" class="form-textarea" placeholder="Remarque optionnelle..."></textarea>
-            </div>
-            
-            <div class="modal-actions">
-                <button type="button" class="btn-secondary" onclick="closeCarburationModal()">Annuler</button>
-                <button type="submit" class="btn-primary">Confirmer la Carburation</button>
-            </div>
+            <button type="submit" class="action-btn" style="width:100%;margin-top:8px;"><i class="fas fa-save"></i> Enregistrer la carburation</button>
         </form>
     </div>
 </div>
 
 <script>
-// Soumission du formulaire (logique métier)
-document.getElementById('carburationForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const data = {
-        aed_id: document.getElementById('modalAedId').value,
-        kilometrage: document.getElementById('modalKilometrage').value,
-        quantite_litres: document.getElementById('modalQuantite').value,
-        prix_unitaire: document.getElementById('modalPrixUnitaire').value,
-        cout_total: document.getElementById('modalCoutTotal').value,
-        remarque: document.getElementById('modalRemarque').value
+document.addEventListener('DOMContentLoaded', function () {
+    // Ouvrir la fiche à partir du tableau
+    document.querySelectorAll('.btn-carburation').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const aedId = this.getAttribute('data-aed-id');
+            const numero = this.getAttribute('data-numero');
+            const immat = this.getAttribute('data-immatriculation');
+            const operateur = this.getAttribute('data-effectue-par');
+
+            // Remplir la fiche
+            document.getElementById('fiche-carburation-numero').textContent = numero || '-';
+            document.getElementById('fiche-carburation-immatriculation').textContent = immat || '-';
+            document.getElementById('fiche-carburation-operateur').textContent = operateur || '-';
+            const now = new Date();
+            const formatted = now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
+            document.getElementById('fiche-carburation-date-heure').textContent = formatted;
+
+            // Stocker pour le formulaire
+            document.getElementById('carburation_aed_id_hidden').value = aedId || '';
+            document.getElementById('carburation_numero_hidden').value = numero || '';
+            document.getElementById('carburation_operateur_hidden').value = operateur || '';
+
+            openCarburationFiche();
+        });
+    });
+
+    // Auto-calcul du coût total
+    const recalcCout = () => {
+        const q = parseFloat(document.getElementById('quantite_input').value || '0');
+        const p = parseFloat(document.getElementById('prix_unitaire_input').value || '0');
+        const total = (isNaN(q) ? 0 : q) * (isNaN(p) ? 0 : p);
+        document.getElementById('cout_total_input').value = total ? total.toFixed(2) : '';
     };
-    
-    fetch('{{ post_url }}', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data)
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Mettre à jour la ligne du tableau
-            updateBusRow(data.bus_updated);
-            closeCarburationModal();
-            // Recharger la page pour mettre à jour l'historique
-            location.reload();
-        } else {
-            alert('Erreur: ' + data.message);
+    ['quantite_input','prix_unitaire_input'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', recalcCout);
+    });
+
+    // Soumission du formulaire de confirmation
+    const form = document.getElementById('formulaire-carburation');
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const aed_id = document.getElementById('aed_id_hidden').value;
+        if (!aed_id) {
+            alert("Erreur : aucun véhicule sélectionné. Veuillez ouvrir la fiche avant de confirmer.");
+            return;
         }
-    })
-    .catch(error => {
-        console.error('Erreur:', error);
-        alert('Erreur de communication avec le serveur');
+        const data = {
+            aed_id: aed_id,
+            kilometrage: document.getElementById('kilometrage_input').value,
+            quantite_litres: document.getElementById('quantite_input').value,
+            prix_unitaire: document.getElementById('prix_unitaire_input').value,
+            cout_total: document.getElementById('cout_total_input').value,
+            remarque: document.getElementById('remarque_input').value
+        };
+
+        fetch('{{ post_url }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                // MAJ de la ligne correspondante
+                if (data.bus_updated) updateBusRow(data.bus_updated);
+                closeFormulaireCarburation();
+                closeCarburationFiche();
+                // Recharger pour MAJ de l'historique
+                location.reload();
+            } else {
+                alert('Erreur: ' + (data.message || 'enregistrement'));
+            }
+        })
+        .catch(() => alert('Erreur serveur.'));
     });
 });
 
+// Helpers d'ouverture/fermeture
+function openCarburationFiche() {
+    const m = document.getElementById('ficheCarburationModal');
+    if (m) m.setAttribute('aria-hidden', 'false');
+}
+function closeCarburationFiche() {
+    const m = document.getElementById('ficheCarburationModal');
+    if (m) m.setAttribute('aria-hidden', 'true');
+}
+function openFormulaireCarburation() {
+    // Alimenter le formulaire depuis les hidden de la fiche
+    const aedId = document.getElementById('carburation_aed_id_hidden').value;
+    const numero = document.getElementById('carburation_numero_hidden').value;
+    document.getElementById('aed_id_hidden').value = aedId || '';
+    document.getElementById('numero_aed').value = numero || '';
+    const m = document.getElementById('formulaireCarburationModal');
+    if (m) m.setAttribute('aria-hidden', 'false');
+}
+function closeFormulaireCarburation() {
+    const m = document.getElementById('formulaireCarburationModal');
+    if (m) m.setAttribute('aria-hidden', 'true');
+}
+
+function printCarburationFiche() {
+    const fiche = document.getElementById('fiche-carburation-content');
+    if (!fiche) return;
+    const w = window.open('', '_blank', 'width=800,height=600');
+    const styles = `
+        <style>
+            body{font-family: Arial, sans-serif; padding: 20px;}
+            .signature-line{border-top:1px solid #000; width:220px; height:40px; margin-top:6px;}
+            h2{margin:0 0 12px 0;}
+            .meta div{margin-bottom:8px;}
+        </style>
+    `;
+    const header = '<h2>Fiche de Carburation</h2>';
+    w.document.write(`<!doctype html><html><head><meta charset="utf-8">${styles}</head><body>${header}${fiche.innerHTML}</body></html>`);
+    w.document.close();
+    w.focus();
+    w.print();
+    w.close();
+}
+
 function updateBusRow(bus) {
-    // Logique de mise à jour de la ligne du tableau (similaire à vidange.html)
+    // Mise à jour similaire à vidange.html mais pour les colonnes carburation
     const rows = document.querySelectorAll('.vidange-table tbody tr');
     rows.forEach(row => {
         const numeroCell = row.querySelector('td:first-child strong');
         if (numeroCell && numeroCell.textContent === bus.numero) {
-            // Mettre à jour les cellules de la ligne
             const cells = row.querySelectorAll('td');
-            if (cells[2]) cells[2].textContent = bus.kilometrage + ' km';
-            // Mettre à jour l'état carburant et autres cellules selon les données
+            // Colonne 2 (index 1): Kilométrage Actuel
+            if (cells[1]) cells[1].textContent = (bus.kilometrage ?? '-') + ' km';
+            // Colonne 3 (index 2): État Réservoir (voyant)
+            if (cells[2]) {
+                const spanVoyant = cells[2].querySelector('.voyant-indicator');
+                if (spanVoyant) {
+                    spanVoyant.className = 'voyant-indicator voyant-' + (bus.voyant || 'green');
+                }
+                const textNode = cells[2].childNodes[1];
+                if (textNode) {
+                    if (bus.voyant === 'green') textNode.textContent = 'Bon';
+                    else if (bus.voyant === 'orange') textNode.textContent = 'Attention';
+                    else textNode.textContent = 'Critique';
+                }
+            }
+            // Colonne 4 (index 3): Km Restant
+            if (cells[3]) {
+                const v = bus.km_restant_carburant;
+                if (v === null || v === undefined) {
+                    cells[3].innerHTML = '<span style="color:#94a3b8;">-</span>';
+                } else if (v <= 0) {
+                    cells[3].innerHTML = '<span class="status-badge status-critical">URGENT</span>';
+                } else if (v <= 100) {
+                    cells[3].innerHTML = '<span class="status-badge status-warning">' + v + ' km</span>';
+                } else {
+                    cells[3].innerHTML = '<span class="status-badge status-ok">' + v + ' km</span>';
+                }
+            }
+            // Colonne 5 (index 4): Niveau carburant (L)
+            if (cells[4]) {
+                const n = bus.niveau_carburant_litres;
+                if (n === null || n === undefined) {
+                    cells[4].textContent = '-';
+                } else {
+                    cells[4].textContent = n + ' L';
+                }
+            }
         }
     });
 }

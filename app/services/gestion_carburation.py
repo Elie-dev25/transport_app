@@ -3,14 +3,20 @@ from app.models.aed import AED
 from datetime import datetime
 
 
-def get_carburation_history(numero_aed=None):
-    """Retourne l'historique des carburations, trié du plus récent au moins récent."""
+def get_carburation_history(numero_aed=None, date_debut=None, date_fin=None):
+    """Retourne l'historique des carburations, trié du plus récent au moins récent.
+    date_debut et date_fin sont des objets date optionnels pour filtrer l'intervalle.
+    """
     # Import local pour éviter les imports circulaires
     from app.models.carburation import Carburation
-    
+
     query = Carburation.query.join(AED, Carburation.aed_id == AED.id)
     if numero_aed:
         query = query.filter(AED.numero == numero_aed)
+    if date_debut:
+        query = query.filter(Carburation.date_carburation >= date_debut)
+    if date_fin:
+        query = query.filter(Carburation.date_carburation <= date_fin)
     # Tri: du plus récent au moins récent (date décroissante)
     return query.order_by(Carburation.date_carburation.desc()).all()
 
@@ -40,10 +46,12 @@ def build_bus_carburation_list():
         result.append({
             'id': bus.id,
             'numero': bus.numero,
+            'immatriculation': getattr(bus, 'immatriculation', None),
             'kilometrage': bus.kilometrage,
             'capacite_plein_carburant': bus.capacite_plein_carburant,
             'km_critique_carburant': bus.km_critique_carburant,
             'km_restant_carburant': km_restant_carburant,
+            'niveau_carburant_litres': getattr(bus, 'niveau_carburant_litres', None),
             'voyant': compute_voyant_carburant(bus)
         })
     return result
@@ -101,11 +109,38 @@ def enregistrer_carburation_common(data: dict) -> dict:
     )
     db.session.add(carburation)
 
-    # Mettre à jour le bus (kilométrage et capacité carburant)
+    # Mettre à jour le bus (kilométrage et portée jusqu'au seuil critique)
     bus.kilometrage = km_int
-    # Supposons qu'un plein donne 500km d'autonomie (à ajuster selon vos besoins)
-    autonomie_par_litre = 8  # km par litre (à ajuster)
-    bus.km_critique_carburant = km_int + (quantite_float * autonomie_par_litre)
+    # Si on fait le plein, le Km restant après carburation doit être égal à la capacité plein (en km)
+    # donc: km_critique_carburant = km_int + capacite_plein_carburant.
+    if getattr(bus, 'capacite_plein_carburant', None):
+        try:
+            capacite_km = float(bus.capacite_plein_carburant)
+        except (TypeError, ValueError):
+            capacite_km = None
+    else:
+        capacite_km = None
+
+    if capacite_km and capacite_km > 0:
+        bus.km_critique_carburant = km_int + capacite_km
+    else:
+        # Valeur de repli si la capacité n'est pas renseignée: estimation simple avec km/L
+        autonomie_par_litre = 8  # km par litre (à ajuster)
+        bus.km_critique_carburant = km_int + (quantite_float * autonomie_par_litre)
+
+    # Mettre à jour le niveau de carburant (L) si suivi activé
+    try:
+        capacite_reservoir = float(getattr(bus, 'capacite_reservoir_litres', 0) or 0)
+    except (TypeError, ValueError):
+        capacite_reservoir = 0.0
+    prev_niveau = getattr(bus, 'niveau_carburant_litres', None)
+    base = float(prev_niveau) if prev_niveau is not None else 0.0
+    nouveau_niveau = base + quantite_float
+    if capacite_reservoir > 0:
+        nouveau_niveau = min(nouveau_niveau, capacite_reservoir)
+    # Enregistrer
+    if hasattr(bus, 'niveau_carburant_litres'):
+        bus.niveau_carburant_litres = nouveau_niveau
 
     db.session.commit()
 
@@ -120,6 +155,7 @@ def enregistrer_carburation_common(data: dict) -> dict:
             'kilometrage': bus.kilometrage,
             'km_critique_carburant': bus.km_critique_carburant,
             'km_restant_carburant': km_restant_carburant,
+            'niveau_carburant_litres': getattr(bus, 'niveau_carburant_litres', None),
             'voyant': voyant
         }
     }

@@ -235,178 +235,18 @@
             </div>
             <div class="trafic-card present">
                 <div class="trafic-number">{{ trafic.present }}</div>
-                <div class="trafic-label">Présents au Campus</div>
-            </div>
-            <div class="trafic-card departed">
-                <div class="trafic-number">{{ trafic.partis }}</div>
-                <div class="trafic-label">Partis du Campus</div>
-            </div>
         </div>
-    </div>
 
-<!-- Modals -->
+    <!-- Modals -->
 
-<!-- Modal Départ Prestataire -->
-<div id="departPrestataireModal" class="modal">
-  <div class="modal-content">
-    <button type="button" id="closeDepartPrestataireModal" class="close-btn"><i class="fas fa-times"></i></button>
-    <div class="modal-header">
-      <h3><i class="fas fa-route"></i> Départ Prestataire</h3>
-    </div>
-    <div class="modal-body">
-      <div class="alert alert-danger" style="display:none;" id="departPrestataireError"></div>
-      <form id="departPrestataireForm" class="modal-form" method="post" action="{{ url_for('charge_transport.depart_prestataire') }}">
-        {{ form_bus.hidden_tag() }}
-        <div class="form-grid">
-          <div class="form-group">{{ form_bus.nom_prestataire.label }}{{ form_bus.nom_prestataire() }}</div>
-          <div class="form-group">{{ form_bus.immat_bus.label }}{{ form_bus.immat_bus() }}</div>
-          <div class="form-group">{{ form_bus.nom_chauffeur.label }}{{ form_bus.nom_chauffeur() }}</div>
-          <div class="form-group">{{ form_bus.nombre_places_occupees.label }}{{ form_bus.nombre_places_occupees() }}</div>
-          <div class="form-group full-width">{{ form_bus.date_heure_depart.label }}{{ form_bus.date_heure_depart(type='datetime-local') }}</div>
-          <div class="form-group">{{ form_bus.point_depart.label }}{{ form_bus.point_depart() }}</div>
-          <div class="form-group">
-            <label>Type de passagers</label>
-            <input type="text" class="form-control" value="Étudiant" readonly>
-            <input type="hidden" name="type_passagers" value="ETUDIANT">
-          </div>
-        </div>
-        <button type="submit" class="submit-btn modal-submit">{{ form_bus.submit.label }}</button>
-      </form>
-      <div id="departPrestataireFeedback"></div>
-    </div>
-  </div>
-</div>
+    {% include 'partials/charge_transport/_depart_prestataire_modal.html' %}
 
+    {% include 'partials/charge_transport/_depart_banekane_retour_modal.html' %}
 
-<!-- End Modal Départ Prestataire -->
+    {% include 'partials/charge_transport/_depart_aed_modal.html' %}
 
-<!-- Modal Départ de Banekane Retour -->
-<div id="departBanekaneRetourModal" class="modal">
-  <div class="modal-content">
-    <button type="button" id="closeDepartBanekaneRetourModal" class="close-btn"><i class="fas fa-times"></i></button>
-    <div class="modal-header">
-      <h3><i class="fas fa-route"></i> Départ de Banekane (Retour)</h3>
-    </div>
-    <div class="modal-body">
-      <div class="alert alert-danger" style="display:none;" id="departBanekaneRetourError"></div>
-      <form method="POST" id="departBanekaneRetourForm" class="modal-form" action="{{ url_for('charge_transport.depart_banekane_retour') }}">
-        {{ form_banekane_retour.hidden_tag() }}
-        <div class="form-grid">
-          <div class="form-group">
-            <label>Point de départ</label>
-            <input type="text" value="Banekane" disabled class="form-control" />
-            {{ form_banekane_retour.point_depart() }}
-          </div>
-          <div class="form-group">
-            <label>{{ form_banekane_retour.type_bus.label }}</label>
-            <div class="type-bus-toggle">
-              {% for subfield in form_banekane_retour.type_bus %}
-                <label class="type-bus-btn">
-                  {{ subfield() }}
-                  <span>{{ subfield.label.text }}</span>
-                </label>
-              {% endfor %}
-            </div>
-          </div>
-          <!-- Champs spécifiques AED -->
-          <div class="form-group aed-only">
-            {{ form_banekane_retour.chauffeur_id.label }}
-            {{ form_banekane_retour.chauffeur_id(class_='form-control') }}
-          </div>
-          <div class="form-group aed-only">
-            {{ form_banekane_retour.numero_aed.label }}
-            {{ form_banekane_retour.numero_aed(class_='form-control') }}
-          </div>
-          <div class="form-group aed-only">
-            {{ form_banekane_retour.type_passagers.label }}
-            {{ form_banekane_retour.type_passagers(class_='form-control') }}
-          </div>
-          <div class="form-group aed-only">
-            {{ form_banekane_retour.kilometrage_actuel.label }}
-            {{ form_banekane_retour.kilometrage_actuel(class_='form-control') }}
-          </div>
-          <!-- Champs spécifiques Prestataire -->
-          <div class="form-group prestataire-only">
-            {{ form_banekane_retour.nom_agence.label }}
-            {{ form_banekane_retour.nom_agence(class_='form-control') }}
-          </div>
-          <div class="form-group prestataire-only">
-            {{ form_banekane_retour.immat_bus.label }}
-            {{ form_banekane_retour.immat_bus(class_='form-control') }}
-          </div>
-          <div class="form-group prestataire-only">
-            {{ form_banekane_retour.nom_chauffeur_agence.label }}
-            {{ form_banekane_retour.nom_chauffeur_agence(class_='form-control') }}
-          </div>
-          <!-- Champs communs -->
-          <div class="form-group">
-            {{ form_banekane_retour.nombre_places_occupees.label }}
-            {{ form_banekane_retour.nombre_places_occupees(class_='form-control') }}
-          </div>
-          <div class="form-group full-width">
-            {{ form_banekane_retour.date_heure_depart.label }}
-            {{ form_banekane_retour.date_heure_depart(type='datetime-local', class_='form-control') }}
-          </div>
-        </div>
-        <button type="submit" class="submit-btn modal-submit">{{ form_banekane_retour.submit.label }}</button>
-      </form>
-      <div id="departBanekaneRetourFeedback"></div>
-    </div>
-  </div>
-</div>
-<!-- End Modal Départ de Banekane Retour -->
-
-<!-- Modal pour le formulaire Départ AED -->
-<div id="departAedModal" class="modal">
-  <div class="modal-content">
-    <button type="button" id="closeDepartAedModal" class="close-btn"><i class="fas fa-times"></i></button>
-    <div class="modal-header">
-      <h3><i class="fas fa-route"></i> Départ AED pour Banekane</h3>
-    </div>
-    <div class="modal-body">
-      <div class="alert alert-danger" style="display:none;" id="departAedError"></div>
-      <form method="POST" id="departAedForm" class="modal-form" action="{{ url_for('charge_transport.depart_aed') }}">
-        {{ form.hidden_tag() }}
-        <div class="form-grid">
-            <div class="form-group">
-                {{ form.date_heure_depart.label }}
-                {{ form.date_heure_depart(type='datetime-local') }}
-            </div>
-            <div class="form-group">
-                {{ form.point_depart.label }}
-                {{ form.point_depart() }}
-            </div>
-            <div class="form-group">
-                {{ form.type_passagers.label }}
-                {{ form.type_passagers() }}
-            </div>
-
-            <div class="form-group">
-                {{ form.nombre_places_occupees.label }}
-                {{ form.nombre_places_occupees() }}
-            </div>
-            <div class="form-group">
-                {{ form.chauffeur_id.label }}
-                {{ form.chauffeur_id() }}
-            </div>
-            <div class="form-group">
-                {{ form.numero_aed.label }}
-                {{ form.numero_aed() }}
-            </div>
-            <div class="form-group">
-                {{ form.kilometrage_actuel.label }}
-                {{ form.kilometrage_actuel() }}
-            </div>
-        </div>
-        <button type="submit" class="submit-btn modal-submit">{{ form.submit.label }}</button>
-      </form>
-      <div id="departAedFeedback"></div>
-    </div>
-  </div>
-</div>
-
-<script src="{{ url_for('static', filename='js/dashboard_charge.js') }}"></script>
-<script src="{{ url_for('static', filename='js/depart_aed_modal.js') }}"></script>
-<script src="{{ url_for('static', filename='js/depart_bus_agence_modal.js') }}"></script>
-<script src="{{ url_for('static', filename='js/depart_banekane_retour_modal.js') }}"></script>
-{% endblock %}
+    <script src="{{ url_for('static', filename='js/dashboard_charge.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/depart_aed_modal.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/depart_bus_agence_modal.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/depart_banekane_retour_modal.js') }}"></script>
+    {% endblock %}

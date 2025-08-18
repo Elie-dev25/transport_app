@@ -1,6 +1,10 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
+from flask_login import current_user
 from app.models.aed import AED
 from app.models.vidange import Vidange
+from app.models.utilisateur import Utilisateur
+from app.models.fuel_alert_state import FuelAlertState
+from app.utils.emailer import send_email
 from app.services.gestion_vidange import (
     get_vidange_history,
     build_bus_vidange_list,
@@ -13,6 +17,15 @@ from app.services.gestion_carburation import (
 )
 from app.database import db  # Ajout de l'import manquant
 from datetime import datetime
+from app.forms.trajet_depart_form import TrajetDepartForm
+from app.forms.trajet_prestataire_form import TrajetPrestataireForm
+from app.forms.trajet_banekane_retour_form import TrajetBanekaneRetourForm
+from app.models.chauffeur import Chauffeur
+from app.services.trajet_service import (
+    enregistrer_depart_aed,
+    enregistrer_depart_prestataire,
+    enregistrer_depart_banekane_retour,
+)
 
 # Création du blueprint pour l'administrateur
 bp = Blueprint('admin', __name__, url_prefix='/admin')
@@ -32,15 +45,20 @@ bp.before_request(lambda: None)  # Placeholder pour pouvoir ajouter le décorate
 @bp.route('/ajouter_bus_ajax', methods=['POST'])
 def ajouter_bus_ajax():
     numero = request.form.get('numero')
+    immatriculation = request.form.get('immatriculation')
     kilometrage = request.form.get('kilometrage')
     type_huile = request.form.get('type_huile')
     capacite_plein_carburant = request.form.get('capacite_plein_carburant')
+    # Nouveau champ optionnel: capacité du réservoir en litres
+    capacite_reservoir_litres = request.form.get('capacite_reservoir_litres')
+    # Nouveau champ optionnel: niveau actuel de carburant en litres
+    niveau_carburant_litres = request.form.get('niveau_carburant_litres')
     date_derniere_vidange = request.form.get('date_derniere_vidange')
     etat_vehicule = request.form.get('etat_vehicule')
     nombre_places = request.form.get('nombre_places')
     derniere_maintenance = request.form.get('derniere_maintenance')
 
-    if not all([numero, kilometrage, type_huile, capacite_plein_carburant, date_derniere_vidange, etat_vehicule, nombre_places, derniere_maintenance]):
+    if not all([numero, immatriculation, kilometrage, type_huile, capacite_plein_carburant, date_derniere_vidange, etat_vehicule, nombre_places, derniere_maintenance]):
         return jsonify({'success': False, 'message': 'Tous les champs sont obligatoires.'}), 400
 
 
@@ -63,11 +81,14 @@ def ajouter_bus_ajax():
     try:
         nouveau_aed = AED(
             numero=numero,
+            immatriculation=immatriculation,
             kilometrage=float(kilometrage),
             type_huile=type_huile,
             km_critique_huile=km_critique_huile,
             km_critique_carburant=km_critique_carburant,
             capacite_plein_carburant=capacite_val,
+            capacite_reservoir_litres=float(capacite_reservoir_litres) if capacite_reservoir_litres else None,
+            niveau_carburant_litres=float(niveau_carburant_litres) if niveau_carburant_litres else None,
             date_derniere_vidange=datetime.strptime(date_derniere_vidange, '%Y-%m-%d').date(),
             etat_vehicule=etat_vehicule,
             nombre_places=int(nombre_places),
@@ -109,8 +130,82 @@ def dashboard():
     from app.utils.trafic import daily_student_trafic
     trafic = daily_student_trafic()
     stats['etudiants'] = trafic.get('present', 0)
-    # Affiche le template HTML du dashboard admin
-    return render_template('dashboard_admin.html', stats=stats, trafic=trafic)
+
+    # Instancier les formulaires pour inclure les modales correspondantes dans le template
+    form = TrajetDepartForm()
+    form_bus = TrajetPrestataireForm()
+    form_banekane_retour = TrajetBanekaneRetourForm()
+
+    # Renseigner les choix dynamiques dépendants de la BD
+    try:
+        form.chauffeur_id.choices = [(c.chauffeur_id, f"{c.nom} {c.prenom}") for c in Chauffeur.query.all()]
+        form.numero_aed.choices = [(a.numero, a.numero) for a in AED.query.all()]
+        form_banekane_retour.chauffeur_id.choices = [(c.chauffeur_id, f"{c.nom} {c.prenom}") for c in Chauffeur.query.all()]
+        form_banekane_retour.numero_aed.choices = [(a.numero, a.numero) for a in AED.query.all()]
+    except Exception:
+        # En cas d'erreur DB, laisser les choix vides pour ne pas casser le rendu
+        form.chauffeur_id.choices = []
+        form.numero_aed.choices = []
+        form_banekane_retour.chauffeur_id.choices = []
+        form_banekane_retour.numero_aed.choices = []
+
+    # Affiche le template HTML du dashboard admin en fournissant les formulaires
+    return render_template(
+        'dashboard_admin.html',
+        stats=stats,
+        trafic=trafic,
+        form=form,
+        form_bus=form_bus,
+        form_banekane_retour=form_banekane_retour,
+        depart_aed_url=url_for('admin.depart_aed'),
+        depart_prestataire_url=url_for('admin.depart_prestataire'),
+        depart_banekane_retour_url=url_for('admin.depart_banekane_retour'),
+    )
+
+
+# --- Endpoints Admin pour enregistrements de trajets ---
+@admin_only
+@bp.route('/depart_aed', methods=['POST'])
+def depart_aed():
+    form = TrajetDepartForm(request.form)
+    # Peupler les choix dynamiques avant validation
+    try:
+        form.chauffeur_id.choices = [(c.chauffeur_id, f"{c.nom} {c.prenom}") for c in Chauffeur.query.all()]
+        form.numero_aed.choices = [(a.numero, a.numero) for a in AED.query.all()]
+    except Exception:
+        form.chauffeur_id.choices = []
+        form.numero_aed.choices = []
+    if not form.validate():
+        return jsonify({'success': False, 'message': 'Formulaire invalide', 'errors': form.errors}), 400
+    ok, msg = enregistrer_depart_aed(form, current_user)
+    status = 200 if ok else 400
+    return jsonify({'success': ok, 'message': msg}), status
+
+
+@admin_only
+@bp.route('/depart_prestataire', methods=['POST'])
+def depart_prestataire():
+    ok, msg = enregistrer_depart_prestataire(request.form, current_user)
+    status = 200 if ok else 400
+    return jsonify({'success': ok, 'message': msg}), status
+
+
+@admin_only
+@bp.route('/depart_banekane_retour', methods=['POST'])
+def depart_banekane_retour():
+    form = TrajetBanekaneRetourForm(request.form)
+    # Peupler les choix dynamiques avant validation
+    try:
+        form.chauffeur_id.choices = [(c.chauffeur_id, f"{c.nom} {c.prenom}") for c in Chauffeur.query.all()]
+        form.numero_aed.choices = [(a.numero, a.numero) for a in AED.query.all()]
+    except Exception:
+        form.chauffeur_id.choices = []
+        form.numero_aed.choices = []
+    if not form.validate():
+        return jsonify({'success': False, 'message': 'Formulaire invalide', 'errors': form.errors}), 400
+    ok, msg = enregistrer_depart_banekane_retour(form, current_user)
+    status = 200 if ok else 400
+    return jsonify({'success': ok, 'message': msg}), status
 
 # Route pour la page Bus AED qui affiche la liste des bus depuis la base
 @admin_only
@@ -159,6 +254,10 @@ def ajouter_bus():
         kilometrage = request.form.get('kilometrage')
         type_huile = request.form.get('type_huile')
         capacite_plein_carburant = request.form.get('capacite_plein_carburant')
+        # Nouveau champ optionnel
+        capacite_reservoir_litres = request.form.get('capacite_reservoir_litres')
+        # Nouveau champ optionnel
+        niveau_carburant_litres = request.form.get('niveau_carburant_litres')
         date_derniere_vidange = request.form.get('date_derniere_vidange')
         etat_vehicule = request.form.get('etat_vehicule')
         nombre_places = request.form.get('nombre_places')
@@ -189,6 +288,8 @@ def ajouter_bus():
             km_critique_huile=km_critique_huile,
             km_critique_carburant=km_critique_carburant,
             capacite_plein_carburant=cap_val,
+            capacite_reservoir_litres=float(capacite_reservoir_litres) if capacite_reservoir_litres else None,
+            niveau_carburant_litres=float(niveau_carburant_litres) if niveau_carburant_litres else None,
             date_derniere_vidange=datetime.strptime(date_derniere_vidange, '%Y-%m-%d').date(),
             etat_vehicule=etat_vehicule,
             nombre_places=int(nombre_places),
@@ -228,6 +329,7 @@ def generer_rapport():
 @admin_only
 @bp.route('/details_bus_ajax/<int:bus_id>', methods=['GET'])
 def details_bus_ajax(bus_id):
+
     bus = AED.query.get(bus_id)
     if not bus:
         return jsonify({'success': False, 'message': 'Bus introuvable.'}), 404
@@ -238,11 +340,77 @@ def details_bus_ajax(bus_id):
         'type_huile': bus.type_huile,
         'km_critique_huile': bus.km_critique_huile,
         'km_critique_carburant': bus.km_critique_carburant,
+        'capacite_reservoir_litres': bus.capacite_reservoir_litres,
+        'niveau_carburant_litres': bus.niveau_carburant_litres,
         'date_derniere_vidange': bus.date_derniere_vidange.strftime('%d/%m/%Y') if bus.date_derniere_vidange else '',
         'etat_vehicule': bus.etat_vehicule,
         'nombre_places': bus.nombre_places,
         'derniere_maintenance': bus.derniere_maintenance.strftime('%d/%m/%Y') if bus.derniere_maintenance else ''
     }
+
+@admin_only
+@bp.route('/mettre_a_jour_niveau_carburant_ajax/<int:bus_id>', methods=['POST'])
+def mettre_a_jour_niveau_carburant_ajax(bus_id):
+    bus = AED.query.get(bus_id)
+    if not bus:
+        return jsonify({'success': False, 'message': 'Bus introuvable.'}), 404
+    # Accepte JSON ou formulaire
+    if request.is_json:
+        data = request.get_json(silent=True) or {}
+        val = data.get('niveau_carburant_litres')
+    else:
+        val = request.form.get('niveau_carburant_litres')
+    try:
+        bus.niveau_carburant_litres = float(val) if val is not None and val != '' else None
+        db.session.commit()
+        # Après mise à jour, vérifier seuils et envoyer email si nécessaire (déduplication)
+        try:
+            cap = bus.capacite_reservoir_litres or 0
+            niv = bus.niveau_carburant_litres or 0
+            pct = (niv / cap * 100) if cap > 0 else None
+
+            def current_threshold(p):
+                if p is None:
+                    return None
+                if p <= 10:
+                    return 10
+                if p <= 25:
+                    return 25
+                if p <= 50:
+                    return 50
+                return None
+
+            th = current_threshold(pct)
+            state = FuelAlertState.query.filter_by(aed_id=bus.id).first()
+            last = state.last_threshold if state else None
+            if th != last:
+                # Chercher email admin
+                admin_user = Utilisateur.query.filter_by(role='ADMIN').first()
+                admin_email = getattr(admin_user, 'email', None) if admin_user else None
+                if th is not None and admin_email:
+                    subject = f"Alerte carburant AED {bus.numero}: {pct:.0f}%"
+                    body = (
+                        f"Le niveau de carburant du bus AED {bus.numero} est à {pct:.1f}% (≈ {niv} L / {cap} L).\n"
+                        f"Seuil atteint: {th}%.\n"
+                        "Cette alerte est dédupliquée: vous ne recevrez pas de nouvel email tant que le bus reste dans cette tranche."
+                    )
+                    send_email(subject, body, admin_email)
+                # Mettre à jour l'état (même si pas d'email, pour stabiliser la tranche)
+                if state:
+                    state.last_threshold = th
+                else:
+                    state = FuelAlertState(aed_id=bus.id, last_threshold=th)
+                    db.session.add(state)
+                db.session.commit()
+        except Exception:
+            db.session.rollback()
+            # On ignore les erreurs d'alerte pour ne pas casser l'UX de mise à jour
+
+        return jsonify({'success': True, 'message': 'Niveau carburant mis à jour.', 'niveau_carburant_litres': bus.niveau_carburant_litres})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
     # Récupérer les documents administratifs liés
     from app.models.document_aed import DocumentAED
     docs = DocumentAED.query.filter_by(numero_aed=bus.numero).all()
@@ -410,6 +578,39 @@ def documents_alerts_ajax():
     return jsonify({'success': True, 'alerts': alerts})
 
 
+@admin_only
+@bp.route('/fuel_alerts_ajax', methods=['GET'])
+def fuel_alerts_ajax():
+    """Retourne les alertes carburant selon les seuils 50%, 25%, 10%.
+    Status: RED (<=10), ORANGE (<=25), YELLOW (<=50).
+    """
+    alerts = []
+    buses = AED.query.all()
+    for bus in buses:
+        cap = bus.capacite_reservoir_litres or 0
+        niv = bus.niveau_carburant_litres or 0
+        if cap <= 0:
+            continue
+        pct = (niv / cap) * 100
+        status = None
+        threshold = None
+        if pct <= 10:
+            status, threshold = 'RED', 10
+        elif pct <= 25:
+            status, threshold = 'ORANGE', 25
+        elif pct <= 50:
+            status, threshold = 'YELLOW', 50
+        if status:
+            alerts.append({
+                'numero_aed': bus.numero,
+                'pourcentage': round(pct, 1),
+                'threshold': threshold,
+                'status': status,
+                'message': f"Niveau carburant {round(pct)}% (seuil {threshold}%)"
+            })
+    return jsonify({'success': True, 'alerts': alerts})
+
+
 def dashboard_mecanicien():
     from app.models.aed import AED
     bus_list = AED.query.order_by(AED.numero).all()
@@ -428,8 +629,21 @@ def vidange():
     # Récupérer tous les numéros AED distincts pour le filtre
     numeros_aed = [bus.numero for bus in bus_list]
     selected_numero = request.args.get('numero_aed')
-    if selected_numero:
-        historique_vidange = get_vidange_history(selected_numero)
+    date_debut_str = request.args.get('date_debut')
+    date_fin_str = request.args.get('date_fin')
+    date_debut = None
+    date_fin = None
+    try:
+        if date_debut_str:
+            date_debut = datetime.strptime(date_debut_str, '%Y-%m-%d').date()
+        if date_fin_str:
+            date_fin = datetime.strptime(date_fin_str, '%Y-%m-%d').date()
+    except ValueError:
+        date_debut = None
+        date_fin = None
+
+    if selected_numero or date_debut or date_fin:
+        historique_vidange = get_vidange_history(selected_numero, date_debut, date_fin)
     else:
         historique_vidange = get_vidange_history()
 
@@ -440,7 +654,9 @@ def vidange():
         historique_vidange=historique_vidange,
         numeros_aed=numeros_aed,
         selected_numero=selected_numero,
-        post_url=url_for('admin.enregistrer_vidange')
+        post_url=url_for('admin.enregistrer_vidange'),
+        selected_date_debut=date_debut_str,
+        selected_date_fin=date_fin_str
     )
 
 # Enregistrer une vidange 
@@ -474,8 +690,21 @@ def carburation():
     # Récupérer tous les numéros AED distincts pour le filtre
     numeros_aed = [bus.numero for bus in bus_list]
     selected_numero = request.args.get('numero_aed')
-    if selected_numero:
-        historique_carburation = get_carburation_history(selected_numero)
+    date_debut_str = request.args.get('date_debut')
+    date_fin_str = request.args.get('date_fin')
+    date_debut = None
+    date_fin = None
+    try:
+        if date_debut_str:
+            date_debut = datetime.strptime(date_debut_str, '%Y-%m-%d').date()
+        if date_fin_str:
+            date_fin = datetime.strptime(date_fin_str, '%Y-%m-%d').date()
+    except ValueError:
+        date_debut = None
+        date_fin = None
+
+    if selected_numero or date_debut or date_fin:
+        historique_carburation = get_carburation_history(selected_numero, date_debut, date_fin)
     else:
         historique_carburation = get_carburation_history()
 
@@ -486,7 +715,9 @@ def carburation():
         historique_carburation=historique_carburation,
         numeros_aed=numeros_aed,
         selected_numero=selected_numero,
-        post_url=url_for('admin.enregistrer_carburation')
+        post_url=url_for('admin.enregistrer_carburation'),
+        selected_date_debut=date_debut_str,
+        selected_date_fin=date_fin_str
     )
 
 # Enregistrer une carburation

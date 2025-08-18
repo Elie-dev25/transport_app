@@ -243,6 +243,11 @@ $(function() {
               <li><strong>Type d'huile :</strong> ${b.type_huile || '-'}</li>
               <li><strong>Km critique huile :</strong> ${b.km_critique_huile || '-'} ${b.km_critique_huile ? 'km' : ''}</li>
               <li><strong>Km critique carburant :</strong> ${b.km_critique_carburant || '-'} ${b.km_critique_carburant ? 'km' : ''}</li>
+              <li><strong>Capacité réservoir :</strong> ${b.capacite_reservoir_litres != null ? b.capacite_reservoir_litres + ' L' : '-'}</li>
+              <li><strong>Niveau carburant actuel :</strong>
+                <input type="number" step="0.1" id="niveauCarbInput" value="${b.niveau_carburant_litres != null ? b.niveau_carburant_litres : ''}" style="width:120px;"> L
+                <button id="saveNiveauCarbBtn" class="submit-btn" style="padding:4px 8px;margin-left:8px;">Mettre à jour</button>
+              </li>
               <li><strong>Dernière vidange :</strong> ${b.date_derniere_vidange || '-'}</li>
               <li><strong>État :</strong> ${b.etat_vehicule}</li>
               <li><strong>Places :</strong> ${b.nombre_places}</li>
@@ -256,6 +261,25 @@ $(function() {
           $('#updateAdminBtn').on('click', function(){
             $('#busDetailsModal').removeClass('show');
             $('#docFormModal').addClass('show');
+          });
+          // update fuel level
+          $('#saveNiveauCarbBtn').on('click', function(){
+            const val = $('#niveauCarbInput').val();
+            $.ajax({
+              url: '/admin/mettre_a_jour_niveau_carburant_ajax/' + busId,
+              method: 'POST',
+              data: { niveau_carburant_litres: val },
+              success: function(resp){
+                if(resp.success){
+                  Swal.fire('Succès', 'Niveau carburant mis à jour.', 'success');
+                }else{
+                  Swal.fire('Erreur', resp.message || 'Mise à jour impossible', 'error');
+                }
+              },
+              error: function(){
+                Swal.fire('Erreur', 'Mise à jour impossible', 'error');
+              }
+            });
           });
           $('#busDetailsModal').addClass('show');
         } else {

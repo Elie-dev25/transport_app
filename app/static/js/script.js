@@ -76,14 +76,103 @@ function calculateTotal() {
     tEl.value = total.toFixed(0);
 }
 
-function filterHistorique(numeroAED) {
+async function filterHistorique(numeroAED) {
     const url = new URL(window.location);
-    if (numeroAED) {
-        url.searchParams.set('numero_aed', numeroAED);
-    } else {
-        url.searchParams.delete('numero_aed');
+    if (numeroAED) url.searchParams.set('numero_aed', numeroAED);
+    else url.searchParams.delete('numero_aed');
+    // Optional date range for carburation page
+    const d1 = document.getElementById('carb_date_debut');
+    const d2 = document.getElementById('carb_date_fin');
+    const v1 = d1 && d1.value ? d1.value : '';
+    const v2 = d2 && d2.value ? d2.value : '';
+    if (v1) url.searchParams.set('date_debut', v1); else url.searchParams.delete('date_debut');
+    if (v2) url.searchParams.set('date_fin', v2); else url.searchParams.delete('date_fin');
+
+    try {
+        setLoadingState('carb', true);
+        const fetchUrl = new URL(url.toString());
+        fetchUrl.searchParams.set('_', Date.now());
+        const res = await fetch(fetchUrl.toString(), { headers: { 'X-Requested-With': 'fetch' }, cache: 'no-store' });
+        const html = await res.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const newTbody = doc.querySelector('#historique-carb-body');
+        const currentTbody = document.querySelector('#historique-carb-body');
+        if (newTbody && currentTbody) {
+            currentTbody.innerHTML = newTbody.innerHTML;
+            // Clean URL (without cache-busting param)
+            history.pushState({}, '', url);
+        } else {
+            // Fallback: if selector not found, do full reload
+            window.location = url;
+        }
+    } catch (e) {
+        window.location = url;
+    } finally {
+        setLoadingState('carb', false);
     }
-    window.location = url;
+}
+
+async function filterHistoriqueVidange(numeroAED) {
+    const url = new URL(window.location);
+    if (numeroAED) url.searchParams.set('numero_aed', numeroAED);
+    else url.searchParams.delete('numero_aed');
+    // Optional date range for vidange page
+    const d1 = document.getElementById('vid_date_debut');
+    const d2 = document.getElementById('vid_date_fin');
+    const v1 = d1 && d1.value ? d1.value : '';
+    const v2 = d2 && d2.value ? d2.value : '';
+    if (v1) url.searchParams.set('date_debut', v1); else url.searchParams.delete('date_debut');
+    if (v2) url.searchParams.set('date_fin', v2); else url.searchParams.delete('date_fin');
+
+    try {
+        setLoadingState('vid', true);
+        const fetchUrl = new URL(url.toString());
+        fetchUrl.searchParams.set('_', Date.now());
+        const res = await fetch(fetchUrl.toString(), { headers: { 'X-Requested-With': 'fetch' }, cache: 'no-store' });
+        const html = await res.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const newTbody = doc.querySelector('#historique-vid-body');
+        const currentTbody = document.querySelector('#historique-vid-body');
+        if (newTbody && currentTbody) {
+            currentTbody.innerHTML = newTbody.innerHTML;
+            history.pushState({}, '', url);
+        } else {
+            window.location = url;
+        }
+    } catch (e) {
+        window.location = url;
+    } finally {
+        setLoadingState('vid', false);
+    }
+}
+
+function setLoadingState(scope, loading) {
+    const loader = document.getElementById(scope === 'carb' ? 'carb_loader' : 'vid_loader');
+    if (loader) loader.style.display = loading ? 'inline-flex' : 'none';
+    // disable relevant inputs
+    if (scope === 'carb') {
+        const select = document.getElementById('carb_numero_select');
+        const d1 = document.getElementById('carb_date_debut');
+        const d2 = document.getElementById('carb_date_fin');
+        [select, d1, d2].forEach(el => { if (el) el.disabled = loading; });
+    } else {
+        const select = document.getElementById('numero_aed');
+        const d1 = document.getElementById('vid_date_debut');
+        const d2 = document.getElementById('vid_date_fin');
+        [select, d1, d2].forEach(el => { if (el) el.disabled = loading; });
+    }
+}
+
+function clearHistoriqueFilters() {
+    const baseUrl = window.location.origin + window.location.pathname;
+    window.location = baseUrl; // force full reload without any params
+}
+
+function clearHistoriqueVidangeFilters() {
+    const baseUrl = window.location.origin + window.location.pathname;
+    window.location = baseUrl;
 }
 
 // Safe bindings for inputs (only if present on the page)

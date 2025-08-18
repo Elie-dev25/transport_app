@@ -29,21 +29,28 @@ function toggleNotifications(){
     $('#alertPanel').toggle();
 }
 function refreshAlerts(){
-    $.get('/admin/documents_alerts_ajax', function(resp){
-        if(resp.success){
-            const alerts = resp.alerts || [];
-            $('#alertCount').text(alerts.length);
-            if(alerts.length){
-                $('#alertCount').show();
-                const items = alerts.map(a=>{
-                    const cls = a.status==='RED' ? 'red' : 'orange';
-                    return `<li style=\"margin:8px 0;font-size:14px;\"><span class='indicator ${cls}'></span>Bus ${a.numero_aed} – ${a.type_document}<br><small style='color:#64748b'>${a.reste} restant (exp. ${a.date_expiration})</small></li>`;
-                }).join('');
-                $('#alertList').html(items);
-            }else{
-                $('#alertCount').hide();
-                $('#alertList').html('<li style="padding:10px;color:#64748b">Aucune alerte</li>');
-            }
+    Promise.all([
+        $.get('/admin/documents_alerts_ajax'),
+        $.get('/admin/fuel_alerts_ajax')
+    ]).then(([docResp, fuelResp])=>{
+        const docAlerts = (docResp && docResp.success) ? (docResp.alerts || []) : [];
+        const fuelAlerts = (fuelResp && fuelResp.success) ? (fuelResp.alerts || []) : [];
+        const total = docAlerts.length + fuelAlerts.length;
+        $('#alertCount').text(total);
+        if(total){
+            $('#alertCount').show();
+            const docItems = docAlerts.map(a=>{
+                const cls = a.status==='RED' ? 'red' : 'orange';
+                return `<li style=\"margin:8px 0;font-size:14px;\"><span class='indicator ${cls}'></span>Bus ${a.numero_aed} – ${a.type_document}<br><small style='color:#64748b'>${a.reste} restant (exp. ${a.date_expiration})</small></li>`;
+            });
+            const fuelItems = fuelAlerts.map(f=>{
+                const cls = f.status==='RED' ? 'red' : (f.status==='ORANGE' ? 'orange' : 'yellow');
+                return `<li style=\"margin:8px 0;font-size:14px;\"><span class='indicator ${cls}'></span>Bus ${f.numero_aed} – ${f.message}</li>`;
+            });
+            $('#alertList').html([...fuelItems, ...docItems].join(''));
+        } else {
+            $('#alertCount').hide();
+            $('#alertList').html('<li style="padding:10px;color:#64748b">Aucune alerte</li>');
         }
     });
 }

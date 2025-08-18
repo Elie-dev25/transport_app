@@ -14,6 +14,8 @@ class Utilisateur(UserMixin, db.Model):  # Hérite de UserMixin pour Flask-Login
     reset_token = db.Column(db.String(255), nullable=True)
     reset_expires = db.Column(db.DateTime, nullable=True)
     role = db.Column(Enum('ADMIN', 'CHAUFFEUR', 'MECANICIEN', 'CHARGE', name='role_enum'), nullable=True)
+    # Champ email optionnel (doit exister dans la base). Utilisé pour les notifications admin.
+    email = db.Column(db.String(255), nullable=True)
 
     def set_password(self, password):
         # Hash le mot de passe et le stocke

@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, IntegerField, SelectField, DateField, SubmitField
+from wtforms import StringField, IntegerField, SelectField, DateField, SubmitField, FloatField
 from wtforms.validators import DataRequired, NumberRange, Length
 
 class AEDForm(FlaskForm):
@@ -33,6 +33,13 @@ class AEDForm(FlaskForm):
         'Kilomètre critique pour le carburant (km)',
         validators=[DataRequired(), NumberRange(min=0, max=999999)],
         render_kw={'placeholder': 'Ex: 25000'}
+    )
+
+    # Capacité du réservoir (L) - optionnelle
+    capacite_reservoir_litres = FloatField(
+        'Capacité réservoir (L)',
+        validators=[NumberRange(min=0)],
+        render_kw={'placeholder': 'Ex: 70.0'}
     )
 
     date_derniere_vidange = DateField(

@@ -4,10 +4,14 @@ from app.models.vidange import Vidange
 from datetime import datetime
 
 
-def get_vidange_history(numero_aed=None):
+def get_vidange_history(numero_aed=None, date_debut=None, date_fin=None):
     query = Vidange.query.join(AED, Vidange.aed_id == AED.id)
     if numero_aed:
         query = query.filter(AED.numero == numero_aed)
+    if date_debut:
+        query = query.filter(Vidange.date_vidange >= date_debut)
+    if date_fin:
+        query = query.filter(Vidange.date_vidange <= date_fin)
     # Tri: du plus récent au moins récent (date décroissante)
     return query.order_by(Vidange.date_vidange.desc()).all()
 

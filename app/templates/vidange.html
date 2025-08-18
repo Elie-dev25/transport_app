@@ -218,18 +218,27 @@ document.addEventListener('DOMContentLoaded', function () {
 <div class="main-content historique-section">
     <div class="dashboard-content">
         <h2 class="section-title"><i class="fas fa-history"></i> Historique des Vidanges</h2>
-        <form method="get" class="vidange-filter">
-            <label for="numero_aed"><i class="fas fa-bus"></i> Filtrer par numéro AED :</label>
-            <select name="numero_aed" id="numero_aed" onchange="this.form.submit()">
+        <div class="vidange-filter" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <label for="numero_aed"><i class="fas fa-bus"></i> Filtrer :</label>
+            <select name="numero_aed" id="numero_aed" onchange="filterHistoriqueVidange(this.value)">
                 <option value="">Tous</option>
                 {% for numero in numeros_aed %}
                     <option value="{{ numero }}" {% if numero == selected_numero %}selected{% endif %}>{{ numero }}</option>
                 {% endfor %}
             </select>
-        </form>
-        <div>
-            <table class="vidange-table">
-                <thead>
+            <input type="date" id="vid_date_debut" value="{{ selected_date_debut or '' }}" onchange="filterHistoriqueVidange(document.getElementById('numero_aed').value)" />
+            <span>au</span>
+            <input type="date" id="vid_date_fin" value="{{ selected_date_fin or '' }}" onchange="filterHistoriqueVidange(document.getElementById('numero_aed').value)" />
+            <button type="button" title="Effacer filtres" aria-label="Effacer filtres" onclick="clearHistoriqueVidangeFilters()" style="border:none;background:transparent;color:#ef4444;width:24px;height:24px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;">
+                <i class="fas fa-times" style="font-size:14px;"></i>
+            </button>
+            <span id="vid_loader" style="display:none;align-items:center;gap:6px;color:#6b7280;">
+                <i class="fas fa-spinner fa-spin"></i> Chargement...
+            </span>
+        </div>
+        <div class="historique-table-container" style="max-height: 400px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 8px;">
+            <table class="vidange-table" style="margin: 0;">
+                <thead style="position: sticky; top: 0; background: #f9fafb; z-index: 10;">
                     <tr>
                         <th>Numéro AED</th>
                         <th>Date Vidange</th>
@@ -238,7 +247,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         <th>Remarque</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="historique-vid-body">
                 {% for v in historique_vidange %}
                     <tr>
                         <td>{{ v.aed.numero }}</td>

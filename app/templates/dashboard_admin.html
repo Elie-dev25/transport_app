@@ -105,7 +105,7 @@
                 <div class="stat-header">
                     <div>
                         <div class="stat-value">{{ stats.trajets_jour_bus_agence }}</div>
-                        <div class="stat-label">Trajets du Jour Bus Agence</div>
+                        <div class="stat-label">Trajets du Jour prestataire</div>
                     </div>
                     <div class="stat-icon purple">
                         <i class="fas fa-bus-alt"></i>
@@ -167,7 +167,7 @@
                     <i class="fas fa-user-plus"></i>
                     <span>Nouveau Chauffeur</span>
                 </a>
-                <a href="{{ url_for('admin.planifier_trajet') }}" class="action-btn">
+                <a href="#" id="openPlanifierTrajetModal" class="action-btn">
                     <i class="fas fa-route"></i>
                     <span>Planifier Trajet</span>
                 </a>
@@ -212,6 +212,10 @@
                     <input type="text" name="numero" value="AED-" required>
                   </div>
                   <div class="form-group">
+                    <label>Immatriculation :</label>
+                    <input type="text" name="immatriculation" placeholder="Ex: DK-1234-AB" required>
+                  </div>
+                  <div class="form-group">
                     <label>Niveau de kilométrage (km) :</label>
                     <input type="number" name="kilometrage" placeholder="Ex: 15000" required>
                   </div>
@@ -226,6 +230,14 @@
                   <div class="form-group">
                     <label>Capacité du plein de carburant (km) :</label>
                     <input type="number" name="capacite_plein_carburant" placeholder="Ex: 500" required>
+                  </div>
+                  <div class="form-group">
+                    <label>Capacité du réservoir (L) :</label>
+                    <input type="number" step="0.1" name="capacite_reservoir_litres" placeholder="Ex: 70.0">
+                  </div>
+                  <div class="form-group">
+                    <label>Niveau carburant (L) :</label>
+                    <input type="number" step="0.1" name="niveau_carburant_litres" placeholder="Ex: 30.5">
                   </div>
                   <div class="form-group">
                     <label>Date de la dernière vidange :</label>
@@ -285,6 +297,49 @@
             </div>
           </div>
         </div>
+
+        <!-- Modal Planifier Trajet -->
+        <div id="planifierTrajetModal" class="modal">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h3><i class="fas fa-route"></i> Planifier un Trajet</h3>
+              <button type="button" id="closePlanifierTrajetModal" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+              <div class="trajet-type-selection">
+                <h4>Choisissez le type de trajet à planifier :</h4>
+                <div class="trajet-buttons">
+                  <a href="#" id="openDepartAedFromPlan" class="trajet-type-btn aed">
+                    <i class="fas fa-bus"></i>
+                    <span>Départ AED pour Banekane</span>
+                    <small>Bus universitaire vers le campus</small>
+                  </a>
+                  <a href="#" id="openDepartPrestataireFromPlan" class="trajet-type-btn prestataire">
+                    <i class="fas fa-bus-alt"></i>
+                    <span>Départ Prestataire</span>
+                    <small>Bus externe vers le campus</small>
+                  </a>
+                  <a href="#" id="openDepartBanekaneRetourFromPlan" class="trajet-type-btn retour">
+                    <i class="fas fa-undo-alt"></i>
+                    <span>Départ de Banekane (Retour)</span>
+                    <small>Retour du campus vers les quartiers</small>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {# Include des formulaires modales extraits (affichés sur demande) #}
+        {% if form is defined %}
+          {% include 'partials/charge_transport/_depart_aed_modal.html' %}
+        {% endif %}
+        {% if form_bus is defined %}
+          {% include 'partials/charge_transport/_depart_prestataire_modal.html' %}
+        {% endif %}
+        {% if form_banekane_retour is defined %}
+          {% include 'partials/charge_transport/_depart_banekane_retour_modal.html' %}
+        {% endif %}
 
         <script>
         $(function() {
@@ -355,6 +410,114 @@
                 setTimeout(function() { $('.flash-message.danger').fadeOut(500, function() { $(this).remove(); }); }, 3000);
               }
             });
+          });
+
+          // --- Soumissions AJAX des trajets (Admin) ---
+          function handleAjaxForm($form, $modal) {
+            $form.on('submit', function(e) {
+              e.preventDefault();
+              const $f = $(this);
+              $.ajax({
+                url: $f.attr('action'),
+                method: 'POST',
+                data: $f.serialize(),
+                success: function(resp) {
+                  if ($modal) { $modal.removeClass('show'); }
+                  const msg = resp && resp.message ? resp.message : 'Opération réussie';
+                  $('body').append('<div class="flash-message success">' + msg + '</div>');
+                  setTimeout(function() { $('.flash-message.success').fadeOut(500, function() { $(this).remove(); }); }, 3000);
+                },
+                error: function(xhr) {
+                  let msg = 'Erreur lors de l\'enregistrement';
+                  if (xhr.responseJSON) {
+                    if (xhr.responseJSON.message) msg = xhr.responseJSON.message;
+                    else if (xhr.responseJSON.errors) msg = 'Formulaire invalide';
+                  }
+                  $('body').append('<div class="flash-message danger">' + msg + '</div>');
+                  setTimeout(function() { $('.flash-message.danger').fadeOut(500, function() { $(this).remove(); }); }, 3000);
+                }
+              });
+            });
+          }
+
+          // Lier les formulaires de modales trajets
+          handleAjaxForm($('#departAedForm'), $('#departAedModal'));
+          handleAjaxForm($('#departPrestataireForm'), $('#departPrestataireModal'));
+          handleAjaxForm($('#departBanekaneRetourForm'), $('#departBanekaneRetourModal'));
+
+          // --- Toggle champs Banekane Retour selon type de bus ---
+          const $banekaneModal = $('#departBanekaneRetourModal');
+          function toggleBanekaneFields() {
+            const val = $banekaneModal.find('input[name="type_bus"]:checked').val();
+            if (val === 'PRESTATAIRE') {
+              $banekaneModal.find('.aed-only').hide();
+              $banekaneModal.find('.prestataire-only').show();
+            } else {
+              $banekaneModal.find('.prestataire-only').hide();
+              $banekaneModal.find('.aed-only').show();
+            }
+          }
+          // Changement radio
+          $banekaneModal.on('change', 'input[name="type_bus"]', toggleBanekaneFields);
+          // Initialiser à l'ouverture si vous avez un bouton d'ouverture
+          $('#openDepartBanekaneRetourModal').on('click', function(e){
+            e.preventDefault();
+            $('#departBanekaneRetourModal').addClass('show');
+            setTimeout(toggleBanekaneFields, 0);
+          });
+          // Initialiser à chargement (au cas où la modale est déjà visible)
+          toggleBanekaneFields();
+
+          // Ouvrir la modale planifier trajet
+          $('#openPlanifierTrajetModal').on('click', function(e) {
+            e.preventDefault();
+            $('#planifierTrajetModal').addClass('show');
+          });
+          // Fermer la modale planifier trajet
+          $('#closePlanifierTrajetModal').on('click', function() {
+            $('#planifierTrajetModal').removeClass('show');
+          });
+          $('#planifierTrajetModal').on('click', function(e) {
+            if (e.target === this) {
+              $(this).removeClass('show');
+            }
+          });
+
+          // Ouvrir les formulaires correspondants depuis la modale de sélection
+          $('#openDepartAedFromPlan').on('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            $('#planifierTrajetModal').removeClass('show');
+            setTimeout(function(){ $('#departAedModal').addClass('show'); }, 50);
+          });
+          $('#openDepartPrestataireFromPlan').on('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            $('#planifierTrajetModal').removeClass('show');
+            setTimeout(function(){ $('#departPrestataireModal').addClass('show'); }, 50);
+          });
+          $('#openDepartBanekaneRetourFromPlan').on('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            $('#planifierTrajetModal').removeClass('show');
+            setTimeout(function(){ $('#departBanekaneRetourModal').addClass('show'); }, 50);
+          });
+
+          // Gestion fermeture des formulaires modales inclus
+          $(document).on('click', '#closeDepartAedModal', function() {
+            $('#departAedModal').removeClass('show');
+          });
+          $(document).on('click', '#closeDepartPrestataireModal', function() {
+            $('#departPrestataireModal').removeClass('show');
+          });
+          $(document).on('click', '#closeDepartBanekaneRetourModal', function() {
+            $('#departBanekaneRetourModal').removeClass('show');
+          });
+          // Fermer si clic en dehors du contenu
+          $(document).on('click', '#departAedModal, #departPrestataireModal, #departBanekaneRetourModal', function(e) {
+            if (e.target === this) {
+              $(this).removeClass('show');
+            }
           });
         });
         </script>
