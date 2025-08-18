@@ -10,7 +10,8 @@ class AED(db.Model):
     nombre_places = db.Column(db.Integer, nullable=False)
     derniere_maintenance = db.Column(db.Date, nullable=True)
     kilometrage = db.Column(db.Integer, nullable=True)
-    type_huile = db.Column(Enum('QUARTZ', 'RUBIA', name='typehuileenum'), nullable=True)
+    # Type d'huile détaillé (ex: "Quartz 5000 20W-50")
+    type_huile = db.Column(db.String(50), nullable=True)
     km_critique_huile = db.Column(db.Integer, nullable=True)
     km_critique_carburant = db.Column(db.Integer, nullable=True)
     capacite_plein_carburant = db.Column(db.Integer, nullable=True)
@@ -18,4 +19,6 @@ class AED(db.Model):
     capacite_reservoir_litres = db.Column(db.Float, nullable=True)
     # Niveau actuel de carburant en litres (suivi en temps réel, manuel ou capteur)
     niveau_carburant_litres = db.Column(db.Float, nullable=True)
+    # Consommation spécifique du bus (km par litre). Si null, on utilisera la valeur globale.
+    consommation_km_par_litre = db.Column(db.Float, nullable=True)
     date_derniere_vidange = db.Column(db.Date, nullable=True)

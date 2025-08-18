@@ -223,8 +223,12 @@
                     <label>Type d'huile :</label>
                     <select name="type_huile" required>
                       <option value="">-- Choisir --</option>
-                      <option value="QUARTZ">Quartz</option>
-                      <option value="RUBIA">Rubia</option>
+                      <option value="Quartz 5000 20W-50">Quartz 5000 20W-50</option>
+                      <option value="Quartz 7000 10W-40">Quartz 7000 10W-40</option>
+                      <option value="Quartz 9000 5W-40">Quartz 9000 5W-40</option>
+                      <option value="Rubia TIR 7400 15W-40">Rubia TIR 7400 15W-40</option>
+                      <option value="Rubia TIR 9900 FE 5W-30">Rubia TIR 9900 FE 5W-30</option>
+                      <option value="Rubia Fleet HD 400 15W-40">Rubia Fleet HD 400 15W-40</option>
                     </select>
                   </div>
                   <div class="form-group">
@@ -324,6 +328,11 @@
                     <span>Départ de Banekane (Retour)</span>
                     <small>Retour du campus vers les quartiers</small>
                   </a>
+                  <a href="#" id="openDepartSortieHorsVilleFromPlan" class="trajet-type-btn aed">
+                    <i class="fas fa-road"></i>
+                    <span>Sortie hors de la ville (AED)</span>
+                    <small>Mission/Intervention hors ville</small>
+                  </a>
                 </div>
               </div>
             </div>
@@ -339,6 +348,9 @@
         {% endif %}
         {% if form_banekane_retour is defined %}
           {% include 'partials/charge_transport/_depart_banekane_retour_modal.html' %}
+        {% endif %}
+        {% if form_sortie is defined %}
+          {% include 'partials/charge_transport/_depart_sortie_hors_ville_modal.html' %}
         {% endif %}
 
         <script>
@@ -444,6 +456,7 @@
           handleAjaxForm($('#departAedForm'), $('#departAedModal'));
           handleAjaxForm($('#departPrestataireForm'), $('#departPrestataireModal'));
           handleAjaxForm($('#departBanekaneRetourForm'), $('#departBanekaneRetourModal'));
+          handleAjaxForm($('#departSortieHorsVilleForm'), $('#departSortieHorsVilleModal'));
 
           // --- Toggle champs Banekane Retour selon type de bus ---
           const $banekaneModal = $('#departBanekaneRetourModal');
@@ -502,6 +515,14 @@
             $('#planifierTrajetModal').removeClass('show');
             setTimeout(function(){ $('#departBanekaneRetourModal').addClass('show'); }, 50);
           });
+          $('#openDepartSortieHorsVilleFromPlan').on('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            $('#planifierTrajetModal').removeClass('show');
+            setTimeout(function(){ 
+              $('#departSortieHorsVilleModal').css('display', 'flex').addClass('show'); 
+            }, 50);
+          });
 
           // Gestion fermeture des formulaires modales inclus
           $(document).on('click', '#closeDepartAedModal', function() {
@@ -513,10 +534,16 @@
           $(document).on('click', '#closeDepartBanekaneRetourModal', function() {
             $('#departBanekaneRetourModal').removeClass('show');
           });
+          $(document).on('click', '#closeDepartSortieHorsVilleModal', function() {
+            $('#departSortieHorsVilleModal').removeClass('show').css('display', 'none');
+          });
           // Fermer si clic en dehors du contenu
-          $(document).on('click', '#departAedModal, #departPrestataireModal, #departBanekaneRetourModal', function(e) {
+          $(document).on('click', '#departAedModal, #departPrestataireModal, #departBanekaneRetourModal, #departSortieHorsVilleModal', function(e) {
             if (e.target === this) {
               $(this).removeClass('show');
+              if (this.id === 'departSortieHorsVilleModal') {
+                $(this).css('display', 'none');
+              }
             }
           });
         });

@@ -3,6 +3,16 @@ from app.models.aed import AED
 from app.models.vidange import Vidange
 from datetime import datetime
 
+# Capacités par type d'huile (km)
+OIL_CAPACITY_KM = {
+    'Quartz 5000 20W-50': 5000,
+    'Quartz 7000 10W-40': 7000,
+    'Quartz 9000 5W-40': 9000,
+    'Rubia TIR 7400 15W-40': 7400,
+    'Rubia TIR 9900 FE 5W-30': 9900,
+    'Rubia Fleet HD 400 15W-40': 400,
+}
+
 
 def get_vidange_history(numero_aed=None, date_debut=None, date_fin=None):
     query = Vidange.query.join(AED, Vidange.aed_id == AED.id)
@@ -21,10 +31,13 @@ def compute_voyant(bus: AED) -> str:
     voyant = 'green'
     if bus.kilometrage is not None and bus.km_critique_huile is not None:
         reste = bus.km_critique_huile - bus.kilometrage
-        seuil = 0.1 * (bus.km_critique_huile - bus.kilometrage)
+        # Seuil orange basé sur 10% de l'intervalle lié au type d'huile.
+        type_huile = getattr(bus, 'type_huile', None)
+        intervalle = OIL_CAPACITY_KM.get(type_huile, 600)
+        seuil_orange = 0.1 * intervalle
         if reste <= 0:
             return 'red'
-        if reste <= seuil:
+        if reste <= seuil_orange:
             return 'orange'
     return voyant
 
@@ -64,31 +77,40 @@ def enregistrer_vidange_common(data: dict) -> dict:
     km_int = int(kilometrage)
     if km_int < 0:
         raise ValueError('Le kilométrage ne peut pas être négatif.')
-    type_norm = (type_huile or '').upper()
-    if type_norm not in ('QUARTZ', 'RUBIA'):
-        raise ValueError("Type d'huile invalide.")
+    type_clean = (type_huile or '').strip()
+    if type_clean not in OIL_CAPACITY_KM:
+        raise ValueError("Type d'huile invalide. Veuillez choisir un type supporté.")
 
     bus = AED.query.get(aed_id_int)
     if not bus:
         raise LookupError('Bus introuvable.')
 
-    if bus.kilometrage is not None and km_int <= bus.kilometrage:
-        raise ValueError(f'Le kilométrage saisi ({km_int} km) doit être supérieur au kilométrage actuel ({bus.kilometrage} km).')
+    # Autoriser égalité: le kilométrage saisi doit être supérieur ou égal au kilométrage actuel
+    if bus.kilometrage is not None and km_int < bus.kilometrage:
+        raise ValueError(f'Le kilométrage saisi ({km_int} km) doit être supérieur ou égal au kilométrage actuel ({bus.kilometrage} km).')
 
     # Persister la vidange
     vidange = Vidange(
         aed_id=aed_id_int,
         date_vidange=datetime.utcnow().date(),
         kilometrage=km_int,
-        type_huile=type_norm,
+        type_huile=type_clean,
         remarque=remarque
     )
     db.session.add(vidange)
 
-    # Mettre à jour le bus
+    # Mettre à jour le bus: ajuster aussi le niveau carburant si le kilométrage évolue
+    try:
+        from app.services.trajet_service import update_autocontrol_after_km_change  # import local pour éviter les cycles
+        prev_km = bus.kilometrage
+        update_autocontrol_after_km_change(bus, km_int, prev_km)
+    except Exception:
+        # En cas d'échec (ex. import), on continue sans bloquer la vidange
+        pass
     bus.kilometrage = km_int
-    bus.type_huile = type_norm
-    bus.km_critique_huile = km_int + (700 if type_norm == 'QUARTZ' else 600)
+    bus.type_huile = type_clean
+    # Définir le km critique selon la capacité du type d'huile saisi
+    bus.km_critique_huile = km_int + OIL_CAPACITY_KM.get(type_clean, 600)
     bus.date_derniere_vidange = datetime.utcnow().date()
 
     db.session.commit()

@@ -25,11 +25,31 @@ def compute_voyant_carburant(bus: AED) -> str:
     """Calcule le voyant (green/orange/red) pour l'état carburant du bus."""
     voyant = 'green'
     if bus.kilometrage is not None and bus.km_critique_carburant is not None:
+        # Reste d'autonomie (km) avant le seuil critique
         reste = bus.km_critique_carburant - bus.kilometrage
-        seuil = 0.1 * bus.km_critique_carburant  # 10% de la capacité totale
+        # Seuil orange = 10% de l'autonomie totale (si connue). Fallback: 10% du reste courant.
+        seuil_orange = None
+        try:
+            capacite_km = float(getattr(bus, 'capacite_plein_carburant', 0) or 0)
+        except (TypeError, ValueError):
+            capacite_km = 0.0
+        if capacite_km > 0:
+            seuil_orange = 0.1 * capacite_km
+        else:
+            # Essayer d'inférer via km/L et capacité réservoir
+            try:
+                cap_res_l = float(getattr(bus, 'capacite_reservoir_litres', 0) or 0)
+            except (TypeError, ValueError):
+                cap_res_l = 0.0
+            km_par_litre = None
+            if cap_res_l > 0 and capacite_km > 0:
+                km_par_litre = capacite_km / cap_res_l
+            # Fallback: 10% du reste si on ne peut rien déduire de plus stable
+            seuil_orange = 0.1 * reste if km_par_litre is None else 0.1 * (km_par_litre * cap_res_l)
+
         if reste <= 0:
             return 'red'
-        if reste <= seuil:
+        if seuil_orange is not None and reste <= seuil_orange:
             return 'orange'
     return voyant
 
@@ -49,9 +69,9 @@ def build_bus_carburation_list():
             'immatriculation': getattr(bus, 'immatriculation', None),
             'kilometrage': bus.kilometrage,
             'capacite_plein_carburant': bus.capacite_plein_carburant,
-            'km_critique_carburant': bus.km_critique_carburant,
+            'km_critique_carburant': round(bus.km_critique_carburant, 3) if bus.km_critique_carburant is not None else None,
             'km_restant_carburant': km_restant_carburant,
-            'niveau_carburant_litres': getattr(bus, 'niveau_carburant_litres', None),
+            'niveau_carburant_litres': round(getattr(bus, 'niveau_carburant_litres', 0.0), 3) if getattr(bus, 'niveau_carburant_litres', None) is not None else None,
             'voyant': compute_voyant_carburant(bus)
         })
     return result
@@ -82,6 +102,8 @@ def enregistrer_carburation_common(data: dict) -> dict:
     quantite_float = float(quantite_litres)
     prix_float = float(prix_unitaire)
     cout_float = float(cout_total) if cout_total else quantite_float * prix_float
+    # Arrondir le coût total à 3 décimales
+    cout_float = round(cout_float, 3)
     
     if km_int < 0:
         raise ValueError('Le kilométrage ne peut pas être négatif.')
@@ -109,26 +131,10 @@ def enregistrer_carburation_common(data: dict) -> dict:
     )
     db.session.add(carburation)
 
-    # Mettre à jour le bus (kilométrage et portée jusqu'au seuil critique)
+    # Mettre à jour le bus (kilométrage, niveau carburant et portée jusqu'au seuil critique)
     bus.kilometrage = km_int
-    # Si on fait le plein, le Km restant après carburation doit être égal à la capacité plein (en km)
-    # donc: km_critique_carburant = km_int + capacite_plein_carburant.
-    if getattr(bus, 'capacite_plein_carburant', None):
-        try:
-            capacite_km = float(bus.capacite_plein_carburant)
-        except (TypeError, ValueError):
-            capacite_km = None
-    else:
-        capacite_km = None
 
-    if capacite_km and capacite_km > 0:
-        bus.km_critique_carburant = km_int + capacite_km
-    else:
-        # Valeur de repli si la capacité n'est pas renseignée: estimation simple avec km/L
-        autonomie_par_litre = 8  # km par litre (à ajuster)
-        bus.km_critique_carburant = km_int + (quantite_float * autonomie_par_litre)
-
-    # Mettre à jour le niveau de carburant (L) si suivi activé
+    # 1) Mettre à jour le niveau de carburant (L)
     try:
         capacite_reservoir = float(getattr(bus, 'capacite_reservoir_litres', 0) or 0)
     except (TypeError, ValueError):
@@ -138,13 +144,29 @@ def enregistrer_carburation_common(data: dict) -> dict:
     nouveau_niveau = base + quantite_float
     if capacite_reservoir > 0:
         nouveau_niveau = min(nouveau_niveau, capacite_reservoir)
-    # Enregistrer
     if hasattr(bus, 'niveau_carburant_litres'):
-        bus.niveau_carburant_litres = nouveau_niveau
+        bus.niveau_carburant_litres = round(nouveau_niveau, 3)
+
+    # 2) Estimer km/L
+    try:
+        capacite_km_full = float(getattr(bus, 'capacite_plein_carburant', 0) or 0)
+    except (TypeError, ValueError):
+        capacite_km_full = 0.0
+    km_par_litre_defaut = 8.0  # valeur par défaut si on ne peut pas déduire
+    if capacite_km_full > 0 and capacite_reservoir > 0:
+        km_par_litre = capacite_km_full / capacite_reservoir
+    else:
+        km_par_litre = km_par_litre_defaut
+
+    # 3) Déterminer le km critique carburant à partir du niveau courant
+    autonomie_estimee = (nouveau_niveau * km_par_litre)
+    bus.km_critique_carburant = round(km_int + autonomie_estimee, 3)
 
     db.session.commit()
 
-    km_restant_carburant = bus.km_critique_carburant - bus.kilometrage if bus.km_critique_carburant else None
+    km_restant_carburant = (bus.km_critique_carburant - bus.kilometrage) if bus.km_critique_carburant else None
+    if km_restant_carburant is not None:
+        km_restant_carburant = round(km_restant_carburant, 3)
     voyant = compute_voyant_carburant(bus)
     
     return {

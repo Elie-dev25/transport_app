@@ -19,7 +19,15 @@ class AEDForm(FlaskForm):
 
     type_huile = SelectField(
         'Type d\'huile',
-        choices=[('', '-- Choisir --'), ('QUARTZ', 'Quartz'), ('RUBIA', 'Rubia')],
+        choices=[
+            ('', '-- Choisir --'),
+            ('Quartz 5000 20W-50', 'Quartz 5000 20W-50'),
+            ('Quartz 7000 10W-40', 'Quartz 7000 10W-40'),
+            ('Quartz 9000 5W-40', 'Quartz 9000 5W-40'),
+            ('Rubia TIR 7400 15W-40', 'Rubia TIR 7400 15W-40'),
+            ('Rubia TIR 9900 FE 5W-30', 'Rubia TIR 9900 FE 5W-30'),
+            ('Rubia Fleet HD 400 15W-40', 'Rubia Fleet HD 400 15W-40'),
+        ],
         validators=[DataRequired()]
     )
 

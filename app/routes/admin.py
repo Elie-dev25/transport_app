@@ -9,6 +9,7 @@ from app.services.gestion_vidange import (
     get_vidange_history,
     build_bus_vidange_list,
     enregistrer_vidange_common,
+    OIL_CAPACITY_KM,
 )
 from app.services.gestion_carburation import (
     get_carburation_history,
@@ -20,11 +21,14 @@ from datetime import datetime
 from app.forms.trajet_depart_form import TrajetDepartForm
 from app.forms.trajet_prestataire_form import TrajetPrestataireForm
 from app.forms.trajet_banekane_retour_form import TrajetBanekaneRetourForm
+from app.forms.trajet_sortie_hors_ville_form import TrajetSortieHorsVilleForm
 from app.models.chauffeur import Chauffeur
+from app.models.aed import AED
 from app.services.trajet_service import (
     enregistrer_depart_aed,
     enregistrer_depart_prestataire,
     enregistrer_depart_banekane_retour,
+    enregistrer_depart_sortie_hors_ville,
 )
 
 # Création du blueprint pour l'administrateur
@@ -65,13 +69,12 @@ def ajouter_bus_ajax():
     kilometrage_val = float(kilometrage)
     capacite_val = float(capacite_plein_carburant)
 
-    # Calculs selon la nouvelle règle
-    if type_huile.upper() == 'QUARTZ':
-        km_critique_huile = kilometrage_val + 700
-    elif type_huile.upper() == 'RUBIA':
-        km_critique_huile = kilometrage_val + 600
-    else:
-        km_critique_huile = kilometrage_val
+    # Valider et calculer km_critique_huile selon le type d'huile détaillé
+    type_clean = (type_huile or '').strip()
+    if type_clean not in OIL_CAPACITY_KM:
+        return jsonify({'success': False, 'message': "Type d'huile invalide. Veuillez choisir un type supporté."}), 400
+    intervalle = OIL_CAPACITY_KM[type_clean]
+    km_critique_huile = kilometrage_val + intervalle
 
     # Carburant:
     # - capacite_plein_carburant: capacité (en km) d'autonomie après un plein
@@ -135,6 +138,7 @@ def dashboard():
     form = TrajetDepartForm()
     form_bus = TrajetPrestataireForm()
     form_banekane_retour = TrajetBanekaneRetourForm()
+    form_sortie = TrajetSortieHorsVilleForm()
 
     # Renseigner les choix dynamiques dépendants de la BD
     try:
@@ -142,12 +146,16 @@ def dashboard():
         form.numero_aed.choices = [(a.numero, a.numero) for a in AED.query.all()]
         form_banekane_retour.chauffeur_id.choices = [(c.chauffeur_id, f"{c.nom} {c.prenom}") for c in Chauffeur.query.all()]
         form_banekane_retour.numero_aed.choices = [(a.numero, a.numero) for a in AED.query.all()]
+        form_sortie.chauffeur_id.choices = [(c.chauffeur_id, f"{c.nom} {c.prenom}") for c in Chauffeur.query.all()]
+        form_sortie.numero_aed.choices = [(a.numero, a.numero) for a in AED.query.all()]
     except Exception:
         # En cas d'erreur DB, laisser les choix vides pour ne pas casser le rendu
         form.chauffeur_id.choices = []
         form.numero_aed.choices = []
         form_banekane_retour.chauffeur_id.choices = []
         form_banekane_retour.numero_aed.choices = []
+        form_sortie.chauffeur_id.choices = []
+        form_sortie.numero_aed.choices = []
 
     # Affiche le template HTML du dashboard admin en fournissant les formulaires
     return render_template(
@@ -157,9 +165,11 @@ def dashboard():
         form=form,
         form_bus=form_bus,
         form_banekane_retour=form_banekane_retour,
+        form_sortie=form_sortie,
         depart_aed_url=url_for('admin.depart_aed'),
         depart_prestataire_url=url_for('admin.depart_prestataire'),
         depart_banekane_retour_url=url_for('admin.depart_banekane_retour'),
+        depart_sortie_hors_ville_url=url_for('admin.depart_sortie_hors_ville'),
     )
 
 
@@ -204,6 +214,30 @@ def depart_banekane_retour():
     if not form.validate():
         return jsonify({'success': False, 'message': 'Formulaire invalide', 'errors': form.errors}), 400
     ok, msg = enregistrer_depart_banekane_retour(form, current_user)
+    status = 200 if ok else 400
+    return jsonify({'success': ok, 'message': msg}), status
+
+
+@admin_only
+@bp.route('/depart_sortie_hors_ville', methods=['POST'])
+def depart_sortie_hors_ville():
+    form = TrajetSortieHorsVilleForm(request.form)
+    # Peupler les choix dynamiques avant validation
+    try:
+        form.chauffeur_id.choices = [(c.chauffeur_id, f"{c.nom} {c.prenom}") for c in Chauffeur.query.all()]
+        form.numero_aed.choices = [(a.numero, a.numero) for a in AED.query.all()]
+    except Exception:
+        form.chauffeur_id.choices = []
+        form.numero_aed.choices = []
+    
+    # Debug: afficher les données reçues et erreurs de validation
+    print(f"DEBUG - Form data: {dict(request.form)}")
+    print(f"DEBUG - Form errors: {form.errors}")
+    print(f"DEBUG - Form validate: {form.validate()}")
+    
+    if not form.validate():
+        return jsonify({'success': False, 'message': 'Formulaire invalide', 'errors': form.errors}), 400
+    ok, msg = enregistrer_depart_sortie_hors_ville(form, current_user)
     status = 200 if ok else 400
     return jsonify({'success': ok, 'message': msg}), status
 
@@ -267,13 +301,12 @@ def ajouter_bus():
             flash('Tous les champs sont obligatoires.', 'danger')
             return render_template('ajouter_bus.html', next_num=numero)
 
-        # Calcul automatique des km critiques
-        if type_huile.upper() == 'QUARTZ':
-            km_critique_huile = 700
-        elif type_huile.upper() == 'RUBIA':
-            km_critique_huile = 600
-        else:
-            km_critique_huile = 0
+        # Validation du type d'huile et calcul automatique des km critiques selon le mapping détaillé
+        type_clean = (type_huile or '').strip()
+        if type_clean not in OIL_CAPACITY_KM:
+            flash("Type d'huile invalide. Veuillez choisir un type supporté.", 'danger')
+            return render_template('ajouter_bus.html', next_num=numero)
+        km_critique_huile = float(kilometrage) + OIL_CAPACITY_KM[type_clean]
 
         # Carburant:
         # - capacite_plein_carburant est la capacité (en km) d'autonomie après un plein
@@ -284,7 +317,7 @@ def ajouter_bus():
         nouveau_aed = AED(
             numero=numero,
             kilometrage=float(kilometrage),
-            type_huile=type_huile,
+            type_huile=type_clean,
             km_critique_huile=km_critique_huile,
             km_critique_carburant=km_critique_carburant,
             capacite_plein_carburant=cap_val,

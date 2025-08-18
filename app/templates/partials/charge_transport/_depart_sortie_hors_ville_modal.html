@@ -1,0 +1,48 @@
+<!-- Modal Sortie Hors de la Ville (AED uniquement) -->
+<div id="departSortieHorsVilleModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10000; justify-content: center; align-items: center;">
+  <div style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); border-radius: 20px; box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15); max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto; position: relative; padding: 0;">
+    <button type="button" id="closeDepartSortieHorsVilleModal" class="close-btn"><i class="fas fa-times"></i></button>
+    <div class="modal-header">
+      <h3><i class="fas fa-road"></i> Sortie hors de la ville (AED)</h3>
+    </div>
+    <div class="modal-body">
+      <div class="alert alert-danger" style="display:none;" id="departSortieHorsVilleError"></div>
+      <form method="POST" id="departSortieHorsVilleForm" class="modal-form" action="{{ depart_sortie_hors_ville_url or url_for('admin.depart_sortie_hors_ville') }}">
+        {{ form_sortie.hidden_tag() }}
+        <div class="form-grid">
+          <div class="form-group">
+            {{ form_sortie.date_heure_depart.label }}
+            {{ form_sortie.date_heure_depart(type='datetime-local') }}
+          </div>
+          <div class="form-group">
+            {{ form_sortie.point_depart.label }}
+            {{ form_sortie.point_depart(placeholder='Ex: Mfetum, Ancienne mairie, ou autre...') }}
+          </div>
+          <div class="form-group">
+            {{ form_sortie.chauffeur_id.label }}
+            {{ form_sortie.chauffeur_id() }}
+          </div>
+          <div class="form-group">
+            {{ form_sortie.numero_aed.label }}
+            {{ form_sortie.numero_aed() }}
+          </div>
+          <div class="form-group">
+            {{ form_sortie.kilometrage_actuel.label }}
+            {{ form_sortie.kilometrage_actuel() }}
+          </div>
+          <div class="form-group full-width">
+            {{ form_sortie.destination.label }}
+            {{ form_sortie.destination(placeholder='Ex: Douala, Yaoundé...') }}
+          </div>
+          <div class="form-group full-width">
+            {{ form_sortie.motif.label }}
+            {{ form_sortie.motif(placeholder='Ex: Mission, Achat pièces, Intervention...') }}
+          </div>
+        </div>
+        <button type="submit" class="submit-btn modal-submit">{{ form_sortie.submit.label }}</button>
+      </form>
+      <div id="departSortieHorsVilleFeedback"></div>
+    </div>
+  </div>
+</div>
+<!-- End Modal Sortie Hors de la Ville -->

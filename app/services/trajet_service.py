@@ -19,6 +19,94 @@ from app.models.prestataire import Prestataire
 from app.models.chargetransport import Chargetransport
 
 
+# Paramètre global par défaut: autonomie (km par litre). Peut être surchargé par bus.
+AUTONOMIE_KM_PAR_LITRE = 8.0
+
+
+def update_autocontrol_after_km_change(aed: AED, new_km: int, prev_km: Optional[int]) -> None:
+    """
+    Met à jour automatiquement le niveau de carburant estimé en fonction du delta kilométrique.
+    - Utilise la consommation spécifique du bus (aed.consommation_km_par_litre) si définie,
+      sinon la constante globale AUTONOMIE_KM_PAR_LITRE.
+    - Ne modifie pas les seuils critiques (km_critique_*), qui sont exprimés en km.
+    """
+    if new_km is None:
+        return
+    try:
+        prev = int(prev_km) if prev_km is not None else None
+        newv = int(new_km)
+    except (TypeError, ValueError):
+        return
+    if prev is None:
+        return
+    delta = newv - prev
+    if delta <= 0:
+        return
+
+    # Déterminer l'autonomie (km par litre)
+    autonomie = None
+    # 1) Consommation spécifique si définie
+    if getattr(aed, 'consommation_km_par_litre', None):
+        try:
+            autonomie = float(aed.consommation_km_par_litre)
+        except (TypeError, ValueError):
+            autonomie = None
+    # 2) Sinon, calculer à partir des capacités si disponibles: km plein / litres réservoir
+    if autonomie is None and getattr(aed, 'capacite_plein_carburant', None) and getattr(aed, 'capacite_reservoir_litres', None):
+        try:
+            km_plein = float(aed.capacite_plein_carburant)
+            litres = float(aed.capacite_reservoir_litres)
+            if km_plein > 0 and litres and litres > 0:
+                autonomie = km_plein / litres
+        except (TypeError, ValueError, ZeroDivisionError):
+            autonomie = None
+    # 3) Repli sur la constante globale
+    if autonomie is None:
+        autonomie = float(AUTONOMIE_KM_PAR_LITRE)
+
+    if autonomie <= 0:
+        return
+
+    # Mettre à jour le niveau de carburant (si suivi activé)
+    if hasattr(aed, 'niveau_carburant_litres') and aed.niveau_carburant_litres is not None:
+        consommation_l = float(delta) / autonomie
+        nouveau_niveau = (aed.niveau_carburant_litres or 0.0) - consommation_l
+        # Clamp entre 0 et capacité réservoir si connue
+        try:
+            cap = float(aed.capacite_reservoir_litres) if getattr(aed, 'capacite_reservoir_litres', None) else None
+        except (TypeError, ValueError):
+            cap = None
+        if nouveau_niveau < 0:
+            nouveau_niveau = 0.0
+        if cap and cap > 0:
+            nouveau_niveau = min(nouveau_niveau, cap)
+        aed.niveau_carburant_litres = round(nouveau_niveau, 3)
+        # Recalculer le km critique carburant à partir du niveau courant
+        # Priorité: consommation spécifique -> capacités plein / réservoir -> constante globale
+        km_par_litre = None
+        if getattr(aed, 'consommation_km_par_litre', None):
+            try:
+                km_par_litre = float(aed.consommation_km_par_litre)
+            except (TypeError, ValueError):
+                km_par_litre = None
+        if km_par_litre is None and getattr(aed, 'capacite_plein_carburant', None) and getattr(aed, 'capacite_reservoir_litres', None):
+            try:
+                km_plein = float(aed.capacite_plein_carburant)
+                litres = float(aed.capacite_reservoir_litres)
+                if km_plein > 0 and litres and litres > 0:
+                    km_par_litre = km_plein / litres
+            except (TypeError, ValueError, ZeroDivisionError):
+                km_par_litre = None
+        if km_par_litre is None:
+            km_par_litre = float(AUTONOMIE_KM_PAR_LITRE)
+        # Mettre à jour l'odomètre critique carburant
+        try:
+            aed.km_critique_carburant = round(float(newv) + (aed.niveau_carburant_litres * km_par_litre), 3)
+        except Exception:
+            # En cas d'erreur de conversion, ne pas casser le flux
+            pass
+
+
 def enregistrer_depart_aed(form, user) -> Tuple[bool, str]:
     """
     Enregistrer un départ AED (formulaire Flask-WTF validé).
@@ -43,11 +131,69 @@ def enregistrer_depart_aed(form, user) -> Tuple[bool, str]:
         if hasattr(form, 'kilometrage_actuel') and form.kilometrage_actuel.data is not None:
             aed = AED.query.filter_by(numero=form.numero_aed.data).first()
             if aed:
-                aed.kilometrage = form.kilometrage_actuel.data
+                prev_km = aed.kilometrage
+                new_km = form.kilometrage_actuel.data
+                # Validation: le nouvel odomètre ne doit pas être inférieur à l'ancien
+                try:
+                    if prev_km is not None and int(new_km) < int(prev_km):
+                        db.session.rollback()
+                        return False, f"Kilométrage invalide: {new_km} < {prev_km}."
+                except (TypeError, ValueError):
+                    db.session.rollback()
+                    return False, "Kilométrage invalide."
+                update_autocontrol_after_km_change(aed, new_km, prev_km)
+                aed.kilometrage = new_km
                 db.session.add(aed)
 
         db.session.commit()
         return True, 'Départ AED enregistré avec succès.'
+    except Exception as e:
+        db.session.rollback()
+        return False, f'Erreur : {e}'
+
+
+def enregistrer_depart_sortie_hors_ville(form, user) -> Tuple[bool, str]:
+    """
+    Enregistrer un départ AED pour une sortie hors de la ville (formulaire Flask-WTF validé).
+    Champs attendus: point_depart, chauffeur_id, numero_aed, destination, motif,
+    kilometrage_actuel, date_heure_depart.
+    """
+    try:
+        _ensure_chargetransport_for_user(user.utilisateur_id)
+        trajet = Trajet(
+            date_heure_depart=form.date_heure_depart.data,
+            point_depart=form.point_depart.data,
+            type_passagers=None,  # NULL pour les sorties hors ville
+            nombre_places_occupees=None,  # NULL pour les sorties hors ville
+            chauffeur_id=form.chauffeur_id.data,
+            numero_aed=form.numero_aed.data,
+            immat_bus=None,
+            enregistre_par=user.utilisateur_id,
+            destination=form.destination.data,
+            motif=form.motif.data,
+        )
+        db.session.add(trajet)
+
+        # Mettre à jour le kilométrage du véhicule AED
+        if hasattr(form, 'kilometrage_actuel') and form.kilometrage_actuel.data is not None:
+            aed = AED.query.filter_by(numero=form.numero_aed.data).first()
+            if aed:
+                prev_km = aed.kilometrage
+                new_km = form.kilometrage_actuel.data
+                # Validation: le nouvel odomètre ne doit pas être inférieur à l'ancien
+                try:
+                    if prev_km is not None and int(new_km) < int(prev_km):
+                        db.session.rollback()
+                        return False, f"Kilométrage invalide: {new_km} < {prev_km}."
+                except (TypeError, ValueError):
+                    db.session.rollback()
+                    return False, "Kilométrage invalide."
+                update_autocontrol_after_km_change(aed, new_km, prev_km)
+                aed.kilometrage = new_km
+                db.session.add(aed)
+
+        db.session.commit()
+        return True, 'Sortie hors de la ville (AED) enregistrée avec succès.'
     except Exception as e:
         db.session.rollback()
         return False, f'Erreur : {e}'
@@ -131,7 +277,18 @@ def enregistrer_depart_banekane_retour(form, user) -> Tuple[bool, str]:
             if hasattr(form, 'kilometrage_actuel') and form.kilometrage_actuel.data is not None:
                 aed = AED.query.filter_by(numero=form.numero_aed.data).first()
                 if aed:
-                    aed.kilometrage = form.kilometrage_actuel.data
+                    prev_km = aed.kilometrage
+                    new_km = form.kilometrage_actuel.data
+                    # Validation: le nouvel odomètre ne doit pas être inférieur à l'ancien
+                    try:
+                        if prev_km is not None and int(new_km) < int(prev_km):
+                            db.session.rollback()
+                            return False, f"Kilométrage invalide: {new_km} < {prev_km}."
+                    except (TypeError, ValueError):
+                        db.session.rollback()
+                        return False, "Kilométrage invalide."
+                    update_autocontrol_after_km_change(aed, new_km, prev_km)
+                    aed.kilometrage = new_km
                     db.session.add(aed)
             db.session.commit()
             return True, 'Départ de Banekane (retour) enregistré et kilométrage mis à jour !'
