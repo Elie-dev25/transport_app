@@ -23,15 +23,13 @@ bp = Blueprint('charge_transport', __name__, url_prefix='/charge')
 def dashboard():
     from app.models.trajet import Trajet
     today = date.today()
-    # Nombre de trajets du jour enregistrés par CE chargé de transport
+    # Nombre total de trajets du jour (aligné avec le dashboard admin)
     trajets_jour_aed = Trajet.query.filter(
         db.func.date(Trajet.date_heure_depart) == today,
-        Trajet.enregistre_par == current_user.utilisateur_id,
         Trajet.numero_aed != None
     ).count()
     trajets_jour_prestataire = Trajet.query.filter(
         db.func.date(Trajet.date_heure_depart) == today,
-        Trajet.enregistre_par == current_user.utilisateur_id,
         Trajet.immat_bus != None
     ).count()
     # Statistiques trafic étudiants temps réel

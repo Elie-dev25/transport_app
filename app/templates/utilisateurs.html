@@ -41,7 +41,7 @@
             <tbody>
                 {% for user in user_list %}
                 <tr style="text-align:center;">
-                    <td style="padding:10px 0;">{{ user.nom_utilisateur }}</td>
+                    <td style="padding:10px 0;">{{ ((user.prenom ~ ' ' ~ user.nom)|trim) or user.login }}</td>
                     <td>{{ user.login }}</td>
                     <td>{{ user.role or '' }}</td>
                     <td>
@@ -58,43 +58,8 @@
     </div>
 </div>
 
-<!-- Modal pour ajout utilisateur -->
-<div id="addUserModal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h3><i class="fas fa-user-plus"></i> Ajouter un utilisateur</h3>
-      <button type="button" id="closeAddUserModal" class="close-btn">&times;</button>
-    </div>
-    <div class="modal-body">
-      <form id="addUserForm">
-        <div class="form-grid">
-          <div class="form-group full-width">
-            <label>Nom complet :</label>
-            <input type="text" name="nom_utilisateur" required>
-          </div>
-          <div class="form-group">
-            <label>Login :</label>
-            <input type="text" name="login" required>
-          </div>
-          <div class="form-group">
-            <label>Mot de passe :</label>
-            <input type="password" name="mot_de_passe" required>
-          </div>
-          <div class="form-group">
-            <label>Rôle :</label>
-            <select name="role" required>
-              <option value="ADMIN">Administrateur</option>
-              <option value="CHAUFFEUR">Chauffeur</option>
-              <option value="MECANICIEN">Mécanicien</option>
-              <option value="CHARGE">Chargé de transport</option>
-            </select>
-          </div>
-        </div>
-        <button type="submit" class="submit-btn">Ajouter</button>
-      </form>
-    </div>
-  </div>
-</div>
+<!-- Modal pour ajout utilisateur (partiel commun) -->
+{% include 'partials/admin/_add_user_modal.html' %}
 
 <script>
 $(function() {
@@ -134,6 +99,13 @@ $(function() {
   $('#openAddUserModal').on('click', function(e) {
     e.preventDefault();
     $('#addUserModal').addClass('show');
+    // Init champs chauffeur selon rôle sélectionné et auto-login
+    setTimeout(function(){
+      toggleChauffeurFields();
+      // réinitialiser le flag d'édition manuelle du login
+      $('#addUserForm input[name="login"]').data('userEdited', false);
+      updateLoginFromName();
+    }, 0);
   });
   // Fermeture de la modale
   $('#closeAddUserModal').on('click', function() {
@@ -143,6 +115,51 @@ $(function() {
     if (e.target === this) {
       $(this).removeClass('show');
     }
+  });
+  // Toggle champs Chauffeur selon rôle
+  function toggleChauffeurFields() {
+    const role = $('#roleSelectAddUser').val();
+    const isPermisRole = (role === 'CHAUFFEUR' || role === 'MECANICIEN');
+    const $container = $('#addUserForm');
+    const $permis = $container.find('.permis-only');
+    const $num = $container.find('input[name="numero_permis"]');
+    const $del = $container.find('input[name="date_delivrance_permis"]');
+    const $exp = $container.find('input[name="date_expiration_permis"]');
+    if (isPermisRole) {
+      $permis.show();
+      $num.attr('required', true);
+      $del.attr('required', true);
+      $exp.attr('required', true);
+    } else {
+      $permis.hide();
+      $num.removeAttr('required');
+      $del.removeAttr('required');
+      $exp.removeAttr('required');
+    }
+  }
+  $(document).on('change', '#roleSelectAddUser', toggleChauffeurFields);
+  // --- Auto-génération du login depuis nom + prénom ---
+  function slugify(str) {
+    return (str || '')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9\.]+/g, '')
+      .replace(/\.+/g, '.')
+      .replace(/^\.|\.$/g, '');
+  }
+  function updateLoginFromName() {
+    const $login = $('#addUserForm input[name="login"]');
+    if ($login.data('userEdited')) return; // ne pas écraser si l'utilisateur a saisi
+    const nom = ($('#addUserForm input[name="nom"]').val() || '').trim();
+    const prenom = ($('#addUserForm input[name="prenom"]').val() || '').trim();
+    if (!nom && !prenom) return;
+    const base = [prenom, nom].filter(Boolean).join('.');
+    const candidate = slugify(base);
+    if (candidate) { $login.val(candidate); }
+  }
+  $(document).on('input', '#addUserForm input[name="nom"], #addUserForm input[name="prenom"]', updateLoginFromName);
+  $(document).on('input', '#addUserForm input[name="login"]', function(){
+    $(this).data('userEdited', true);
   });
   // Soumission du formulaire d'ajout d'utilisateur
   $('#addUserForm').on('submit', function(e) {

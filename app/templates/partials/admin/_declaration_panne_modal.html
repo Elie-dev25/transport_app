@@ -1,0 +1,59 @@
+<!-- Modal Déclaration de Panne -->
+<div id="panneModal" class="modal">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header">
+            <h3><i class="fas fa-triangle-exclamation"></i> Déclaration de Panne</h3>
+            <button type="button" id="closePanneModal" class="close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="panneForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="numero_aed_panne">Numéro AED *</label>
+                        <input type="text" id="numero_aed_panne" name="numero_aed" placeholder="Ex: AED-1234" list="aedNumerosList" autocomplete="off">
+                        <datalist id="aedNumerosList"></datalist>
+                    </div>
+                    <div class="form-group">
+                        <label for="immatriculation_panne">Immatriculation</label>
+                        <input type="text" id="immatriculation_panne" name="immatriculation" placeholder="Ex: AB-123-CD">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="kilometrage_panne">Kilométrage actuel</label>
+                        <input type="number" id="kilometrage_panne" name="kilometrage" step="0.1" placeholder="Ex: 152340" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="criticite_panne">Criticité *</label>
+                        <select id="criticite_panne" name="criticite" required>
+                            <option value="">-- Sélectionner --</option>
+                            <option value="FAIBLE">Faible</option>
+                            <option value="MOYENNE">Moyenne</option>
+                            <option value="HAUTE">Haute</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="description_panne">Description de la panne *</label>
+                    <textarea id="description_panne" name="description" rows="4" required 
+                              placeholder="Décrivez la panne observée..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="immobilisation_panne" name="immobilisation" value="1">
+                        Bus immobilisé (ne peut plus circuler)
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label for="enregistre_par_panne">Enregistré par</label>
+                    <input type="text" id="enregistre_par_panne" name="enregistre_par" readonly style="background-color: #f3f4f6;"
+                           value="{{ ((current_user.nom ~ ' ' ~ current_user.prenom)|trim) or current_user.login }}">
+                </div>
+                <div class="form-actions">
+                    
+                    <button type="submit" class="submit-btn">Enregistrer la panne</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

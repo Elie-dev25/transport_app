@@ -72,7 +72,7 @@
                                     data-aed-id="{{ bus.id }}"
                                     data-numero="{{ bus.numero|e }}"
                                     data-immatriculation="{{ bus.immatriculation|default('', true)|e }}"
-                                    data-effectue-par="{{ (current_user.nom_utilisateur ~ ' ' ~ current_user.prenom)|e }}">
+                                    data-effectue-par="{{ (((current_user.nom ~ ' ' ~ current_user.prenom)|trim) or current_user.login)|e }}">
                                 <i class="fas fa-gas-pump"></i>
                                 Effectuer Carburation
                             </button>

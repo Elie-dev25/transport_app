@@ -50,7 +50,7 @@
                                 data-open-vidange="1"
                                 data-bus-id="{{ bus.id }}"
                                 data-numero="{{ bus.numero|e }}"
-                                data-demandeur="{{ (current_user.nom_utilisateur ~ ' ' ~ current_user.prenom)|e }}">
+                                data-demandeur="{{ (((current_user.nom ~ ' ' ~ current_user.prenom)|trim) or current_user.login)|e }}">
                                 <i class="fas fa-oil-can"></i> Effectuer une vidange
                             </button>
                         </td>

@@ -43,7 +43,7 @@
             <div class="user-menu">
                 <div class="user-avatar">{{ current_user.initials }}</div>
                 <div>
-                    <div style="font-weight: 600; font-size: 14px;">{{ current_user.nom_utilisateur }}</div>
+                    <div style="font-weight: 600; font-size: 14px;">{{ ((current_user.nom ~ ' ' ~ current_user.prenom)|trim) or current_user.login }}</div>
                     <div style="font-size: 12px; color: #64748b;">{{ current_user.login }}</div>
                 </div>
             </div>
@@ -67,7 +67,7 @@
                 {% for bus in bus_list %}
                 <tr style="text-align:center;">
                     <td style="padding:10px 0;">{{ bus.numero }}</td>
-                    <td>{{ bus.etat_vehicule }}</td>
+                    <td>{{ bus.etat_vehicule|status_label }}</td>
                     <td>{{ bus.kilometrage if bus.kilometrage else '-' }} {{ 'km' if bus.kilometrage else '' }}</td>
                     <td>{{ bus.type_huile if bus.type_huile else '-' }}</td>
                     <td>{{ bus.km_critique_huile if bus.km_critique_huile else '-' }} {{ 'km' if bus.km_critique_huile else '' }}</td>
@@ -102,7 +102,7 @@
                     <span style="position:absolute;top:2px;left:{{ slider_pos }};width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 4px #0002;transition:left 0.2s;"></span>
                 </span>
                 <span style="margin-left:8px;font-size:13px;font-weight:bold;color:{{ etat_color }};">
-                    {% if bus.etat_vehicule == 'DEFAILLANT' %}Panne{% else %}Bonne{% endif %}
+                    {% if bus.etat_vehicule == 'DEFAILLANT' %}Hors service{% else %}Bonne{% endif %}
                 </span>
             </label>
         </div>

@@ -22,3 +22,5 @@ class AED(db.Model):
     # Consommation spécifique du bus (km par litre). Si null, on utilisera la valeur globale.
     consommation_km_par_litre = db.Column(db.Float, nullable=True)
     date_derniere_vidange = db.Column(db.Date, nullable=True)
+    # Relation ORM: un AED peut avoir plusieurs pannes
+    pannes = db.relationship('PanneAED', backref='aed', lazy=True)

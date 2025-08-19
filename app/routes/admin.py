@@ -4,6 +4,7 @@ from app.models.aed import AED
 from app.models.vidange import Vidange
 from app.models.utilisateur import Utilisateur
 from app.models.fuel_alert_state import FuelAlertState
+from app.models.panne_aed import PanneAED
 from app.utils.emailer import send_email
 from app.services.gestion_vidange import (
     get_vidange_history,
@@ -248,6 +249,24 @@ def bus():
     bus_list = AED.query.order_by(AED.numero).all()
     return render_template('bus_aed.html', bus_list=bus_list)
 
+# Route AJAX: liste des AED pour autocomplétion (numero, immatriculation, kilometrage)
+@admin_only
+@bp.route('/aed_list_ajax', methods=['GET'])
+def aed_list_ajax():
+    try:
+        buses = AED.query.order_by(AED.numero).all()
+        data = [
+            {
+                'id': b.id,
+                'numero': b.numero,
+                'immatriculation': b.immatriculation,
+                'kilometrage': b.kilometrage
+            } for b in buses
+        ]
+        return jsonify({'success': True, 'aed': data})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 # Route pour la page Chauffeurs qui affiche la liste des chauffeurs depuis la base
 @admin_only
 @bp.route('/chauffeurs')
@@ -261,7 +280,7 @@ def chauffeurs():
 @bp.route('/utilisateurs')
 def utilisateurs():
     from app.models.utilisateur import Utilisateur
-    user_list = Utilisateur.query.order_by(Utilisateur.nom_utilisateur).all()
+    user_list = Utilisateur.query.order_by(Utilisateur.nom, Utilisateur.prenom).all()
     return render_template('utilisateurs.html', user_list=user_list, active_page='utilisateurs')
 
 # Route placeholder pour la page Rapports (pour éviter les erreurs de lien)
@@ -444,6 +463,81 @@ def mettre_a_jour_niveau_carburant_ajax(bus_id):
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
 
+
+# Route pour enregistrer une déclaration de panne
+@admin_only
+@bp.route('/declarer_panne', methods=['POST'])
+def declarer_panne():
+    data = request.get_json(silent=True) or {}
+    
+    numero_aed = data.get('numero_aed')
+    immatriculation = data.get('immatriculation')
+    kilometrage = data.get('kilometrage')
+    description = data.get('description')
+    criticite = data.get('criticite')
+    immobilisation = data.get('immobilisation', False)
+    
+    if not all([numero_aed, description, criticite]):
+        return jsonify({'success': False, 'message': 'Champs obligatoires manquants.'}), 400
+    
+    if criticite not in ['FAIBLE', 'MOYENNE', 'HAUTE']:
+        return jsonify({'success': False, 'message': 'Criticité invalide.'}), 400
+    
+    try:
+        # Vérifier l'existence du bus et valider le kilométrage
+        bus_existant = AED.query.filter_by(numero=numero_aed).first()
+        if not bus_existant:
+            return jsonify({'success': False, 'message': "Numéro AED inconnu. Veuillez sélectionner un numéro existant."}), 400
+        # Normaliser immobilisation (peut venir en bool, str, int)
+        if isinstance(immobilisation, str):
+            immobilisation_bool = immobilisation.strip().lower() in ('true', '1', 'oui', 'on')
+        else:
+            immobilisation_bool = bool(immobilisation)
+
+        km_val = None
+        if kilometrage not in (None, ''):
+            try:
+                km_val = float(kilometrage)
+            except ValueError:
+                return jsonify({'success': False, 'message': 'Kilométrage invalide.'}), 400
+        if km_val is not None:
+            km_bd = bus_existant.kilometrage or 0
+            if km_val < km_bd:
+                return jsonify({'success': False, 'message': f'Le kilométrage doit être supérieur ou égal à {km_bd}.'}), 400
+            # Mettre à jour le kilométrage du bus si la valeur est valide
+            bus_existant.kilometrage = km_val
+
+        # Récupérer le nom complet de l'utilisateur connecté (défensif)
+        nom = getattr(current_user, 'nom', None)
+        prenom = getattr(current_user, 'prenom', None)
+        full_name = " ".join([p for p in [nom, prenom] if p]) if (nom or prenom) else None
+        login = getattr(current_user, 'login', None)
+        enregistre_par = full_name or login or (getattr(current_user, 'get_id', lambda: None)() or 'Inconnu')
+        
+        nouvelle_panne = PanneAED(
+            aed_id=bus_existant.id,
+            numero_aed=numero_aed,
+            immatriculation=immatriculation,
+            kilometrage=km_val if km_val is not None else None,
+            description=description,
+            criticite=criticite,
+            immobilisation=immobilisation_bool,
+            enregistre_par=enregistre_par
+        )
+        
+        # Si immobilisation, mettre à jour l'état du bus
+        if immobilisation_bool:
+            bus_existant.etat_vehicule = 'DEFAILLANT'
+        
+        db.session.add(nouvelle_panne)
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Panne déclarée avec succès.'})
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
     # Récupérer les documents administratifs liés
     from app.models.document_aed import DocumentAED
     docs = DocumentAED.query.filter_by(numero_aed=bus.numero).all()
@@ -510,7 +604,8 @@ def ajouter_document_aed_ajax(bus_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
-    return jsonify({'success': True, 'message': 'Document ajouté.'})
+
+
 
 # Route pour supprimer un bus en AJAX via son id
 @admin_only

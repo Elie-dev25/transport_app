@@ -115,6 +115,10 @@ def enregistrer_depart_aed(form, user) -> Tuple[bool, str]:
     """
     try:
         _ensure_chargetransport_for_user(user.utilisateur_id)
+        # Refus si l'AED est défaillant
+        aed_bus = AED.query.filter_by(numero=form.numero_aed.data).first()
+        if aed_bus and getattr(aed_bus, 'etat_vehicule', None) == 'DEFAILLANT':
+            return False, f"Le bus AED {aed_bus.numero} est immobilisé (DEFAILLANT) et ne peut pas être utilisé pour un trajet."
         trajet = Trajet(
             date_heure_depart=form.date_heure_depart.data,
             point_depart=form.point_depart.data,
@@ -160,6 +164,10 @@ def enregistrer_depart_sortie_hors_ville(form, user) -> Tuple[bool, str]:
     """
     try:
         _ensure_chargetransport_for_user(user.utilisateur_id)
+        # Refus si l'AED est défaillant
+        aed_bus = AED.query.filter_by(numero=form.numero_aed.data).first()
+        if aed_bus and getattr(aed_bus, 'etat_vehicule', None) == 'DEFAILLANT':
+            return False, f"Le bus AED {aed_bus.numero} est immobilisé (DEFAILLANT) et ne peut pas être utilisé pour un trajet."
         trajet = Trajet(
             date_heure_depart=form.date_heure_depart.data,
             point_depart=form.point_depart.data,
@@ -262,6 +270,10 @@ def enregistrer_depart_banekane_retour(form, user) -> Tuple[bool, str]:
         _ensure_chargetransport_for_user(user.utilisateur_id)
         type_bus = getattr(form, 'type_bus').data
         if type_bus == 'AED':
+            # Refus si l'AED est défaillant
+            aed_bus = AED.query.filter_by(numero=form.numero_aed.data).first()
+            if aed_bus and getattr(aed_bus, 'etat_vehicule', None) == 'DEFAILLANT':
+                return False, f"Le bus AED {aed_bus.numero} est immobilisé (DEFAILLANT) et ne peut pas être utilisé pour un trajet."
             trajet = Trajet(
                 date_heure_depart=form.date_heure_depart.data,
                 point_depart='Banekane',

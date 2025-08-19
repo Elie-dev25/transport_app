@@ -8,14 +8,16 @@ class Utilisateur(UserMixin, db.Model):  # Hérite de UserMixin pour Flask-Login
     __tablename__ = "utilisateur"
 
     utilisateur_id = db.Column(db.Integer, primary_key=True)  # Identifiant unique
-    nom_utilisateur = db.Column(db.String(100), nullable=False)  # Nom complet
+    nom = db.Column(db.String(100), nullable=False)  # Nom
+    prenom = db.Column(db.String(100), nullable=False)  # Prénom
     login = db.Column(db.String(50), unique=True, nullable=False)  # Login unique
     mot_de_passe = db.Column(db.String(255), nullable=False)  # Mot de passe hashé
     reset_token = db.Column(db.String(255), nullable=True)
     reset_expires = db.Column(db.DateTime, nullable=True)
     role = db.Column(Enum('ADMIN', 'CHAUFFEUR', 'MECANICIEN', 'CHARGE', name='role_enum'), nullable=True)
-    # Champ email optionnel (doit exister dans la base). Utilisé pour les notifications admin.
-    email = db.Column(db.String(255), nullable=True)
+    # Email et téléphone désormais obligatoires pour tous les utilisateurs
+    email = db.Column(db.String(255), nullable=False)
+    telephone = db.Column(db.String(50), nullable=False)
 
     def set_password(self, password):
         # Hash le mot de passe et le stocke

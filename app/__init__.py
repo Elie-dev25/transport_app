@@ -51,6 +51,13 @@ def create_app():
     from app.routes.admin_ajax import bp_ajax
     app.register_blueprint(bp_ajax, url_prefix='/admin')
 
+    # Filtre Jinja pour afficher les statuts avec mapping UI (sans changer la BD)
+    def status_label(value: str) -> str:
+        if value == 'DEFAILLANT':
+            return 'HORS_SERVICE'
+        return value
+    app.jinja_env.filters['status_label'] = status_label
+
     @app.route('/')
     def accueil():
         from flask import render_template

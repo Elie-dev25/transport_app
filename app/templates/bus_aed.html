@@ -77,7 +77,7 @@
                     <!-- <td>{{ bus.km_critique_huile if bus.km_critique_huile else '-' }} {{ 'km' if bus.km_critique_huile else '' }}</td> -->
                     <!-- <td>{{ bus.km_critique_carburant if bus.km_critique_carburant else '-' }} {{ 'km' if bus.km_critique_carburant else '' }}</td> -->
                     <!-- <td>{{ bus.date_derniere_vidange.strftime('%d/%m/%Y') if bus.date_derniere_vidange else '-' }}</td> -->
-                    <td>{{ bus.etat_vehicule }}</td>
+                    <td>{{ bus.etat_vehicule|status_label }}</td>
                     <td>{{ bus.nombre_places }}</td>
                     <!-- <td>{{ bus.derniere_maintenance.strftime('%d/%m/%Y') if bus.derniere_maintenance else '' }}</td> -->
                     <td>
@@ -107,6 +107,10 @@
                 <a href="{{ url_for('admin.vidange') }}" class="action-btn">
                     <i class="fas fa-oil-can"></i>
                     <span>Vidange</span>
+                </a>
+                <a href="#" id="declare-panne-btn" class="action-btn">
+                    <i class="fas fa-triangle-exclamation"></i>
+                    <span>Déclaration de panne</span>
                 </a>
             </div>
         </div>
@@ -153,6 +157,8 @@
   </div>
 </div>
 
+{% include 'partials/admin/_declaration_panne_modal.html' %}
+
 <!-- Réutilise la modale d'ajout de bus du dashboard -->
 <script>
 
@@ -176,6 +182,126 @@ $(function() {
               }
           }
       });
+
+  // Variable globale pour stocker les données du bus sélectionné
+  window.selectedBusData = null;
+  // Index des AED par numéro pour autocomplétion
+  window.aedIndexByNumero = {};
+  // Charger la liste des AED pour alimenter le datalist de la modale panne
+  function loadAedListForDatalist(){
+    $.get('/admin/aed_list_ajax', function(resp){
+      if(resp && resp.success){
+        const list = resp.aed || [];
+        const options = list.map(b=>{
+          // Construire un index pour auto-fill
+          window.aedIndexByNumero[b.numero] = b;
+          const label = b.immatriculation ? `${b.numero} — ${b.immatriculation}` : b.numero;
+          return `<option value="${b.numero}" label="${label}"></option>`;
+        }).join('');
+        $('#aedNumerosList').html(options);
+      }
+    });
+  }
+  loadAedListForDatalist();
+
+  // Quand le numéro AED est saisi/sélectionné, remplir automatiquement immatriculation uniquement
+  $(document).on('input change', '#numero_aed_panne', function(){
+    const num = $(this).val();
+    const b = window.aedIndexByNumero[num];
+    if(b){
+      $('#immatriculation_panne').val(b.immatriculation || '');
+      // Définir la borne minimale pour le kilométrage
+      const minKm = (b.kilometrage != null && b.kilometrage !== '') ? Number(b.kilometrage) : 0;
+      $('#kilometrage_panne').attr('min', minKm);
+    }
+    else{
+      // Si numéro inconnu, pas de contrainte spécifique (min=0)
+      $('#immatriculation_panne').val('');
+      $('#kilometrage_panne').attr('min', 0);
+    }
+  });
+
+  // Bouton Déclaration de panne
+  $(document).on('click', '#declare-panne-btn', function(e){
+    e.preventDefault();
+    // Pré-remplir si un bus est sélectionné, sinon vider
+    if (window.selectedBusData) {
+      $('#numero_aed_panne').val(window.selectedBusData.numero || '');
+      $('#immatriculation_panne').val(window.selectedBusData.immatriculation || '');
+    } else {
+      $('#numero_aed_panne').val('');
+      $('#immatriculation_panne').val('');
+    }
+    // Le kilométrage doit toujours être saisi par l'utilisateur
+    $('#kilometrage_panne').val('');
+    // Initialiser min selon numéro sélectionné (si déjà présent)
+    const num = $('#numero_aed_panne').val();
+    const b = window.aedIndexByNumero[num];
+    const minKm = b && (b.kilometrage != null && b.kilometrage !== '') ? Number(b.kilometrage) : 0;
+    $('#kilometrage_panne').attr('min', minKm);
+    // Ouvrir la modale de déclaration de panne
+    $('#panneModal').addClass('show');
+  });
+
+  // Fermeture modale panne
+  $('#closePanneModal, #cancelPanneBtn').on('click', function(){
+    $('#panneModal').removeClass('show');
+    $('#panneForm')[0].reset();
+  });
+
+  // Soumission formulaire panne
+  $('#panneForm').on('submit', function(e){
+    e.preventDefault();
+    const formData = {
+      numero_aed: $('#numero_aed_panne').val(),
+      immatriculation: $('#immatriculation_panne').val(),
+      kilometrage: $('#kilometrage_panne').val(),
+      description: $('#description_panne').val(),
+      criticite: $('#criticite_panne').val(),
+      immobilisation: $('#immobilisation_panne').is(':checked')
+    };
+
+    // Validation client: numéro AED doit exister dans la liste
+    const numTrim = (formData.numero_aed || '').trim();
+    if (!numTrim || !window.aedIndexByNumero[numTrim]) {
+      Swal.fire('Erreur', 'Numéro AED inconnu. Veuillez sélectionner un numéro existant.', 'error');
+      return;
+    }
+
+    // Validation client: kilometrage >= min si un AED est reconnu
+    const selected = window.aedIndexByNumero[formData.numero_aed];
+    const kmVal = formData.kilometrage !== '' ? Number(formData.kilometrage) : NaN;
+    const minAttr = Number($('#kilometrage_panne').attr('min') || 0);
+    if (Number.isNaN(kmVal)) {
+      Swal.fire('Erreur', 'Veuillez renseigner le kilométrage.', 'error');
+      return;
+    }
+    if (kmVal < minAttr) {
+      Swal.fire('Erreur', `Le kilométrage doit être supérieur ou égal à ${minAttr}.`, 'error');
+      return;
+    }
+
+    $.ajax({
+      url: '/admin/declarer_panne',
+      method: 'POST',
+      contentType: 'application/json',
+      data: JSON.stringify(formData),
+      success: function(resp){
+        if(resp.success){
+          Swal.fire('Succès', resp.message, 'success');
+          $('#panneModal').removeClass('show');
+          $('#panneForm')[0].reset();
+          // Rafraîchir la page pour voir les changements d'état
+          setTimeout(() => location.reload(), 1500);
+        } else {
+          Swal.fire('Erreur', resp.message, 'error');
+        }
+      },
+      error: function(){
+        Swal.fire('Erreur', 'Impossible d\'enregistrer la panne', 'error');
+      }
+    });
+  });
   }
   refreshAlerts();
   setInterval(refreshAlerts, 30000);
@@ -222,6 +348,12 @@ $(function() {
       success: function(resp) {
         if (resp.success) {
           const b = resp.bus;
+          // Stocker les données du bus sélectionné pour la déclaration de panne
+          window.selectedBusData = {
+            numero: b.numero,
+            immatriculation: b.immatriculation || '',
+            kilometrage: b.kilometrage || ''
+          };
           let docsHtml = '';
           if(resp.documents && resp.documents.length){
             docsHtml = '<h4 style="margin-top:12px;">Documents administratifs</h4>'+
@@ -249,7 +381,7 @@ $(function() {
                 <button id="saveNiveauCarbBtn" class="submit-btn" style="padding:4px 8px;margin-left:8px;">Mettre à jour</button>
               </li>
               <li><strong>Dernière vidange :</strong> ${b.date_derniere_vidange || '-'}</li>
-              <li><strong>État :</strong> ${b.etat_vehicule}</li>
+              <li><strong>État :</strong> ${b.etat_vehicule === 'DEFAILLANT' ? 'HORS_SERVICE' : b.etat_vehicule}</li>
               <li><strong>Places :</strong> ${b.nombre_places}</li>
               <li><strong>Dernière maintenance :</strong> ${b.derniere_maintenance || '-'}</li>
             </ul>${docsHtml}

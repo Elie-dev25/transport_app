@@ -37,7 +37,7 @@
             <div class="user-menu">
                 <div class="user-avatar">{{ current_user.initials }}</div>
                 <div>
-                    <div style="font-weight: 600; font-size: 14px;">{{ current_user.nom_utilisateur }}</div>
+                    <div style="font-weight: 600; font-size: 14px;">{{ ((current_user.nom ~ ' ' ~ current_user.prenom)|trim) or current_user.login }}</div>
                     <div style="font-size: 12px; color: #64748b;">{{ current_user.login }}</div>
                 </div>
             </div>
@@ -163,9 +163,9 @@
                     <i class="fas fa-plus-circle"></i>
                     <span>Ajouter un Bus</span>
                 </a>
-                <a href="#" id="openAddChauffeurModal" class="action-btn">
+                <a href="#" id="openAddUserModal" class="action-btn">
                     <i class="fas fa-user-plus"></i>
-                    <span>Nouveau Chauffeur</span>
+                    <span>Nouvel Utilisateur</span>
                 </a>
                 <a href="#" id="openPlanifierTrajetModal" class="action-btn">
                     <i class="fas fa-route"></i>
@@ -269,38 +269,7 @@
           </div>
         </div>
 
-        <!-- Modal for Add Chauffeur Form -->
-        <div id="addChauffeurModal">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h3><i class="fas fa-user-plus"></i> Ajouter un chauffeur</h3>
-              <button type="button" id="closeAddChauffeurModal" class="close-btn">&times;</button>
-            </div>
-            <div class="modal-body">
-              <form id="addChauffeurForm">
-                <div class="form-grid">
-                  <div class="form-group">
-                    <label>Nom :</label>
-                    <input type="text" name="nom" required>
-                  </div>
-                  <div class="form-group">
-                    <label>Prénom :</label>
-                    <input type="text" name="prenom" required>
-                  </div>
-                  <div class="form-group">
-                    <label>Numéro de permis :</label>
-                    <input type="text" name="numero_permis" required>
-                  </div>
-                  <div class="form-group">
-                    <label>Téléphone :</label>
-                    <input type="text" name="telephone" required>
-                  </div>
-                </div>
-                <button type="submit" class="submit-btn">Ajouter</button>
-              </form>
-            </div>
-          </div>
-        </div>
+        {% include 'partials/admin/_add_user_modal.html' %}
 
         <!-- Modal Planifier Trajet -->
         <div id="planifierTrajetModal" class="modal">
@@ -389,32 +358,31 @@
             });
           });
 
-          // Ouvrir la modale chauffeur
-          $('#openAddChauffeurModal').on('click', function(e) {
+          // Ouvrir la modale utilisateur
+          $('#openAddUserModal').on('click', function(e) {
             e.preventDefault();
-            $('#addChauffeurModal').addClass('show');
+            $('#addUserModal').addClass('show');
           });
-          // Fermer la modale chauffeur
-          $('#closeAddChauffeurModal').on('click', function() {
-            $('#addChauffeurModal').removeClass('show');
+          // Fermer la modale utilisateur
+          $('#closeAddUserModal').on('click', function() {
+            $('#addUserModal').removeClass('show');
           });
-          $('#addChauffeurModal').on('click', function(e) {
+          $('#addUserModal').on('click', function(e) {
             if (e.target === this) {
               $(this).removeClass('show');
             }
           });
-          // Soumission AJAX
-          $('#addChauffeurForm').on('submit', function(e) {
+          // Soumission AJAX ajout utilisateur
+          $('#addUserForm').on('submit', function(e) {
             e.preventDefault();
             $.ajax({
-              url: '/admin/ajouter_chauffeur_ajax',
+              url: '/admin/ajouter_utilisateur_ajax',
               method: 'POST',
               data: $(this).serialize(),
               success: function(resp) {
-                $('#addChauffeurModal').removeClass('show');
+                $('#addUserModal').removeClass('show');
                 $('body').append('<div class="flash-message success">' + resp.message + '</div>');
                 setTimeout(function() { $('.flash-message.success').fadeOut(500, function() { $(this).remove(); }); }, 3000);
-                // Optionnel: rafraîchir la liste des chauffeurs ici
               },
               error: function(xhr) {
                 let msg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Erreur lors de l\'ajout';
@@ -422,6 +390,64 @@
                 setTimeout(function() { $('.flash-message.danger').fadeOut(500, function() { $(this).remove(); }); }, 3000);
               }
             });
+          });
+
+          // Toggle champs Chauffeur selon rôle
+          function toggleChauffeurFields() {
+            const role = $('#roleSelectAddUser').val();
+            const isPermisRole = (role === 'CHAUFFEUR' || role === 'MECANICIEN');
+            const $container = $('#addUserForm');
+            const $permis = $container.find('.permis-only');
+            const $num = $container.find('input[name="numero_permis"]');
+            const $del = $container.find('input[name="date_delivrance_permis"]');
+            const $exp = $container.find('input[name="date_expiration_permis"]');
+            if (isPermisRole) {
+              $permis.show();
+              $num.attr('required', true);
+              $del.attr('required', true);
+              $exp.attr('required', true);
+            } else {
+              $permis.hide();
+              $num.removeAttr('required');
+              $del.removeAttr('required');
+              $exp.removeAttr('required');
+            }
+          }
+          $(document).on('change', '#roleSelectAddUser', toggleChauffeurFields);
+          // Init à l'ouverture de la modale
+          $('#openAddUserModal').on('click', function(){
+            setTimeout(function(){
+              toggleChauffeurFields();
+              // Réinitialiser le flag d'édition manuelle du login
+              $('#addUserForm input[name="login"]').data('userEdited', false);
+              // Tenter un premier remplissage si des valeurs existent
+              updateLoginFromName();
+            }, 0);
+          });
+
+          // --- Auto-génération du login depuis nom + prénom ---
+          function slugify(str) {
+            return (str || '')
+              .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // retirer accents
+              .toLowerCase()
+              .replace(/[^a-z0-9\.]+/g, '')
+              .replace(/\.+/g, '.')
+              .replace(/^\.|\.$/g, '');
+          }
+          function updateLoginFromName() {
+            const $login = $('#addUserForm input[name="login"]');
+            if ($login.data('userEdited')) return; // ne pas écraser si édité manuellement
+            const nom = ($('#addUserForm input[name="nom"]').val() || '').trim();
+            const prenom = ($('#addUserForm input[name="prenom"]').val() || '').trim();
+            if (!nom && !prenom) return;
+            const base = [prenom, nom].filter(Boolean).join('.');
+            const candidate = slugify(base);
+            if (candidate) { $login.val(candidate); }
+          }
+          $(document).on('input', '#addUserForm input[name="nom"], #addUserForm input[name="prenom"]', updateLoginFromName);
+          $(document).on('input', '#addUserForm input[name="login"]', function(){
+            // L'utilisateur prend la main, on arrête l'auto-remplissage
+            $(this).data('userEdited', true);
           });
 
           // --- Soumissions AJAX des trajets (Admin) ---

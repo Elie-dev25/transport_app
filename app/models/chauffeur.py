@@ -7,6 +7,8 @@ class Chauffeur(db.Model):
     prenom = db.Column(db.String(100), nullable=False)
     numero_permis = db.Column(db.String(50), nullable=False, unique=True)
     telephone = db.Column(db.String(30), nullable=False)
+    date_delivrance_permis = db.Column(db.Date, nullable=False)
+    date_expiration_permis = db.Column(db.Date, nullable=False)
 
     def __repr__(self):
         return f'<Chauffeur {self.nom} {self.prenom}>'
