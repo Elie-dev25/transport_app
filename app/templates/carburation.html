@@ -133,7 +133,7 @@
                     <tbody id="historique-carb-body">
                         {% for carburation in historique_carburation %}
                         <tr>
-                            <td>{{ carburation.date_carburation.strftime('%d/%m/%Y') }}</td>
+                            <td>{{ carburation.date_carburation|date_fr }}</td>
                             <td><strong>{{ carburation.aed.numero }}</strong></td>
                             <td>{{ carburation.kilometrage }} km</td>
                             <td>{{ carburation.quantite_litres }} L</td>
@@ -252,7 +252,7 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('fiche-carburation-immatriculation').textContent = immat || '-';
             document.getElementById('fiche-carburation-operateur').textContent = operateur || '-';
             const now = new Date();
-            const formatted = now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
+            const formatted = now.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' + now.toLocaleTimeString('fr-FR');
             document.getElementById('fiche-carburation-date-heure').textContent = formatted;
 
             // Stocker pour le formulaire

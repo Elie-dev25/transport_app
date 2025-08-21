@@ -1,6 +1,7 @@
 from flask import Flask
 from app.config import Config
 from app.extensions import db, login_manager
+from datetime import date, datetime
 
 
 # Fonction de création de l'application Flask
@@ -57,6 +58,37 @@ def create_app():
             return 'HORS_SERVICE'
         return value
     app.jinja_env.filters['status_label'] = status_label
+
+    # Filtre Jinja pour formater les dates au format jj/mm/aaaa
+    def date_fr(value):
+        """Retourne une date au format jj/mm/aaaa.
+        - Accepte datetime.date, datetime.datetime ou str (ISO y-m-d[, time]).
+        - Retourne '' si valeur vide/non parsable.
+        """
+        if not value:
+            return ''
+        try:
+            if isinstance(value, datetime):
+                d = value.date()
+                return d.strftime('%d/%m/%Y')
+            if isinstance(value, date):
+                return value.strftime('%d/%m/%Y')
+            if isinstance(value, str):
+                # Essai ISO 8601: 'YYYY-MM-DD' ou 'YYYY-MM-DDTHH:MM:SS' ou 'YYYY-MM-DD HH:MM:SS'
+                txt = value.strip()
+                try:
+                    # Remplacer espace par 'T' si nécessaire pour fromisoformat
+                    iso_txt = txt.replace(' ', 'T')
+                    dt = datetime.fromisoformat(iso_txt)
+                    return dt.date().strftime('%d/%m/%Y')
+                except Exception:
+                    # Dernier recours: conserver tel quel (afin d'éviter les erreurs d'affichage)
+                    return txt
+        except Exception:
+            return ''
+        return ''
+
+    app.jinja_env.filters['date_fr'] = date_fr
 
     @app.route('/')
     def accueil():

@@ -4,7 +4,9 @@ function openVidangeModal(busId, numeroVehicule, demandeurNom) {
     window.currentNumeroVehicule = numeroVehicule || '';
     document.getElementById('fiche-numero-demande').textContent = 'DEM-' + (new Date()).getTime();
     const now = new Date();
-    document.getElementById('fiche-date-heure').textContent = now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
+    const dateStr = now.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const timeStr = now.toLocaleTimeString('fr-FR');
+    document.getElementById('fiche-date-heure').textContent = dateStr + ' ' + timeStr;
     document.getElementById('fiche-demandeur').textContent = demandeurNom || '-';
     document.getElementById('fiche-numero-vehicule').textContent = window.currentNumeroVehicule || '-';
     document.getElementById('ficheVidangeModal').classList.add('show');

@@ -38,7 +38,7 @@
                         <td>{{ bus.numero }}</td>
                         <td>{{ bus.kilometrage or '-' }}</td>
                         <td>{{ bus.km_critique_huile or '-' }}</td>
-                        <td>{{ bus.date_derniere_vidange.strftime('%d/%m/%Y') if bus.date_derniere_vidange else '-' }}</td>
+                        <td>{{ bus.date_derniere_vidange|date_fr or '-' }}</td>
                         <td style="text-align:left;">
                             <span class="indicator {{ bus.voyant }}" aria-hidden="true" style="display:inline-block;width:16px;height:16px;border-radius:50%;margin-right:8px;vertical-align:middle;"></span>
                             <span style="vertical-align:middle;">
@@ -255,7 +255,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 {% for v in historique_vidange %}
                     <tr>
                         <td>{{ v.aed.numero }}</td>
-                        <td>{{ v.date_vidange.strftime('%d/%m/%Y') }}</td>
+                        <td>{{ v.date_vidange|date_fr }}</td>
                         <td>{{ v.kilometrage }}</td>
                         <td>{{ v.type_huile or '-' }}</td>
                         <td>{{ v.remarque or '-' }}</td>

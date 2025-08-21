@@ -4,13 +4,25 @@
 {% block head %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard_admin.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modale.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/form.css') }}">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+      if (!window.jQuery) {
+        document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"><\\/script>');
+      }
+    </script>
+    <script>
+      if (!window.jQuery) {
+        document.write('<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"><\\/script>');
+      }
+    </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
       .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);align-items:center;justify-content:center;z-index:9999;}
 #docFormModal{z-index:10000;}
-      .modal.show{display:flex;}
+#addBusModal{z-index:10000;}
+      .modal.show{display:flex !important;}
       .modal-content{background:#fff;border-radius:10px;padding:20px;box-shadow:0 4px 24px rgba(0,0,0,0.2);max-height:80%;overflow:auto;}
       .details-list{list-style:none;padding:0;margin:0;}
       .details-list li{margin:6px 0;}
@@ -48,6 +60,11 @@
                
 
     <div class="dashboard-content">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
+            <button id="openAddBusModal" style="width:42px;height:42px;border:none;border-radius:50%;background:#2563eb;color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;" title="Ajouter un AED">
+                <i class="fas fa-plus"></i>
+            </button>
+        </div>
         <table style="width:100%;background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(30,64,175,0.07);overflow:hidden;">
             <thead style="background:linear-gradient(90deg,#1e3a8a,#2563eb);color:#fff;">
                 <tr>
@@ -159,10 +176,55 @@
 
 {% include 'partials/admin/_declaration_panne_modal.html' %}
 
+{% include 'partials/admin/_add_bus_modal.html' %}
+
 <!-- Réutilise la modale d'ajout de bus du dashboard -->
 <script>
 
 $(function() {
+  // Gestion de la modale d'ajout d'AED
+  $('#openAddBusModal').on('click', function(e) {
+    e.preventDefault();
+    $('#addBusModal').addClass('show');
+  });
+  
+  $('#closeAddBusModal').on('click', function() {
+    $('#addBusModal').removeClass('show');
+    $('#addBusForm')[0].reset();
+  });
+  
+  // Fermer la modale si on clique en dehors du contenu
+  $('#addBusModal').on('click', function(e) {
+    if (e.target === this) {
+      $(this).removeClass('show');
+      $('#addBusForm')[0].reset();
+    }
+  });
+  
+  // Soumission du formulaire d'ajout d'AED
+  $('#addBusForm').on('submit', function(e) {
+    e.preventDefault();
+    $.ajax({
+      url: '/admin/ajouter_bus_ajax',
+      method: 'POST',
+      data: $(this).serialize(),
+      success: function(resp) {
+        $('#addBusModal').removeClass('show');
+        $('#addBusForm')[0].reset();
+        if (resp.success) {
+          Swal.fire('Succès', resp.message, 'success').then(() => {
+            location.reload();
+          });
+        } else {
+          Swal.fire('Erreur', resp.message, 'error');
+        }
+      },
+      error: function() {
+        Swal.fire('Erreur', 'Impossible d\'ajouter le bus AED', 'error');
+      }
+    });
+  });
+
   // Gestion des alertes de documents
   function refreshAlerts(){
       $.get('/admin/documents_alerts_ajax', function(resp){

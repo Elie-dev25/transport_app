@@ -6,8 +6,37 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard_admin.css') }}?v=20250129">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}?v=20250129">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/student_trafic.css') }}?v=20250129">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/form.css') }}">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+      if (!window.jQuery) {
+        document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"><\/script>');
+      }
+    </script>
+    <script>
+      if (!window.jQuery) {
+        document.write('<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"><\/script>');
+      }
+    </script>
     <script src="{{ url_for('static', filename='js/dashboard_admin.js') }}?v=20250129"></script>
+    <style>
+        /* Fix pour les modales qui ne s'affichent pas */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+        .modal.show {
+            display: flex !important;
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
@@ -197,77 +226,7 @@
           </div>
       </div>
 
-        <!-- Modal for Add Bus Form -->
-        <div id="addBusModal">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h3><i class="fas fa-bus"></i> Ajouter un bus AED</h3>
-              <button type="button" id="closeAddBusModal" class="close-btn">&times;</button>
-            </div>
-            <div class="modal-body">
-              <form id="addBusForm">
-                <div class="form-grid">
-                  <div class="form-group">
-                    <label>Numéro du bus :</label>
-                    <input type="text" name="numero" value="AED-" required>
-                  </div>
-                  <div class="form-group">
-                    <label>Immatriculation :</label>
-                    <input type="text" name="immatriculation" placeholder="Ex: DK-1234-AB" required>
-                  </div>
-                  <div class="form-group">
-                    <label>Niveau de kilométrage (km) :</label>
-                    <input type="number" name="kilometrage" placeholder="Ex: 15000" required>
-                  </div>
-                  <div class="form-group">
-                    <label>Type d'huile :</label>
-                    <select name="type_huile" required>
-                      <option value="">-- Choisir --</option>
-                      <option value="Quartz 5000 20W-50">Quartz 5000 20W-50</option>
-                      <option value="Quartz 7000 10W-40">Quartz 7000 10W-40</option>
-                      <option value="Quartz 9000 5W-40">Quartz 9000 5W-40</option>
-                      <option value="Rubia TIR 7400 15W-40">Rubia TIR 7400 15W-40</option>
-                      <option value="Rubia TIR 9900 FE 5W-30">Rubia TIR 9900 FE 5W-30</option>
-                      <option value="Rubia Fleet HD 400 15W-40">Rubia Fleet HD 400 15W-40</option>
-                    </select>
-                  </div>
-                  <div class="form-group">
-                    <label>Capacité du plein de carburant (km) :</label>
-                    <input type="number" name="capacite_plein_carburant" placeholder="Ex: 500" required>
-                  </div>
-                  <div class="form-group">
-                    <label>Capacité du réservoir (L) :</label>
-                    <input type="number" step="0.1" name="capacite_reservoir_litres" placeholder="Ex: 70.0">
-                  </div>
-                  <div class="form-group">
-                    <label>Niveau carburant (L) :</label>
-                    <input type="number" step="0.1" name="niveau_carburant_litres" placeholder="Ex: 30.5">
-                  </div>
-                  <div class="form-group">
-                    <label>Date de la dernière vidange :</label>
-                    <input type="date" name="date_derniere_vidange" required>
-                  </div>
-                  <div class="form-group">
-                    <label>État actuel du véhicule :</label>
-                    <select name="etat_vehicule" required>
-                      <option value="BON">Bon</option>
-                      <option value="DEFAILLANT">Défaillant</option>
-                    </select>
-                  </div>
-                  <div class="form-group">
-                    <label>Nombre de places :</label>
-                    <input type="number" name="nombre_places" value="30" required>
-                  </div>
-                  <div class="form-group full-width">
-                    <label>Date de la dernière maintenance :</label>
-                    <input type="date" name="derniere_maintenance" required>
-                  </div>
-                </div>
-                <button type="submit" class="submit-btn">Ajouter</button>
-              </form>
-            </div> 
-          </div>
-        </div>
+        {% include 'partials/admin/_add_bus_modal.html' %}
 
         {% include 'partials/admin/_add_user_modal.html' %}
 

@@ -272,7 +272,19 @@ def aed_list_ajax():
 @bp.route('/chauffeurs')
 def chauffeurs():
     from app.models.chauffeur import Chauffeur
+    from app.models.chauffeur_statut import ChauffeurStatut
+    from datetime import datetime
+    
     chauffeur_list = Chauffeur.query.order_by(Chauffeur.nom).all()
+    
+    # Ajouter les statuts actuels pour chaque chauffeur
+    for chauffeur in chauffeur_list:
+        chauffeur.statuts_actuels = ChauffeurStatut.get_current_statuts(chauffeur.chauffeur_id)
+        # Debug temporaire
+        print(f"DEBUG: Chauffeur {chauffeur.nom} {chauffeur.prenom} (ID: {chauffeur.chauffeur_id}) - {len(chauffeur.statuts_actuels)} statuts actuels")
+        for statut in chauffeur.statuts_actuels:
+            print(f"  - {statut.statut}: {statut.date_debut} -> {statut.date_fin}")
+    
     return render_template('chauffeurs.html', chauffeur_list=chauffeur_list, active_page='chauffeurs')
 
 # Route pour la page Utilisateurs qui affiche la liste des utilisateurs depuis la base

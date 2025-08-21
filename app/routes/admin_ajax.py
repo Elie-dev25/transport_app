@@ -5,6 +5,7 @@ from app.models.aed import AED
 from app.models.chauffeur import Chauffeur
 from app.models.utilisateur import Utilisateur
 from app.models.mecanicien import Mecanicien
+from app.models.chauffeur_statut import ChauffeurStatut
 from app.database import db
 from datetime import datetime
 from werkzeug.security import generate_password_hash
@@ -205,3 +206,114 @@ def ajouter_utilisateur_ajax():
             payload['mysql_message'] = err_msg
         return jsonify(payload), 400
     return jsonify({'success': True, 'message': 'Utilisateur ajouté avec succès !'})
+
+@bp_ajax.route('/modifier_statut_chauffeur_ajax', methods=['POST'])
+def modifier_statut_chauffeur_ajax():
+    chauffeur_id = request.form.get('chauffeur_id')
+    statut = request.form.get('statut')
+    date_debut_str = request.form.get('date_debut')
+    date_fin_str = request.form.get('date_fin')
+
+    # Validation des champs obligatoires
+    if not all([chauffeur_id, statut, date_debut_str, date_fin_str]):
+        return jsonify({'success': False, 'message': 'Tous les champs sont obligatoires.'}), 400
+
+    # Vérifier que le chauffeur existe
+    chauffeur = Chauffeur.query.get(chauffeur_id)
+    if not chauffeur:
+        return jsonify({'success': False, 'message': 'Chauffeur introuvable.'}), 404
+
+    # Validation et conversion des dates
+    try:
+        date_debut = datetime.strptime(date_debut_str, '%Y-%m-%dT%H:%M')
+        date_fin = datetime.strptime(date_fin_str, '%Y-%m-%dT%H:%M')
+    except ValueError:
+        return jsonify({'success': False, 'message': 'Format de date invalide.'}), 400
+
+    # Validation logique des dates
+    if date_fin <= date_debut:
+        return jsonify({'success': False, 'message': 'La date de fin doit être postérieure à la date de début.'}), 400
+
+    # Vérification des chevauchements selon les règles métier
+    conflicting_statuts = ChauffeurStatut.check_overlap(chauffeur_id, date_debut, date_fin, statut)
+    
+    if conflicting_statuts:
+        if statut == 'CONGE':
+            conflict_details = [
+                f"{s.statut} ({s.date_debut.strftime('%d/%m/%Y')} - {s.date_fin.strftime('%d/%m/%Y')})"
+                for s in conflicting_statuts
+            ]
+            # Message explicite lorsqu'on tente de poser un CONGE qui chevauche
+            return jsonify({
+                'success': False,
+                'message': (
+                    f"Chevauchement interdit: le congé demandé pour {chauffeur.nom} {chauffeur.prenom} "
+                    f"({date_debut.strftime('%d/%m/%Y')} - {date_fin.strftime('%d/%m/%Y')}) chevauche des statuts existants: "
+                    + ", ".join(conflict_details)
+                )
+            }), 400
+        else:
+            # Lorsque le statut demandé chevauche un CONGE existant, indiquer clairement la période de congé
+            conges = [s for s in conflicting_statuts if s.statut == 'CONGE'] or conflicting_statuts
+            conflict_details = [
+                f"{s.statut} ({s.date_debut.strftime('%d/%m/%Y')} - {s.date_fin.strftime('%d/%m/%Y')})"
+                for s in conges
+            ]
+            return jsonify({
+                'success': False,
+                'message': (
+                    f"Chevauchement avec congé: {chauffeur.nom} {chauffeur.prenom} est en CONGE sur "
+                    + ", ".join(conflict_details)
+                    + f". Impossible d'assigner le statut {statut} sur la période demandée "
+                    f"({date_debut.strftime('%d/%m/%Y')} - {date_fin.strftime('%d/%m/%Y')})."
+                )
+            }), 400
+
+    # Création du nouveau statut
+    try:
+        nouveau_statut = ChauffeurStatut(
+            chauffeur_id=chauffeur_id,
+            statut=statut,
+            date_debut=date_debut,
+            date_fin=date_fin
+        )
+        db.session.add(nouveau_statut)
+        db.session.commit()
+        
+        logging.info(f"[modifier_statut_chauffeur_ajax] Nouveau statut créé: chauffeur_id={chauffeur_id}, statut={statut}, période={date_debut} - {date_fin}")
+        print(f"DEBUG AJAX: Statut créé pour chauffeur_id={chauffeur_id}, statut={statut}, {date_debut} -> {date_fin}")
+        
+        return jsonify({
+            'success': True, 
+            'message': f"Statut {statut} programmé avec succès pour la période du {date_debut.strftime('%d/%m/%Y')} au {date_fin.strftime('%d/%m/%Y')}.",
+            'statut_id': nouveau_statut.id
+        })
+        
+    except IntegrityError as e:
+        db.session.rollback()
+        logging.exception("[modifier_statut_chauffeur_ajax] IntegrityError lors du commit")
+        return jsonify({'success': False, 'message': 'Erreur d\'intégrité en base de données.'}), 500
+    except Exception as e:
+        db.session.rollback()
+        logging.exception("[modifier_statut_chauffeur_ajax] Erreur inattendue")
+        return jsonify({'success': False, 'message': 'Erreur inattendue lors de la création du statut.'}), 500
+
+@bp_ajax.route('/get_statuts_chauffeur_ajax/<int:chauffeur_id>', methods=['GET'])
+def get_statuts_chauffeur_ajax(chauffeur_id):
+    """Récupérer l'historique des statuts d'un chauffeur"""
+    try:
+        statuts = ChauffeurStatut.query.filter_by(chauffeur_id=chauffeur_id).order_by(ChauffeurStatut.date_debut.desc()).all()
+        statuts_data = [statut.to_dict() for statut in statuts]
+        
+        # Récupérer les statuts actuels
+        statuts_actuels = ChauffeurStatut.get_current_statuts(chauffeur_id)
+        statuts_actuels_data = [statut.to_dict() for statut in statuts_actuels]
+        
+        return jsonify({
+            'success': True,
+            'statuts': statuts_data,
+            'statuts_actuels': statuts_actuels_data
+        })
+    except Exception as e:
+        logging.exception("[get_statuts_chauffeur_ajax] Erreur lors de la récupération des statuts")
+        return jsonify({'success': False, 'message': 'Erreur lors de la récupération des statuts.'}), 500
