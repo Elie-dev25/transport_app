@@ -1,66 +1,52 @@
-{% extends "layout.html" %}
+{% extends "_base_admin.html" %}
 {% block title %}Bus AED{% endblock %}
 
-{% block head %}
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <!-- CSS Modulaire - Architecture optimisée pour la maintenance -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard-main.css') }}?v=20250821">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-      if (!window.jQuery) {
-        document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"><\\/script>');
-      }
-    </script>
-    <script>
-      if (!window.jQuery) {
-        document.write('<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"><\\/script>');
-      }
-    </script>
+{% set active_page = 'bus' %}
+{% set page_title = 'Liste des Bus AED' %}
+
+{% block extra_head %}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-      .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);align-items:center;justify-content:center;z-index:9999;}
-#docFormModal{z-index:10000;}
-#addBusModal{z-index:10000;}
-      .modal.show{display:flex !important;}
-      .modal-content{background:#fff;border-radius:10px;padding:20px;box-shadow:0 4px 24px rgba(0,0,0,0.2);max-height:80%;overflow:auto;}
-      .details-list{list-style:none;padding:0;margin:0;}
-      .details-list li{margin:6px 0;}
-      .indicator{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:6px;}
-      .green{background:#10b981;}
-      .orange{background:#f59e0b;}
-      .red{background:#ef4444;}
-      .close-btn{background:none;border:none;font-size:24px;cursor:pointer;}
+      /* Styles spécifiques à la page Bus AED */
+      #docFormModal, #addBusModal {
+        z-index: 10000;
+      }
+
+      /* Styles pour les détails de bus */
+      .details-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      .details-list li {
+        margin: 6px 0;
+      }
+
+      /* Indicateurs colorés */
+      .indicator {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 6px;
+      }
+      .green { background: #10b981; }
+      .orange { background: #f59e0b; }
+      .red { background: #ef4444; }
+
+      /* Bouton fermeture personnalisé si nécessaire */
+      .close-btn {
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+      }
     </style>
 {% endblock %}
 
-{% block content %}
-<!-- Mobile Toggle -->
-<button class="mobile-toggle" onclick="toggleSidebar()">
-    <i class="fas fa-bars"></i>
-</button>
-
-<!-- Overlay -->
-
-
-    
-<!-- Panel -->
-<div id="alertPanel" style="display:none;position:fixed;top:60px;right:25px;z-index:11000;width:300px;background:#fff;border-radius:12px;box-shadow:0 10px 25px rgba(0,0,0,.15);">
-    <ul id="alertList" style="list-style:none;margin:0;padding:10px;"></ul>
-</div>
-<div class="overlay" onclick="toggleSidebar()"></div>
-
-<!-- Sidebar -->
-{% include '_sidebar_admin.html' %}
-
-<div class="main-content">
-    {% set page_title = 'Liste des Bus AED' %}
-{% include '_topbar_admin.html' %}
-
-               
-
-    <div class="dashboard-content">
-        <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
+{% block dashboard_content %}
+<div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
             <button id="openAddBusModal" style="width:42px;height:42px;border:none;border-radius:50%;background:#2563eb;color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;" title="Ajouter un AED">
                 <i class="fas fa-plus"></i>
             </button>
@@ -514,6 +500,197 @@ $('#docForm').on('submit', function(e){
   // Gestion de la fermeture du modal détails
   $('#closeBusDetailsModal').on('click', function(){ $('#busDetailsModal').removeClass('show'); });
   $('#busDetailsModal').on('click', function(e){ if(e.target === this){ $(this).removeClass('show'); }});
+});
+</script>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+$(function() {
+  // Gestion de la modale d'ajout d'AED
+  $('#openAddBusModal').on('click', function(e) {
+    e.preventDefault();
+    $('#addBusModal').addClass('show');
+  });
+
+  $('#closeAddBusModal').on('click', function() {
+    $('#addBusModal').removeClass('show');
+    $('#addBusForm')[0].reset();
+  });
+
+  // Fermer la modale si on clique en dehors du contenu
+  $('#addBusModal').on('click', function(e) {
+    if (e.target === this) {
+      $(this).removeClass('show');
+      $('#addBusForm')[0].reset();
+    }
+  });
+
+  // Soumission du formulaire d'ajout d'AED
+  $('#addBusForm').on('submit', function(e) {
+    e.preventDefault();
+    $.ajax({
+      url: '/admin/ajouter_bus_ajax',
+      method: 'POST',
+      data: $(this).serialize(),
+      success: function(resp) {
+        $('#addBusModal').removeClass('show');
+        $('#addBusForm')[0].reset();
+        if (resp.success) {
+          Swal.fire('Succès', resp.message, 'success').then(() => {
+            location.reload();
+          });
+        } else {
+          Swal.fire('Erreur', resp.message, 'error');
+        }
+      },
+      error: function() {
+        Swal.fire('Erreur', 'Impossible d\'ajouter le bus AED', 'error');
+      }
+    });
+  });
+
+  // Autres scripts de la page (alertes, détails, etc.)
+  function refreshAlerts(){
+    $('.alert-indicator').each(function(){
+      const $indicator = $(this);
+      const busId = $indicator.data('bus-id');
+      if (!busId) return;
+
+      $.get('/admin/bus_alerts/' + busId, function(data){
+        const hasAlerts = data.vidange_due || data.assurance_expire || data.visite_due;
+        $indicator.toggleClass('has-alerts', hasAlerts);
+
+        let tooltip = '';
+        if (data.vidange_due) tooltip += 'Vidange due\\n';
+        if (data.assurance_expire) tooltip += 'Assurance expire\\n';
+        if (data.visite_due) tooltip += 'Visite technique due\\n';
+
+        $indicator.attr('title', tooltip.trim());
+      }).fail(function(){
+        console.warn('Impossible de récupérer les alertes pour le bus', busId);
+      });
+    });
+  }
+
+  refreshAlerts();
+  setInterval(refreshAlerts, 300000);
+
+  // Gestion des détails de bus
+  $(document).on('click', '.view-details-btn', function(e){
+    e.preventDefault();
+    const busId = $(this).data('id');
+
+    $.get('/admin/bus_details/' + busId, function(data){
+      if (data.success) {
+        const bus = data.bus;
+        $('#busDetailsModal .modal-body').html(`
+          <div class="details-grid">
+            <div class="detail-item">
+              <strong>Numéro:</strong> ${bus.numero || '-'}
+            </div>
+            <div class="detail-item">
+              <strong>Immatriculation:</strong> ${bus.immatriculation || '-'}
+            </div>
+            <div class="detail-item">
+              <strong>Marque:</strong> ${bus.marque || '-'}
+            </div>
+            <div class="detail-item">
+              <strong>Modèle:</strong> ${bus.modele || '-'}
+            </div>
+            <div class="detail-item">
+              <strong>Kilométrage:</strong> ${bus.kilometrage || '-'} km
+            </div>
+            <div class="detail-item">
+              <strong>État:</strong> <span class="indicator ${bus.etat === 'OPERATIONNEL' ? 'green' : 'orange'}"></span> ${bus.etat || '-'}
+            </div>
+          </div>
+        `);
+        $('#busDetailsModal').addClass('show');
+      } else {
+        Swal.fire('Erreur', data.message || 'Impossible de charger les détails', 'error');
+      }
+    }).fail(function(){
+      Swal.fire('Erreur', 'Erreur de connexion', 'error');
+    });
+  });
+
+  // Fermeture des modales
+  $('#closeDocFormModal').on('click', function(){ $('#docFormModal').removeClass('show'); });
+  $('#closeBusDetailsModal').on('click', function(){ $('#busDetailsModal').removeClass('show'); });
+  $('#busDetailsModal').on('click', function(e){ if(e.target === this){ $(this).removeClass('show'); }});
+
+  // Scripts Déclaration de Panne
+  $(document).on('click', '#declare-panne-btn', function(e){
+    e.preventDefault();
+    // Pré-remplir si un bus est sélectionné, sinon vider
+    if (window.selectedBusData) {
+      $('#numero_aed_panne').val(window.selectedBusData.numero || '');
+      $('#immatriculation_panne').val(window.selectedBusData.immatriculation || '');
+    } else {
+      $('#numero_aed_panne').val('');
+      $('#immatriculation_panne').val('');
+    }
+
+    // Définir le kilométrage minimum
+    const b = window.selectedBusData;
+    const minKm = b && (b.kilometrage != null && b.kilometrage !== '') ? Number(b.kilometrage) : 0;
+    $('#kilometrage_panne').attr('min', minKm);
+
+    // Ouvrir la modale de déclaration de panne
+    $('#panneModal').addClass('show');
+  });
+
+  // Fermeture modale panne
+  $('#closePanneModal, #cancelPanneBtn').on('click', function(){
+    $('#panneModal').removeClass('show');
+    $('#panneForm')[0].reset();
+  });
+
+  // Fermer en cliquant en dehors
+  $('#panneModal').on('click', function(e){
+    if (e.target === this) {
+      $(this).removeClass('show');
+      $('#panneForm')[0].reset();
+    }
+  });
+
+  // Soumission formulaire panne
+  $('#panneForm').on('submit', function(e){
+    e.preventDefault();
+    const formData = {
+      numero_aed: $('#numero_aed_panne').val(),
+      immatriculation: $('#immatriculation_panne').val(),
+      kilometrage: $('#kilometrage_panne').val(),
+      description: $('#description_panne').val(),
+      gravite: $('#gravite_panne').val()
+    };
+
+    if (!formData.numero_aed || !formData.description || !formData.gravite) {
+      Swal.fire('Erreur', 'Veuillez remplir tous les champs obligatoires', 'error');
+      return;
+    }
+
+    $.ajax({
+      url: '/admin/declarer_panne_ajax',
+      method: 'POST',
+      data: formData,
+      success: function(resp){
+        if(resp.success){
+          Swal.fire('Succès', resp.message, 'success');
+          $('#panneModal').removeClass('show');
+          $('#panneForm')[0].reset();
+          // Rafraîchir la page pour voir les changements d'état
+          setTimeout(() => location.reload(), 1500);
+        } else {
+          Swal.fire('Erreur', resp.message, 'error');
+        }
+      },
+      error: function(){
+        Swal.fire('Erreur', 'Erreur lors de la déclaration de panne', 'error');
+      }
+    });
+  });
 });
 </script>
 {% endblock %}

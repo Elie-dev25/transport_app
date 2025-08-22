@@ -1,116 +1,12 @@
 <!-- Charge Transport dashboard -->
-<!-- Cette page est dédiée au chargé de transport pour gérer les trajets, les affectations, etc. -->{% extends "layout.html" %}
+<!-- Cette page est dédiée au chargé de transport pour gérer les trajets, les affectations, etc. -->
+{% extends "_base_charge.html" %}
 {% block title %}Tableau de Bord Chargé de Transport{% endblock %}
 
-{% block head %}
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <!-- CSS Modulaire - Architecture optimisée pour la maintenance -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard-main.css') }}?v=20250821">
-{% endblock %}
+{% set active_page = 'accueil' %}
+{% set page_title = 'Tableau de Bord Chargé de Transport' %}
 
-{% block content %}
-<!-- Mobile Toggle -->
-<button class="mobile-toggle" onclick="toggleSidebar()">
-    <i class="fas fa-bars"></i>
-</button>
-
-<!-- Overlay -->
-<div class="overlay" onclick="toggleSidebar()"></div>
-
-<!-- Sidebar -->
-<div class="sidebar" id="sidebar">
-    <div class="sidebar-header">
-        <div class="logo">UDM</div>
-        <div class="admin-info">
-            <h2>Chargé de transport Panel</h2>
-            <p>Transport Universitaire</p>
-        </div>
-    </div>
-    <nav class="nav-menu">
-        <div class="nav-item">
-            <a href="{{ url_for('charge_transport.dashboard') }}" class="nav-link {% if active_page == 'accueil' %}active{% endif %}">
-                <i class="fas fa-tachometer-alt"></i>
-                Accueil
-            </a>
-        </div>
-        <div class="nav-item">
-            <a href="{{ url_for('charge_transport.bus') }}" class="nav-link {% if active_page == 'bus' %}active{% endif %}">
-                <i class="fas fa-bus"></i>
-                Bus AED
-            </a>
-        </div>
-        <div class="nav-item">
-            <a href="{{ url_for('charge_transport.chauffeurs') }}" class="nav-link {% if active_page == 'chauffeurs' %}active{% endif %}">
-                <i class="fas fa-user-tie"></i>
-                Chauffeurs
-            </a>
-        </div>
-        <div class="nav-item">
-            <a href="{{ url_for('charge_transport.rapports') }}" class="nav-link {% if active_page == 'rapports' %}active{% endif %}">
-                <i class="fas fa-chart-bar"></i>
-                Rapports
-            </a>
-        </div>
-        <div class="nav-item">
-            <a href="{{ url_for('charge_transport.parametres') }}" class="nav-link {% if active_page == 'parametres' %}active{% endif %}">
-                <i class="fas fa-cog"></i>
-                Paramètres
-            </a>
-        </div>
-        <div class="nav-item" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
-            <a href="{{ url_for('auth.logout') }}" class="nav-link">
-                <i class="fas fa-sign-out-alt"></i>
-                Déconnexion
-            </a>
-        </div>
-    </nav>
-</div>
-
-<!-- Main Content -->
-<div class="main-content">
-    <!-- Top Bar -->
-    <div class="top-bar">
-        <h1 class="page-title">{{ page_title or "Tableau de Bord" }}</h1>
-        <div class="top-bar-actions">
-            <div class="notification-bell" onclick="toggleNotifications()">
-                <i class="fas fa-bell"></i>
-                {% if notifications|length > 0 %}
-                    <span class="notification-badge">{{ notifications|length }}</span>
-                {% endif %}
-            </div>
-            <div class="user-menu">
-                <div class="user-avatar">{{ current_user.initials }}</div>
-                <div>
-                    <div style="font-weight: 600; font-size: 14px;">{{ ((current_user.nom ~ ' ' ~ current_user.prenom)|trim) or current_user.login }}</div>
-                    <div style="font-size: 12px; color: #64748b;">{{ current_user.login }}</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Notification Panel -->
-    <div class="notification-panel" id="notificationPanel">
-        <div class="notification-header">
-            <h3>Notifications</h3>
-            <button onclick="toggleNotifications()" style="background: none; border: none; cursor: pointer; font-size: 16px;">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        {% for notif in notifications %}
-        <div class="notification-item">
-            <div class="notification-icon {{ notif.type }}">
-                <i class="{{ notif.icon }}"></i>
-            </div>
-            <div>
-                <div style="font-weight: 600; margin-bottom: 5px;">{{ notif.title }}</div>
-                <div style="font-size: 14px; color: #64748b;">{{ notif.time }}</div>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-
-    <!-- Dashboard Content -->
-    <div class="dashboard-content">
+{% block dashboard_content %}
         <!-- Statistics Cards -->
         <div class="stats-grid">
             <div class="stat-card">

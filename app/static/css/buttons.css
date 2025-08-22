@@ -16,23 +16,26 @@
 
 .trajet-buttons {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    justify-items: center;
 }
 
 .trajet-type-btn {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 25px 20px;
+    padding: 16px 10px;
     background: linear-gradient(135deg, #f8fafc, #e2e8f0);
     border: 2px solid #e5e7eb;
-    border-radius: 16px;
+    border-radius: 12px;
     text-decoration: none;
     color: #1e3a8a;
     transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
+    min-width: 140px;
+    max-width: 220px;
 }
 
 .trajet-type-btn:hover {

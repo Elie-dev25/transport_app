@@ -1,26 +1,25 @@
-{% extends "layout.html" %}
+{% extends "_base_admin.html" %}
 {% block title %}Vidange{% endblock %}
 
-{% block head %}
- <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
- <!-- CSS Modulaire - Architecture optimisée pour la maintenance -->
- <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard-main.css') }}?v=20250821">
- <link rel="stylesheet" href="{{ url_for('static', filename='css/vidange.css') }}">
- {# Optional: expose CSRF token to JS if you use Flask-WTF or similar #}
- <meta name="csrf-token" content="{{ csrf_token() if csrf_token is defined else '' }}">
- <script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
+{% set active_page = 'vidange' %}
+{% set page_title = 'Gestion des Vidanges' %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/vidange.css') }}">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+/* Surcharger le padding pour que le contenu occupe toute la largeur */
+.dashboard-content {
+    padding: 8px 0 24px 0 !important;
+}
+.vidange-welcome {
+    padding: 0 24px;
+}
+</style>
 {% endblock %}
 
-{% block content %}
-<!-- Sidebar -->
-{% include '_sidebar_admin.html' %}
-
-<div class="main-content vidange-container">
-    {% set page_title = 'Gestion des Vidanges' %}
-    {% include '_topbar_admin.html' %}
-    <div class="dashboard-content">
-       
-        <div class="vidange-welcome">
+{% block dashboard_content %}
+<div class="vidange-welcome">
             <table class="vidange-table">
                 <thead>
                     <tr class="aed-list-title-row">
@@ -274,6 +273,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 </tbody>
             </table>
         </div>
-    </div>
-</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+
 {% endblock %}
