@@ -1,0 +1,306 @@
+/* ================== RESPONSIVE MODULE ================== */
+/* Module dédié au responsive design */
+
+/* === MOBILE TOGGLE === */
+.mobile-toggle {
+    display: none;
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1100;
+    background: #1e3a8a;
+    color: #ffffff;
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+}
+
+.overlay.active {
+    display: block;
+}
+
+/* === TABLET (768px et moins) === */
+@media (max-width: 768px) {
+    /* Sidebar */
+    .sidebar {
+        transform: translateX(-100%);
+        width: 100%;
+        max-width: 280px;
+    }
+
+    .sidebar.active {
+        transform: translateX(0);
+    }
+
+    /* Layout */
+    .main-content {
+        margin-left: 0;
+    }
+
+    .mobile-toggle {
+        display: block;
+    }
+
+    /* Top bar */
+    .top-bar {
+        padding: 15px 20px;
+        left: 0;
+        width: 100%;
+    }
+
+    .page-title {
+        font-size: 24px;
+    }
+
+    /* Dashboard content */
+    .dashboard-content {
+        padding: 20px;
+    }
+
+    /* Grids */
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .actions-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    .trafic-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+    }
+
+    .profil-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    /* Forms */
+    .form-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    /* Cards */
+    .stat-card,
+    .trafic-card {
+        padding: 20px;
+    }
+
+    .profil-avatar {
+        width: 60px;
+        height: 60px;
+        font-size: 24px;
+    }
+
+    /* Modals - Responsive */
+    .modal-content {
+        width: 95% !important;
+        max-width: 95vw !important;
+        margin: 20px;
+    }
+
+    .modal-header {
+        padding: 20px 24px 16px;
+    }
+
+    .modal-body {
+        padding: 20px 24px 24px;
+        max-height: calc(85vh - 100px);
+    }
+
+    /* Buttons */
+    .btn {
+        padding: 12px 20px;
+        font-size: 14px;
+    }
+
+    .submit-btn,
+    .login-button {
+        padding: 14px;
+        font-size: 16px;
+    }
+}
+
+/* === MOBILE (480px et moins) === */
+@media (max-width: 480px) {
+    /* Typography */
+    .page-title {
+        font-size: 20px;
+    }
+
+    .section-title {
+        font-size: 18px;
+    }
+
+    .stat-value,
+    .trafic-number {
+        font-size: 28px;
+    }
+
+    /* Layout */
+    .dashboard-content {
+        padding: 15px;
+    }
+
+    /* Cards */
+    .stat-card,
+    .trafic-card,
+    .quick-actions,
+    .trafic-section,
+    .profil-section {
+        padding: 15px;
+    }
+
+    /* Top bar */
+    .top-bar {
+        padding: 12px 15px;
+    }
+
+    .top-bar-actions {
+        gap: 15px;
+    }
+
+    .notification-bell {
+        width: 40px;
+        height: 40px;
+    }
+
+    .user-avatar {
+        width: 35px;
+        height: 35px;
+    }
+
+    /* Grids */
+    .trafic-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    /* Forms */
+    .type-bus-toggle {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    /* Modals - Mobile */
+    .modal-content {
+        width: 98% !important;
+        max-width: 98vw !important;
+        margin: 10px;
+    }
+
+    .modal-body {
+        max-height: calc(85vh - 80px);
+    }
+
+    /* Tables */
+    .table-container {
+        padding: 15px;
+        overflow-x: auto;
+    }
+
+    .table {
+        min-width: 500px;
+    }
+}
+
+/* === MEDIUM DESKTOP (769px à 1199px) === */
+@media (min-width: 769px) and (max-width: 1199px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .trafic-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* === LARGE DESKTOP (1200px et plus) === */
+@media (min-width: 1200px) {
+    .stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .actions-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .trafic-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .dashboard-content {
+        padding: 8px 40px 40px 40px;
+    }
+}
+
+/* === PRINT STYLES === */
+@media print {
+    .sidebar,
+    .top-bar,
+    .mobile-toggle,
+    .overlay,
+    .btn,
+    .modal {
+        display: none !important;
+    }
+
+    .main-content {
+        margin-left: 0 !important;
+        padding-top: 0 !important;
+    }
+
+    .dashboard-content {
+        padding: 0 !important;
+    }
+
+    .stat-card,
+    .trafic-card {
+        break-inside: avoid;
+        box-shadow: none !important;
+        border: 1px solid #ccc !important;
+    }
+}
+
+/* === ACCESSIBILITY === */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* === HIGH CONTRAST === */
+@media (prefers-contrast: high) {
+    .stat-card,
+    .trafic-card,
+    .quick-actions,
+    .trafic-section {
+        border: 2px solid #000 !important;
+    }
+
+    .btn {
+        border: 2px solid currentColor !important;
+    }
+}

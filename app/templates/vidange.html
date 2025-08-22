@@ -3,9 +3,9 @@
 
 {% block head %}
  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
- <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard_admin.css') }}">
+ <!-- CSS Modulaire - Architecture optimisée pour la maintenance -->
+ <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard-main.css') }}?v=20250821">
  <link rel="stylesheet" href="{{ url_for('static', filename='css/vidange.css') }}">
- <link rel="stylesheet" href="{{ url_for('static', filename='css/modale.css') }}">
  {# Optional: expose CSRF token to JS if you use Flask-WTF or similar #}
  <meta name="csrf-token" content="{{ csrf_token() if csrf_token is defined else '' }}">
  <script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
@@ -68,8 +68,11 @@
 {# --- Modales (only once, outside the loop) --- #}
 <div id="ficheVidangeModal" class="modal" aria-hidden="true">
     <div class="modal-content">
-        <button class="close" aria-label="Fermer" onclick="closeVidangeModal()">&times;</button>
-        <h2 style="margin-bottom:18px;">Fiche de Vidange</h2>
+        <div class="modal-header">
+            <h3><i class="fas fa-oil-can"></i> Fiche de Vidange</h3>
+            <button type="button" class="close-btn" onclick="closeVidangeModal()">&times;</button>
+        </div>
+        <div class="modal-body">
         <div id="fiche-vidange-content">
             <div class="fiche-vidange-form">
                 <div style="margin-bottom:18px;">
@@ -96,9 +99,10 @@
                 </div>
             </div>
         </div>
-        <div style="display:flex;gap:16px;justify-content:center;margin-top:24px;">
-            <button class="action-btn" onclick="printFicheVidange()"><i class="fas fa-print"></i> Imprimer</button>
-            <button class="action-btn" onclick="openFormulaireVidange(null)"><i class="fas fa-check"></i> Confirmer la vidange</button>
+            <div style="display:flex;gap:16px;justify-content:center;margin-top:24px;">
+                <button class="action-btn" onclick="printFicheVidange()"><i class="fas fa-print"></i> Imprimer</button>
+                <button class="action-btn" onclick="openFormulaireVidange(null)"><i class="fas fa-check"></i> Confirmer la vidange</button>
+            </div>
         </div>
     </div>
 </div>
@@ -106,8 +110,11 @@
 <!-- Modale formulaire de confirmation vidange (single instance) -->
 <div id="formulaireVidangeModal" class="modal" aria-hidden="true">
     <div class="modal-content">
-        <button class="close" aria-label="Fermer" onclick="closeFormulaireVidangeModal()">&times;</button>
-        <h2 style="margin-bottom:18px;">Formulaire de confirmation vidange</h2>
+        <div class="modal-header">
+            <h3><i class="fas fa-oil-can"></i> Formulaire de confirmation vidange</h3>
+            <button type="button" class="close-btn" onclick="closeFormulaireVidangeModal()">&times;</button>
+        </div>
+        <div class="modal-body">
         <form id="formulaire-vidange">
             <input type="hidden" id="aed_id_hidden" name="aed_id_hidden">
             <div style="margin-bottom:18px;">
@@ -135,6 +142,7 @@
             </div>
             <button type="submit" class="action-btn" style="width:100%;margin-top:12px;"><i class="fas fa-save"></i> Enregistrer la vidange</button>
         </form>
+        </div>
     </div>
 </div>
 

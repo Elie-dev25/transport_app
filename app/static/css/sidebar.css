@@ -1,6 +1,6 @@
-/* Styles communs pour la barre latérale (sidebar) — référence: dashboard_admin.css */
+/* ================== SIDEBAR MODULE ================== */
+/* Module dédié à la barre latérale */
 
-/* Sidebar */
 .sidebar {
     position: fixed;
     left: 0;
@@ -102,54 +102,4 @@
 .nav-link span {
     flex: 1;
     margin-left: 5px;
-}
-
-/* Mobile Responsive */
-.mobile-toggle {
-    display: none;
-    position: fixed;
-    top: 20px;
-    left: 20px;
-    z-index: 1100;
-    background: #1e3a8a;
-    color: #ffffff;
-    border: none;
-    border-radius: 50%;
-    width: 50px;
-    height: 50px;
-    cursor: pointer;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-}
-
-@media (max-width: 768px) {
-    .sidebar {
-        transform: translateX(-100%);
-        width: 100%;
-        max-width: 280px;
-    }
-    .sidebar.active {
-        transform: translateX(0);
-    }
-    .main-content {
-        margin-left: 0;
-    }
-    .mobile-toggle {
-        display: block;
-    }
-}
-
-/* Overlay pour mobile */
-.overlay {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 999;
-}
-
-.overlay.active {
-    display: block;
 }

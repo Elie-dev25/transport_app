@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Modales Style Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="app/static/css/dashboard-main.css?v=20250821">
+    <link rel="stylesheet" href="app/static/css/vidanges.css">
+    <link rel="stylesheet" href="app/static/css/vidange.css">
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">UDM</div>
+            <div class="admin-info">
+                <h2>Test Modales</h2>
+                <p>Style Dashboard</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <h1 class="page-title">Test Modales avec Style Dashboard</h1>
+        <div class="top-bar-actions">
+            <div class="notification-bell">
+                <i class="fas fa-bell"></i>
+            </div>
+            <div class="user-menu">
+                <div class="user-avatar">T</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="dashboard-content">
+            <div style="background: white; padding: 20px; border-radius: 15px; margin-bottom: 30px;">
+                <h2>✅ Test Modales avec Style Dashboard Unifié</h2>
+                <p><strong>Solution :</strong> Suppression des styles conflictuels dans vidanges.css et vidange.css</p>
+                
+                <div style="margin: 15px 0; padding: 15px; background: #f0f9ff; border-radius: 8px;">
+                    <strong>✅ Corrections appliquées :</strong><br>
+                    • Suppression des styles de modales dans vidanges.css<br>
+                    • Suppression des styles de boutons conflictuels<br>
+                    • Les modales utilisent maintenant modals.css (dashboard)<br>
+                    • Les boutons utilisent maintenant buttons.css (dashboard)<br>
+                    • Les formulaires utilisent maintenant forms.css (dashboard)
+                </div>
+            </div>
+
+            <!-- Test Table avec boutons -->
+            <div style="background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);">
+                <h2 style="color: #1e3a8a; margin-bottom: 25px;">
+                    <i class="fas fa-test-tube"></i>
+                    Test Boutons et Modales
+                </h2>
+                
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
+                    <thead>
+                        <tr style="background: #f8fafc;">
+                            <th style="padding: 15px; text-align: left; border-bottom: 2px solid #e5e7eb;">Numéro</th>
+                            <th style="padding: 15px; text-align: left; border-bottom: 2px solid #e5e7eb;">Immatriculation</th>
+                            <th style="padding: 15px; text-align: left; border-bottom: 2px solid #e5e7eb;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;">AED-001</td>
+                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;">ABC-123-XY</td>
+                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;">
+                                <button class="btn-action btn-carburation" onclick="openTestModal()">
+                                    <i class="fas fa-gas-pump"></i>
+                                    Effectuer Carburation
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;">BUS-042</td>
+                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;">DEF-456-ZW</td>
+                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;">
+                                <button class="action-btn" onclick="openTestModal()">
+                                    <i class="fas fa-oil-can"></i>
+                                    Effectuer Vidange
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div style="padding: 15px; background: #f0f9ff; border-radius: 8px;">
+                    <strong>📋 Vérifications :</strong><br>
+                    1. Les boutons ont-ils la taille normale (pas trop grands) ?<br>
+                    2. La modal s'ouvre-t-elle avec le style du dashboard ?<br>
+                    3. Le header a-t-il le gradient bleu moderne ?<br>
+                    4. Les formulaires ont-ils les focus effects ?<br>
+                    5. Les boutons de la modal ont-ils les animations ?
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Test (utilise maintenant les styles du dashboard) -->
+    <div id="testModal" class="modal" aria-hidden="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-gas-pump"></i> Test Modal Style Dashboard</h3>
+                <button type="button" class="close-btn" onclick="closeTestModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="background: linear-gradient(135deg, #f8fafc, #e2e8f0); border-radius: 16px; padding: 24px; margin-bottom: 20px; border: 2px solid #e5e7eb;">
+                    <div style="margin-bottom: 16px; padding: 12px; background: #ffffff; border-radius: 8px; border-left: 4px solid #01D758;">
+                        <strong style="color: #1e3a8a; font-weight: 600; margin-right: 8px;">Date et heure :</strong>
+                        <span style="color: #374151; font-weight: 500;">21/08/2025 14:30</span>
+                    </div>
+                    <div style="margin-bottom: 16px; padding: 12px; background: #ffffff; border-radius: 8px; border-left: 4px solid #01D758;">
+                        <strong style="color: #1e3a8a; font-weight: 600; margin-right: 8px;">Numéro AED :</strong>
+                        <span style="color: #374151; font-weight: 500;">AED-001</span>
+                    </div>
+                    <div style="margin-bottom: 16px; padding: 12px; background: #ffffff; border-radius: 8px; border-left: 4px solid #01D758;">
+                        <strong style="color: #1e3a8a; font-weight: 600; margin-right: 8px;">Immatriculation :</strong>
+                        <span style="color: #374151; font-weight: 500;">ABC-123-XY</span>
+                    </div>
+                </div>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label><i class="fas fa-tachometer-alt"></i> Quantité (L) :</label>
+                        <input type="number" placeholder="Entrez la quantité" value="45">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-user"></i> Opérateur :</label>
+                        <input type="text" value="Test User" readonly>
+                    </div>
+                </div>
+                
+                <button type="submit" class="submit-btn">
+                    <i class="fas fa-save"></i>
+                    Enregistrer la Carburation
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openTestModal() {
+            document.getElementById('testModal').setAttribute('aria-hidden', 'false');
+            console.log('✅ Modal ouverte avec style dashboard');
+            console.log('🔍 Vérifications :');
+            console.log('   - Header avec gradient bleu ?');
+            console.log('   - Bouton fermeture avec animation ?');
+            console.log('   - Formulaires avec focus effects ?');
+            console.log('   - Bouton submit avec gradient ?');
+        }
+        
+        function closeTestModal() {
+            document.getElementById('testModal').setAttribute('aria-hidden', 'true');
+            console.log('✅ Modal fermée');
+        }
+
+        // Fermer en cliquant en dehors
+        document.getElementById('testModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeTestModal();
+            }
+        });
+
+        console.log('✅ Test Modales Style Dashboard chargé');
+        console.log('🧹 Styles conflictuels supprimés de vidanges.css et vidange.css');
+        console.log('🎨 Les modales utilisent maintenant les styles du dashboard');
+    </script>
+</body>
+</html>

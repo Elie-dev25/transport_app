@@ -3,10 +3,8 @@
 
 {% block head %}
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard_admin.css') }}?v=20250129">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}?v=20250129">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/student_trafic.css') }}?v=20250129">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/form.css') }}">
+    <!-- CSS Modulaire - Architecture optimisée pour la maintenance -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard-main.css') }}?v=20250821">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
       if (!window.jQuery) {
@@ -19,24 +17,6 @@
       }
     </script>
     <script src="{{ url_for('static', filename='js/dashboard_admin.js') }}?v=20250129"></script>
-    <style>
-        /* Fix pour les modales qui ne s'affichent pas */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-        }
-        .modal.show {
-            display: flex !important;
-        }
-    </style>
 {% endblock %}
 
 {% block content %}

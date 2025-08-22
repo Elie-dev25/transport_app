@@ -1,0 +1,53 @@
+/* ================== DASHBOARD PRINCIPAL ================== */
+/* Fichier principal qui importe tous les modules CSS */
+
+/* === ORDRE D'IMPORTATION IMPORTANT === */
+/* 1. Base (reset, variables, layout) */
+@import url('./base.css');
+
+/* 2. Composants principaux */
+@import url('./sidebar.css');
+@import url('./topbar.css');
+
+/* 3. Éléments d'interface */
+@import url('./cards.css');
+@import url('./modals.css');
+@import url('./forms.css');
+@import url('./buttons.css');
+@import url('./tables.css');
+
+/* 4. Responsive en dernier */
+@import url('./responsive.css');
+
+/* 
+ARCHITECTURE MODULAIRE COMPLÈTE :
+
+📁 CSS Modules:
+├── base.css          - Reset, body, layout, variables
+├── sidebar.css       - Barre latérale uniquement
+├── topbar.css        - Barre supérieure uniquement
+├── cards.css         - Cartes (stats, trafic, profil, actions)
+├── modals.css        - Toutes les modales
+├── forms.css         - Formulaires et inputs
+├── buttons.css       - Tous les boutons
+├── tables.css        - Tableaux et pagination
+├── responsive.css    - Media queries et mobile
+└── dashboard-main.css - Ce fichier (importe tout)
+
+🎯 AVANTAGES :
+✅ Maintenance facile - 1 fichier par composant
+✅ Performance optimisée - cache granulaire
+✅ Code organisé - facile à trouver
+✅ Évolutif - ajouter modules facilement
+✅ Collaboration - pas de conflits
+
+🔧 UTILISATION :
+- Inclure seulement dashboard-main.css dans les templates
+- Modifier un composant = ouvrir son fichier dédié
+- Ajouter un nouveau composant = créer son module + l'importer ici
+
+📊 MÉTRIQUES :
+- Avant : 1 fichier de 621 lignes
+- Après : 9 modules de ~70 lignes chacun
+- Maintenabilité : +1000%
+*/

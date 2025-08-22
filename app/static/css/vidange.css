@@ -1,30 +1,4 @@
-/* Bouton action spécifique pour la page vidange */
-.action-btn {
-    padding: 6px 14px;
-    font-size: 13px;
-    border-radius: 8px;
-    background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
-    color: #fff;
-    border: none;
-    font-weight: 600;
-    box-shadow: 0 2px 8px rgba(30, 64, 175, 0.08);
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    transition: background 0.2s, transform 0.2s;
-}
-
-.action-btn i {
-    font-size: 15px;
-    margin-right: 4px;
-}
-
-.action-btn:hover {
-    background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
-    transform: translateY(-2px) scale(1.04);
-    color: #fff;
-}
+/* Les boutons utilisent maintenant les styles du module buttons.css */
 /* Ligne d'en-tête bleue pour la liste AED (pour <tr>) */
 .aed-list-title-row {
     background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%) !important;

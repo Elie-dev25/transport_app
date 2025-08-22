@@ -4,10 +4,8 @@
 
 {% block head %}
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/form.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard_charge.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/student_trafic.css') }}">
+    <!-- CSS Modulaire - Architecture optimisée pour la maintenance -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard-main.css') }}?v=20250821">
 {% endblock %}
 
 {% block content %}

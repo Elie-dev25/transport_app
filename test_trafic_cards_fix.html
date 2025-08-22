@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Trafic Cards Fix</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="app/static/css/dashboard-main.css?v=20250821">
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">UDM</div>
+            <div class="admin-info">
+                <h2>Test Trafic</h2>
+                <p>Cards Fix</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <h1 class="page-title">Test Correction Trafic Cards</h1>
+        <div class="top-bar-actions">
+            <div class="notification-bell">
+                <i class="fas fa-bell"></i>
+            </div>
+            <div class="user-menu">
+                <div class="user-avatar">T</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="dashboard-content">
+            <div style="background: white; padding: 20px; border-radius: 15px; margin-bottom: 30px;">
+                <h2>🚌 Test Correction Trafic Cards</h2>
+                <p><strong>Objectif :</strong> Les 3 trafic-cards doivent occuper toute la largeur disponible et être centrées</p>
+                
+                <div style="margin: 15px 0; padding: 15px; background: #f0f9ff; border-radius: 8px;">
+                    <strong>✅ Corrections appliquées :</strong><br>
+                    • Grid: <code>repeat(3, 1fr)</code> au lieu de <code>auto-fit minmax(200px, 1fr)</code><br>
+                    • Responsive: 1 colonne mobile, 2 colonnes tablette, 3 colonnes desktop<br>
+                    • Gap augmenté à 25px pour plus d'espacement<br>
+                    • Cartes occupent maintenant toute la largeur disponible
+                </div>
+            </div>
+
+            <!-- Trafic Section - Test -->
+            <div class="trafic-section">
+                <h2 class="section-title">
+                    <i class="fas fa-chart-line"></i>
+                    Trafic Étudiants - Temps Réel
+                </h2>
+                <div class="trafic-grid">
+                    <div class="trafic-card arrived">
+                        <div class="trafic-number">156</div>
+                        <div class="trafic-label">Arrivés au Campus</div>
+                    </div>
+                    <div class="trafic-card present">
+                        <div class="trafic-number">89</div>
+                        <div class="trafic-label">Présents au Campus</div>
+                    </div>
+                    <div class="trafic-card departed">
+                        <div class="trafic-number">67</div>
+                        <div class="trafic-label">Partis du Campus</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="background: white; padding: 20px; border-radius: 15px; margin-top: 30px;">
+                <h3>📊 Résultat Attendu :</h3>
+                
+                <div style="margin: 20px 0;">
+                    <h4>🖥️ Desktop (≥1200px) :</h4>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 10px 0; font-family: monospace; font-size: 12px;">
+                        <div style="background: #d1fae5; padding: 15px; text-align: center; border-radius: 5px; border: 2px solid #10b981;">ARRIVÉS</div>
+                        <div style="background: #dbeafe; padding: 15px; text-align: center; border-radius: 5px; border: 2px solid #3b82f6;">PRÉSENTS</div>
+                        <div style="background: #fee2e2; padding: 15px; text-align: center; border-radius: 5px; border: 2px solid #ef4444;">PARTIS</div>
+                    </div>
+                    <p><strong>✅ 3 cartes égales occupant toute la largeur</strong></p>
+                </div>
+
+                <div style="margin: 20px 0;">
+                    <h4>📱 Tablette (769-1199px) :</h4>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 10px 0; font-family: monospace; font-size: 12px;">
+                        <div style="background: #d1fae5; padding: 15px; text-align: center; border-radius: 5px; border: 2px solid #10b981;">ARRIVÉS</div>
+                        <div style="background: #dbeafe; padding: 15px; text-align: center; border-radius: 5px; border: 2px solid #3b82f6;">PRÉSENTS</div>
+                        <div style="background: #fee2e2; padding: 15px; text-align: center; border-radius: 5px; border: 2px solid #ef4444; grid-column: 1 / -1;">PARTIS</div>
+                    </div>
+                    <p><strong>✅ 2 cartes en haut, 1 carte pleine largeur en bas</strong></p>
+                </div>
+
+                <div style="margin: 20px 0;">
+                    <h4>📱 Mobile (≤768px) :</h4>
+                    <div style="display: grid; grid-template-columns: 1fr; gap: 10px; margin: 10px 0; font-family: monospace; font-size: 12px;">
+                        <div style="background: #d1fae5; padding: 15px; text-align: center; border-radius: 5px; border: 2px solid #10b981;">ARRIVÉS</div>
+                        <div style="background: #dbeafe; padding: 15px; text-align: center; border-radius: 5px; border: 2px solid #3b82f6;">PRÉSENTS</div>
+                        <div style="background: #fee2e2; padding: 15px; text-align: center; border-radius: 5px; border: 2px solid #ef4444;">PARTIS</div>
+                    </div>
+                    <p><strong>✅ 3 cartes empilées verticalement</strong></p>
+                </div>
+
+                <div style="margin-top: 20px; padding: 15px; background: #f0f9ff; border-radius: 8px;">
+                    <strong>🎯 Points Clés de la Correction :</strong><br>
+                    • <strong>Largeur maximale :</strong> Cartes utilisent toute la largeur disponible<br>
+                    • <strong>Centrage parfait :</strong> Répartition égale de l'espace<br>
+                    • <strong>Responsive optimal :</strong> Adaptation selon la taille d'écran<br>
+                    • <strong>Espacement cohérent :</strong> Gap de 25px entre les cartes
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        console.log('🚌 Test Trafic Cards Fix chargé');
+        console.log('📊 Configuration grille :');
+        console.log('   - Desktop: 3 colonnes égales (repeat(3, 1fr))');
+        console.log('   - Tablette: 2 colonnes');
+        console.log('   - Mobile: 1 colonne');
+        
+        // Afficher les dimensions actuelles
+        window.addEventListener('load', function() {
+            const grid = document.querySelector('.trafic-grid');
+            const cards = document.querySelectorAll('.trafic-card');
+            
+            console.log('📏 Dimensions actuelles :');
+            console.log('   - Grille:', window.getComputedStyle(grid).gridTemplateColumns);
+            console.log('   - Nombre de cartes:', cards.length);
+            
+            cards.forEach((card, index) => {
+                const rect = card.getBoundingClientRect();
+                console.log(`   - Carte ${index + 1}: ${Math.round(rect.width)}px × ${Math.round(rect.height)}px`);
+            });
+            
+            // Vérifier si les cartes occupent bien toute la largeur
+            const gridRect = grid.getBoundingClientRect();
+            const totalCardWidth = Array.from(cards).reduce((sum, card) => sum + card.getBoundingClientRect().width, 0);
+            const totalGaps = (cards.length - 1) * 25; // 25px de gap
+            const expectedWidth = gridRect.width;
+            const actualUsedWidth = totalCardWidth + totalGaps;
+            
+            console.log('🎯 Vérification largeur :');
+            console.log(`   - Largeur grille: ${Math.round(gridRect.width)}px`);
+            console.log(`   - Largeur utilisée: ${Math.round(actualUsedWidth)}px`);
+            console.log(`   - Utilisation: ${Math.round((actualUsedWidth / expectedWidth) * 100)}%`);
+        });
+    </script>
+</body>
+</html>

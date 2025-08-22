@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Dimensions Modales Uniformes</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="app/static/css/dashboard-main.css?v=20250821">
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">UDM</div>
+            <div class="admin-info">
+                <h2>Test Dimensions</h2>
+                <p>Modales Uniformes</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <h1 class="page-title">Test Dimensions Modales Uniformes</h1>
+        <div class="top-bar-actions">
+            <div class="notification-bell">
+                <i class="fas fa-bell"></i>
+            </div>
+            <div class="user-menu">
+                <div class="user-avatar">T</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="dashboard-content">
+            <div style="background: white; padding: 20px; border-radius: 15px; margin-bottom: 30px;">
+                <h2>📐 Test Dimensions Modales Uniformes</h2>
+                <p><strong>Correction :</strong> Dimensions uniformes et suppression des scrolls inutiles</p>
+                
+                <div style="margin: 15px 0; padding: 15px; background: #f0f9ff; border-radius: 8px;">
+                    <strong>✅ Corrections appliquées :</strong><br>
+                    • Dimensions uniformes : <code>width: 90%, max-width: 600px</code><br>
+                    • Suppression <code>overflow-y: auto</code> sur modal-content<br>
+                    • Scroll intelligent seulement sur modal-body si nécessaire<br>
+                    • Responsive cohérent sur mobile<br>
+                    • Scrollbar personnalisée uniquement sur le contenu
+                </div>
+            </div>
+
+            <!-- Boutons de test -->
+            <div style="background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); margin-bottom: 30px;">
+                <h3 style="color: #1e3a8a; margin-bottom: 25px;">
+                    <i class="fas fa-window-maximize"></i>
+                    Test des Différentes Modales
+                </h3>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                    <button onclick="openModalPetite()" class="btn btn-primary">
+                        <i class="fas fa-compress"></i>
+                        Modal Petite
+                    </button>
+                    
+                    <button onclick="openModalNormale()" class="btn btn-secondary">
+                        <i class="fas fa-window-maximize"></i>
+                        Modal Normale
+                    </button>
+                    
+                    <button onclick="openModalGrande()" class="btn btn-info">
+                        <i class="fas fa-expand"></i>
+                        Modal Grande
+                    </button>
+                    
+                    <button onclick="openModalContenuLong()" class="btn btn-warning">
+                        <i class="fas fa-scroll"></i>
+                        Contenu Long
+                    </button>
+                </div>
+                
+                <div style="margin-top: 20px; padding: 15px; background: #f0f9ff; border-radius: 8px;">
+                    <strong>📋 Vérifications :</strong><br>
+                    1. Toutes les modales ont-elles la même largeur de base ?<br>
+                    2. Pas de scroll horizontal inutile ?<br>
+                    3. Scroll vertical seulement si contenu long ?<br>
+                    4. Dimensions cohérentes sur mobile ?<br>
+                    5. Scrollbar personnalisée seulement sur le contenu ?
+                </div>
+            </div>
+
+            <!-- Comparaison avant/après -->
+            <div style="background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);">
+                <h3 style="color: #1e3a8a; margin-bottom: 25px;">
+                    <i class="fas fa-balance-scale"></i>
+                    Comparaison Avant/Après
+                </h3>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                    <div>
+                        <h4 style="color: #ef4444; margin-bottom: 15px;">❌ Avant</h4>
+                        <ul style="line-height: 1.8; color: #6b7280;">
+                            <li>Dimensions incohérentes (420px, 90vw, etc.)</li>
+                            <li>Scroll horizontal inutile</li>
+                            <li>Scroll vertical sur modal-content</li>
+                            <li>Conflits responsive</li>
+                            <li>Scrollbar sur toute la modal</li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <h4 style="color: #10b981; margin-bottom: 15px;">✅ Après</h4>
+                        <ul style="line-height: 1.8; color: #6b7280;">
+                            <li>Dimensions uniformes (90%, max 600px)</li>
+                            <li>Pas de scroll horizontal</li>
+                            <li>Scroll intelligent sur modal-body</li>
+                            <li>Responsive cohérent</li>
+                            <li>Scrollbar personnalisée sur contenu</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Petite -->
+    <div id="modalPetite" class="modal">
+        <div class="modal-content small">
+            <div class="modal-header">
+                <h3><i class="fas fa-compress"></i> Modal Petite</h3>
+                <button type="button" class="close-btn" onclick="closeModalPetite()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Cette modal utilise la classe <code>.small</code> mais garde des dimensions cohérentes.</p>
+                <div class="form-group">
+                    <label><i class="fas fa-user"></i> Nom :</label>
+                    <input type="text" placeholder="Votre nom">
+                </div>
+                <button type="submit" class="submit-btn">
+                    <i class="fas fa-save"></i>
+                    Enregistrer
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Normale -->
+    <div id="modalNormale" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-window-maximize"></i> Modal Normale</h3>
+                <button type="button" class="close-btn" onclick="closeModalNormale()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Cette modal a les dimensions standard uniformes.</p>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label><i class="fas fa-user"></i> Nom :</label>
+                        <input type="text" placeholder="Votre nom">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-envelope"></i> Email :</label>
+                        <input type="email" placeholder="votre@email.com">
+                    </div>
+                </div>
+                <button type="submit" class="submit-btn">
+                    <i class="fas fa-save"></i>
+                    Enregistrer
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Grande -->
+    <div id="modalGrande" class="modal">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h3><i class="fas fa-expand"></i> Modal Grande</h3>
+                <button type="button" class="close-btn" onclick="closeModalGrande()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Cette modal utilise la classe <code>.large</code> pour plus d'espace.</p>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label><i class="fas fa-user"></i> Nom complet :</label>
+                        <input type="text" placeholder="Votre nom complet">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-envelope"></i> Email :</label>
+                        <input type="email" placeholder="votre@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-phone"></i> Téléphone :</label>
+                        <input type="tel" placeholder="Votre téléphone">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-comment"></i> Message :</label>
+                        <textarea placeholder="Votre message..." rows="4"></textarea>
+                    </div>
+                </div>
+                <button type="submit" class="submit-btn">
+                    <i class="fas fa-save"></i>
+                    Enregistrer
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Contenu Long -->
+    <div id="modalContenuLong" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-scroll"></i> Modal avec Contenu Long</h3>
+                <button type="button" class="close-btn" onclick="closeModalContenuLong()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Cette modal teste le scroll intelligent :</strong></p>
+                
+                <div style="margin: 20px 0;">
+                    <h4>Section 1</h4>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+                </div>
+                
+                <div style="margin: 20px 0;">
+                    <h4>Section 2</h4>
+                    <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+                </div>
+                
+                <div style="margin: 20px 0;">
+                    <h4>Section 3</h4>
+                    <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
+                </div>
+                
+                <div style="margin: 20px 0;">
+                    <h4>Section 4</h4>
+                    <p>Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+                </div>
+                
+                <div style="margin: 20px 0;">
+                    <h4>Section 5</h4>
+                    <p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium.</p>
+                </div>
+                
+                <div style="margin: 20px 0;">
+                    <h4>Section 6</h4>
+                    <p>Totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt.</p>
+                </div>
+                
+                <div style="margin: 20px 0;">
+                    <h4>Formulaire</h4>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label><i class="fas fa-user"></i> Nom :</label>
+                            <input type="text" placeholder="Votre nom">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-envelope"></i> Email :</label>
+                            <input type="email" placeholder="votre@email.com">
+                        </div>
+                    </div>
+                </div>
+                
+                <button type="submit" class="submit-btn">
+                    <i class="fas fa-save"></i>
+                    Enregistrer (Fin du contenu)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Fonctions d'ouverture/fermeture
+        function openModalPetite() {
+            document.getElementById('modalPetite').classList.add('show');
+            console.log('✅ Modal Petite ouverte - Dimensions uniformes');
+        }
+        
+        function closeModalPetite() {
+            document.getElementById('modalPetite').classList.remove('show');
+        }
+        
+        function openModalNormale() {
+            document.getElementById('modalNormale').classList.add('show');
+            console.log('✅ Modal Normale ouverte - Dimensions standard');
+        }
+        
+        function closeModalNormale() {
+            document.getElementById('modalNormale').classList.remove('show');
+        }
+        
+        function openModalGrande() {
+            document.getElementById('modalGrande').classList.add('show');
+            console.log('✅ Modal Grande ouverte - Plus d\'espace');
+        }
+        
+        function closeModalGrande() {
+            document.getElementById('modalGrande').classList.remove('show');
+        }
+        
+        function openModalContenuLong() {
+            document.getElementById('modalContenuLong').classList.add('show');
+            console.log('✅ Modal Contenu Long ouverte - Scroll intelligent');
+        }
+        
+        function closeModalContenuLong() {
+            document.getElementById('modalContenuLong').classList.remove('show');
+        }
+
+        // Fermer en cliquant en dehors
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('show');
+                }
+            });
+        });
+
+        console.log('📐 Test Dimensions Modales Uniformes chargé');
+        console.log('✅ Dimensions uniformes : width: 90%, max-width: 600px');
+        console.log('🚫 Scrolls inutiles supprimés');
+        console.log('📱 Responsive cohérent');
+    </script>
+</body>
+</html>

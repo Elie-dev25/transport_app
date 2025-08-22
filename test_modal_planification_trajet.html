@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Modal Planification Trajet</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="app/static/css/dashboard-main.css?v=20250821">
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">UDM</div>
+            <div class="admin-info">
+                <h2>Test Modal</h2>
+                <p>Planification Trajet</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <h1 class="page-title">Test Modal Planification Trajet</h1>
+        <div class="top-bar-actions">
+            <div class="notification-bell">
+                <i class="fas fa-bell"></i>
+            </div>
+            <div class="user-menu">
+                <div class="user-avatar">T</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="dashboard-content">
+            <div style="background: white; padding: 20px; border-radius: 15px; margin-bottom: 30px;">
+                <h2>🚌 Test Modal Planification Trajet</h2>
+                <p><strong>Correction :</strong> Ajout des styles pour les liens de planification du trajet</p>
+                
+                <div style="margin: 15px 0; padding: 15px; background: #f0f9ff; border-radius: 8px;">
+                    <strong>✅ Styles ajoutés :</strong><br>
+                    • <code>.trajet-type-btn</code> → Liens stylisés avec gradients<br>
+                    • <code>.trajet-buttons</code> → Grille responsive<br>
+                    • <code>.trajet-type-selection</code> → Container stylisé<br>
+                    • Variantes par type (AED, Prestataire, Retour)<br>
+                    • Animations hover et shimmer effect
+                </div>
+            </div>
+
+            <!-- Bouton pour ouvrir la modal -->
+            <div style="background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); margin-bottom: 30px;">
+                <h3 style="color: #1e3a8a; margin-bottom: 25px;">
+                    <i class="fas fa-route"></i>
+                    Test de la Modal
+                </h3>
+                
+                <button onclick="openPlanifierTrajetModal()" class="btn btn-primary">
+                    <i class="fas fa-route"></i>
+                    Planifier Trajet
+                </button>
+                
+                <div style="margin-top: 20px; padding: 15px; background: #f0f9ff; border-radius: 8px;">
+                    <strong>📋 Vérifications :</strong><br>
+                    1. Les liens ont-ils un style moderne avec gradients ?<br>
+                    2. Les hover effects fonctionnent-ils ?<br>
+                    3. Les icônes sont-elles bien visibles ?<br>
+                    4. La grille responsive fonctionne-t-elle ?<br>
+                    5. Les variantes de couleur par type sont-elles appliquées ?
+                </div>
+            </div>
+
+            <!-- Aperçu des styles -->
+            <div style="background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);">
+                <h3 style="color: #1e3a8a; margin-bottom: 25px;">
+                    <i class="fas fa-palette"></i>
+                    Aperçu des Styles Appliqués
+                </h3>
+                
+                <div class="trajet-type-selection">
+                    <h4>Aperçu des liens de planification :</h4>
+                    <div class="trajet-buttons">
+                        <a href="#" class="trajet-type-btn aed">
+                            <i class="fas fa-bus"></i>
+                            <span>Départ AED pour Banekane</span>
+                            <small>Bus universitaire vers le campus</small>
+                        </a>
+                        <a href="#" class="trajet-type-btn prestataire">
+                            <i class="fas fa-bus-alt"></i>
+                            <span>Départ Prestataire</span>
+                            <small>Bus externe vers le campus</small>
+                        </a>
+                        <a href="#" class="trajet-type-btn retour">
+                            <i class="fas fa-undo-alt"></i>
+                            <span>Départ de Banekane (Retour)</span>
+                            <small>Retour du campus vers les quartiers</small>
+                        </a>
+                        <a href="#" class="trajet-type-btn aed">
+                            <i class="fas fa-road"></i>
+                            <span>Sortie hors de la ville (AED)</span>
+                            <small>Mission/Intervention hors ville</small>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Planifier Trajet (copié du dashboard admin) -->
+    <div id="planifierTrajetModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-route"></i> Planifier un Trajet</h3>
+                <button type="button" class="close-btn" onclick="closePlanifierTrajetModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="trajet-type-selection">
+                    <h4>Choisissez le type de trajet à planifier :</h4>
+                    <div class="trajet-buttons">
+                        <a href="#" class="trajet-type-btn aed" onclick="showAlert('Départ AED')">
+                            <i class="fas fa-bus"></i>
+                            <span>Départ AED pour Banekane</span>
+                            <small>Bus universitaire vers le campus</small>
+                        </a>
+                        <a href="#" class="trajet-type-btn prestataire" onclick="showAlert('Départ Prestataire')">
+                            <i class="fas fa-bus-alt"></i>
+                            <span>Départ Prestataire</span>
+                            <small>Bus externe vers le campus</small>
+                        </a>
+                        <a href="#" class="trajet-type-btn retour" onclick="showAlert('Départ Banekane Retour')">
+                            <i class="fas fa-undo-alt"></i>
+                            <span>Départ de Banekane (Retour)</span>
+                            <small>Retour du campus vers les quartiers</small>
+                        </a>
+                        <a href="#" class="trajet-type-btn aed" onclick="showAlert('Sortie Hors Ville')">
+                            <i class="fas fa-road"></i>
+                            <span>Sortie hors de la ville (AED)</span>
+                            <small>Mission/Intervention hors ville</small>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openPlanifierTrajetModal() {
+            document.getElementById('planifierTrajetModal').classList.add('show');
+            console.log('✅ Modal Planifier Trajet ouverte');
+            console.log('🎨 Styles trajet-type-btn appliqués');
+        }
+        
+        function closePlanifierTrajetModal() {
+            document.getElementById('planifierTrajetModal').classList.remove('show');
+            console.log('✅ Modal Planifier Trajet fermée');
+        }
+        
+        function showAlert(type) {
+            alert(`✅ Clic sur : ${type}\n\nDans la vraie application, cela ouvrirait le formulaire correspondant.`);
+            console.log(`🚌 Clic sur trajet : ${type}`);
+        }
+
+        // Fermer en cliquant en dehors
+        document.getElementById('planifierTrajetModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closePlanifierTrajetModal();
+            }
+        });
+
+        console.log('🚌 Test Modal Planification Trajet chargé');
+        console.log('✅ Styles trajet-type-btn ajoutés dans buttons.css');
+        console.log('🎨 Liens de planification maintenant stylisés');
+    </script>
+</body>
+</html>

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Notifications Fix</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="app/static/css/dashboard-main.css?v=20250821">
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">UDM</div>
+            <div class="admin-info">
+                <h2>Test Notifications</h2>
+                <p>Correction du panneau</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <h1 class="page-title">Test Panneau Notifications</h1>
+        <div class="top-bar-actions">
+            <div class="notification-bell" onclick="toggleNotifications()">
+                <i class="fas fa-bell"></i>
+                <span class="notification-badge">3</span>
+            </div>
+            <div class="user-menu">
+                <div class="user-avatar">T</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Panel -->
+    <div class="notification-panel" id="notificationPanel">
+        <div class="notification-header">
+            <h3>Notifications</h3>
+            <button onclick="toggleNotifications()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="notification-item">
+            <div class="notification-icon success">
+                <i class="fas fa-check"></i>
+            </div>
+            <div class="notification-content">
+                <div class="notification-title">Bus ajouté avec succès</div>
+                <div class="notification-time">Il y a 5 minutes</div>
+            </div>
+        </div>
+        <div class="notification-item">
+            <div class="notification-icon warning">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="notification-content">
+                <div class="notification-title">Maintenance programmée</div>
+                <div class="notification-time">Il y a 1 heure</div>
+            </div>
+        </div>
+        <div class="notification-item">
+            <div class="notification-icon info">
+                <i class="fas fa-info-circle"></i>
+            </div>
+            <div class="notification-content">
+                <div class="notification-title">Nouveau chauffeur inscrit</div>
+                <div class="notification-time">Il y a 2 heures</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="dashboard-content">
+            <div style="padding: 30px; background: white; border-radius: 20px; margin-bottom: 30px;">
+                <h2>🔔 Test Correction Panneau Notifications</h2>
+                
+                <div style="margin: 20px 0;">
+                    <h3>✅ Corrections Appliquées :</h3>
+                    <ul style="margin-left: 20px; line-height: 1.8;">
+                        <li><strong>CSS ajouté</strong> - Styles complets pour le panneau</li>
+                        <li><strong>Classe corrigée</strong> - Utilise "active" au lieu de "show"</li>
+                        <li><strong>Position fixe</strong> - Panneau en haut à droite</li>
+                        <li><strong>Animation fluide</strong> - Transition d'apparition</li>
+                        <li><strong>Z-index élevé</strong> - Au-dessus du contenu</li>
+                    </ul>
+                </div>
+
+                <div style="margin: 20px 0;">
+                    <h3>🎯 Comportement Attendu :</h3>
+                    <ul style="margin-left: 20px; line-height: 1.8;">
+                        <li><strong>Par défaut</strong> - Panneau masqué (invisible)</li>
+                        <li><strong>Clic sur cloche</strong> - Panneau s'affiche en haut à droite</li>
+                        <li><strong>Clic sur X</strong> - Panneau se ferme</li>
+                        <li><strong>Clic extérieur</strong> - Panneau se ferme automatiquement</li>
+                    </ul>
+                </div>
+
+                <div style="background: #f0f9ff; padding: 15px; border-radius: 10px; border-left: 4px solid #3b82f6;">
+                    <strong>📋 Instructions de Test :</strong><br>
+                    1. Cliquez sur la cloche 🔔 en haut à droite<br>
+                    2. Le panneau devrait apparaître avec une animation fluide<br>
+                    3. Cliquez sur la croix ✕ pour fermer<br>
+                    4. Cliquez à nouveau sur la cloche pour rouvrir<br>
+                    5. Cliquez en dehors du panneau pour le fermer
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Toggle Notifications
+        function toggleNotifications() {
+            const panel = document.getElementById('notificationPanel');
+            panel.classList.toggle('active');
+            console.log('🔔 Panneau notifications:', panel.classList.contains('active') ? 'OUVERT' : 'FERMÉ');
+        }
+
+        // Close notifications when clicking outside
+        document.addEventListener('click', function(event) {
+            const panel = document.getElementById('notificationPanel');
+            const bell = document.querySelector('.notification-bell');
+            
+            if (!panel.contains(event.target) && !bell.contains(event.target)) {
+                panel.classList.remove('active');
+                console.log('🔔 Panneau fermé (clic extérieur)');
+            }
+        });
+
+        console.log('✅ Test Notifications chargé');
+        console.log('🔧 Corrections appliquées :');
+        console.log('   - CSS panneau notifications ajouté');
+        console.log('   - Classe "active" synchronisée avec JS');
+        console.log('   - Position et animations optimisées');
+    </script>
+</body>
+</html>

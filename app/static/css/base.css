@@ -1,0 +1,70 @@
+/* ================== BASE STYLES ================== */
+/* Reset, body, variables CSS communes */
+
+/* === RESET === */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    height: auto !important;
+    overflow-y: auto !important;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #f8fbff 0%, #e8f4f8 100%);
+    color: #2c3e50;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+/* === LAYOUT PRINCIPAL === */
+.main-content {
+    margin-left: 280px;
+    padding-top: 100px;
+    height: auto;
+    overflow-y: visible;
+    transition: margin-left 0.3s ease;
+    margin-top: 0 !important;
+}
+
+.dashboard-content {
+    padding: 8px 24px 24px 24px;
+    margin-top: 0 !important;
+}
+
+/* === INDICATEURS COLORÉS === */
+.indicator {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+.green, .voyant-green { 
+    background: #10b981; 
+}
+
+.orange, .voyant-orange { 
+    background: #f59e0b; 
+}
+
+.red, .voyant-red { 
+    background: #ef4444; 
+}
+
+/* === UTILITAIRES === */
+.section-title {
+    font-size: 22px;
+    font-weight: 600;
+    color: #1e3a8a;
+    margin-bottom: 25px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
