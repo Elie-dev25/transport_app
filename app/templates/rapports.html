@@ -1,0 +1,318 @@
+{% extends "_base_admin.html" %}
+{% block title %}Rapports - Gestion Transport{% endblock %}
+
+{% set active_page = 'rapports' %}
+{% set page_title = 'Rapports et Analyses' %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/rapports.css') }}">
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="rapports-container">
+    <!-- Filtres de période -->
+    <div class="filters-section">
+        <div class="filter-group">
+            <label for="periode-select">Période d'analyse :</label>
+            <select id="periode-select" class="form-control">
+                <option value="jour">Aujourd'hui</option>
+                <option value="semaine">Cette semaine</option>
+                <option value="mois" selected>Ce mois</option>
+                <option value="annee">Cette année</option>
+            </select>
+        </div>
+        <div class="filter-actions">
+            <button id="refresh-data" class="btn btn-primary">
+                <i class="fas fa-sync-alt"></i> Actualiser
+            </button>
+            <button id="export-pdf" class="btn btn-secondary">
+                <i class="fas fa-file-pdf"></i> Export PDF
+            </button>
+        </div>
+    </div>
+
+    <!-- Loading indicator -->
+    <div id="loading-indicator" class="loading-section">
+        <div class="spinner"></div>
+        <p>Chargement des données...</p>
+    </div>
+
+    <!-- Section 1: Rapports de Trajets -->
+    <section class="rapport-section" id="section-trajets">
+        <div class="section-header">
+            <h2><i class="fas fa-route"></i> Rapports de Trajets</h2>
+            <div class="section-toggle">
+                <button class="btn-toggle" data-target="trajets-content">
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="section-content" id="trajets-content">
+            <div class="charts-grid">
+                <!-- Performance Chauffeurs -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3>Performance des Chauffeurs</h3>
+                        <span class="chart-info" title="Nombre de trajets effectués par chauffeur">
+                            <i class="fas fa-info-circle"></i>
+                        </span>
+                    </div>
+                    <canvas id="chart-chauffeurs"></canvas>
+                    <div class="chart-stats" id="stats-chauffeurs"></div>
+                </div>
+
+                <!-- Performance Prestataires -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3>Performance des Prestataires</h3>
+                        <span class="chart-info" title="Nombre de trajets par agence prestataire">
+                            <i class="fas fa-info-circle"></i>
+                        </span>
+                    </div>
+                    <canvas id="chart-prestataires"></canvas>
+                    <div class="chart-stats" id="stats-prestataires"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 2: Rapports de Flotte -->
+    <section class="rapport-section" id="section-flotte">
+        <div class="section-header">
+            <h2><i class="fas fa-bus"></i> Rapports de Flotte (AED)</h2>
+            <div class="section-toggle">
+                <button class="btn-toggle" data-target="flotte-content">
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="section-content" id="flotte-content">
+            <div class="charts-grid">
+                <!-- Suivi Kilométrage -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3>Suivi Kilométrage</h3>
+                        <span class="chart-info" title="Évolution du kilométrage par bus">
+                            <i class="fas fa-info-circle"></i>
+                        </span>
+                    </div>
+                    <canvas id="chart-kilometrage"></canvas>
+                    <div class="chart-stats" id="stats-kilometrage"></div>
+                </div>
+
+                <!-- Utilisation des Bus -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3>Utilisation des Bus</h3>
+                        <span class="chart-info" title="Taux d'utilisation par véhicule">
+                            <i class="fas fa-info-circle"></i>
+                        </span>
+                    </div>
+                    <canvas id="chart-utilisation"></canvas>
+                    <div class="chart-stats" id="stats-utilisation"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 3: Rapports Financiers -->
+    <section class="rapport-section" id="section-financier">
+        <div class="section-header">
+            <h2><i class="fas fa-chart-line"></i> Rapports Financiers</h2>
+            <div class="section-toggle">
+                <button class="btn-toggle" data-target="financier-content">
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="section-content" id="financier-content">
+            <div class="charts-grid">
+                <!-- Coûts Carburant -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3>Coûts Carburant</h3>
+                        <span class="chart-info" title="Évolution des dépenses carburant">
+                            <i class="fas fa-info-circle"></i>
+                        </span>
+                    </div>
+                    <canvas id="chart-carburant"></canvas>
+                    <div class="chart-stats" id="stats-carburant">
+                        <div class="stat-item">
+                            <span class="stat-label">Coût total :</span>
+                            <span class="stat-value" id="cout-total-global">0 €</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Consommation Moyenne -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3>Consommation Moyenne</h3>
+                        <span class="chart-info" title="Analyse consommation par km">
+                            <i class="fas fa-info-circle"></i>
+                        </span>
+                    </div>
+                    <canvas id="chart-consommation"></canvas>
+                    <div class="chart-stats" id="stats-consommation"></div>
+                </div>
+
+                <!-- ROI par Bus -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3>ROI par Bus</h3>
+                        <span class="chart-info" title="Rentabilité de chaque véhicule">
+                            <i class="fas fa-info-circle"></i>
+                        </span>
+                    </div>
+                    <canvas id="chart-roi"></canvas>
+                    <div class="chart-stats" id="stats-roi"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 4: Rapports de Maintenance -->
+    <section class="rapport-section" id="section-maintenance">
+        <div class="section-header">
+            <h2><i class="fas fa-tools"></i> Rapports de Maintenance</h2>
+            <div class="section-toggle">
+                <button class="btn-toggle" data-target="maintenance-content">
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="section-content" id="maintenance-content">
+            <div class="charts-grid">
+                <!-- Historique des Pannes -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3>Historique des Pannes</h3>
+                        <span class="chart-info" title="Fréquence et criticité par bus">
+                            <i class="fas fa-info-circle"></i>
+                        </span>
+                    </div>
+                    <canvas id="chart-pannes"></canvas>
+                    <div class="chart-stats" id="stats-pannes"></div>
+                </div>
+
+                <!-- Planning Vidanges -->
+                <div class="chart-container full-width">
+                    <div class="chart-header">
+                        <h3>Planning Vidanges</h3>
+                        <span class="chart-info" title="Prochaines vidanges dues">
+                            <i class="fas fa-info-circle"></i>
+                        </span>
+                    </div>
+                    <div class="table-container">
+                        <table id="table-vidanges" class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Bus N°</th>
+                                    <th>Kilométrage Actuel</th>
+                                    <th>Km Critique</th>
+                                    <th>Km Restants</th>
+                                    <th>Dernière Vidange</th>
+                                    <th>Urgence</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-vidanges">
+                                <!-- Données chargées dynamiquement -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tableau détaillé des pannes récentes -->
+            <div class="chart-container full-width">
+                <div class="chart-header">
+                    <h3>Pannes Récentes</h3>
+                    <span class="chart-info" title="50 dernières pannes enregistrées">
+                        <i class="fas fa-info-circle"></i>
+                    </span>
+                </div>
+                <div class="table-container">
+                    <table id="table-pannes" class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Bus N°</th>
+                                <th>Date/Heure</th>
+                                <th>Criticité</th>
+                                <th>Description</th>
+                                <th>Immobilisation</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-pannes">
+                            <!-- Données chargées dynamiquement -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section Résumé Exécutif -->
+    <section class="rapport-section" id="section-resume">
+        <div class="section-header">
+            <h2><i class="fas fa-chart-pie"></i> Résumé Exécutif</h2>
+        </div>
+        
+        <div class="section-content">
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <div class="summary-icon blue">
+                        <i class="fas fa-bus"></i>
+                    </div>
+                    <div class="summary-content">
+                        <h4>Flotte Active</h4>
+                        <div class="summary-value" id="resume-flotte">-</div>
+                        <div class="summary-label">Bus opérationnels</div>
+                    </div>
+                </div>
+
+                <div class="summary-card">
+                    <div class="summary-icon green">
+                        <i class="fas fa-route"></i>
+                    </div>
+                    <div class="summary-content">
+                        <h4>Trajets Période</h4>
+                        <div class="summary-value" id="resume-trajets">-</div>
+                        <div class="summary-label">Trajets effectués</div>
+                    </div>
+                </div>
+
+                <div class="summary-card">
+                    <div class="summary-icon orange">
+                        <i class="fas fa-euro-sign"></i>
+                    </div>
+                    <div class="summary-content">
+                        <h4>Coût Carburant</h4>
+                        <div class="summary-value" id="resume-cout">-</div>
+                        <div class="summary-label">Dépenses totales</div>
+                    </div>
+                </div>
+
+                <div class="summary-card">
+                    <div class="summary-icon red">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="summary-content">
+                        <h4>Alertes</h4>
+                        <div class="summary-value" id="resume-alertes">-</div>
+                        <div class="summary-label">Maintenance due</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/rapports.js') }}"></script>
+{% endblock %}
