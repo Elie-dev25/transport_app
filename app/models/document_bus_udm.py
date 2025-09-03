@@ -1,12 +1,11 @@
 from app.database import db
 from sqlalchemy import Enum
-from datetime import date
 
-class DocumentAED(db.Model):
-    __tablename__ = 'document_aed'
+class DocumentBusUdM(db.Model):
+    __tablename__ = 'document_bus_udm'
 
     document_id = db.Column(db.Integer, primary_key=True)
-    numero_aed = db.Column(db.String(50), db.ForeignKey('aed.numero'), nullable=False)
+    numero_bus_udm = db.Column(db.String(50), db.ForeignKey('bus_udm.numero'), nullable=False)
     type_document = db.Column(
         Enum(
             'ASSURANCE',
@@ -24,4 +23,4 @@ class DocumentAED(db.Model):
     # No fichier_url nor commentaire as per current requirements
 
     def __repr__(self):
-        return f"<DocumentAED {self.type_document} {self.numero_aed}>"
+        return f"<DocumentBusUdM {self.type_document} {self.numero_bus_udm}>"

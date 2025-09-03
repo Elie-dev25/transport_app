@@ -49,8 +49,7 @@ def create_app():
     app.register_blueprint(chauffeur.bp)
     app.register_blueprint(mecanicien.bp)
     app.register_blueprint(charge_transport.bp)
-    from app.routes.admin_ajax import bp_ajax
-    app.register_blueprint(bp_ajax, url_prefix='/admin')
+
 
     # Filtre Jinja pour afficher les statuts avec mapping UI (sans changer la BD)
     def status_label(value: str) -> str:

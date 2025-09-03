@@ -317,8 +317,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (data.bus_updated) updateBusRow(data.bus_updated);
                 closeFormulaireCarburation();
                 closeCarburationFiche();
-                // Recharger pour MAJ de l'historique
-                location.reload();
+                // Rafraîchir l'historique sans recharger la page
+                if (typeof filterHistoriqueCarburation === 'function') {
+                    filterHistoriqueCarburation();
+                }
             } else {
                 alert('Erreur: ' + (data.message || 'enregistrement'));
             }

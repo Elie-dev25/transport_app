@@ -15,7 +15,8 @@
           <div class="form-group">{{ form_bus.nom_chauffeur.label }}{{ form_bus.nom_chauffeur() }}</div>
           <div class="form-group">{{ form_bus.nombre_places_occupees.label }}{{ form_bus.nombre_places_occupees() }}</div>
           <div class="form-group full-width">{{ form_bus.date_heure_depart.label }}{{ form_bus.date_heure_depart(type='datetime-local') }}</div>
-          <div class="form-group">{{ form_bus.point_depart.label }}{{ form_bus.point_depart() }}</div>
+          <div class="form-group">{{ form_bus.lieu_depart.label }}{{ form_bus.lieu_depart() }}</div>
+          <div class="form-group">{{ form_bus.lieu_arrivee.label }}{{ form_bus.lieu_arrivee() }}</div>
           <div class="form-group">
             <label>Type de passagers</label>
             <input type="text" class="form-control" value="Étudiant" readonly>
@@ -29,3 +30,4 @@
   </div>
 </div>
 <!-- End Modal Départ Prestataire -->
+

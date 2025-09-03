@@ -86,7 +86,9 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(function() {
         let notif = document.querySelector('.flash-message.success');
         if (notif) notif.remove();
-        window.location.reload();
+        if (typeof refreshDashboardStats === 'function') {
+            refreshDashboardStats();
+        }
     }, 3000);
     form.reset();
 } else {

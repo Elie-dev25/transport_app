@@ -152,8 +152,13 @@ $(document).ready(function() {
         var aedId = checkbox.data('id');
         $.post('/mecanicien/aed/' + aedId + '/toggle_etat', function(response) {
             if (response.success) {
-                // Rafraîchir la page pour refléter l'état (ou mettre à jour dynamiquement le switch et le label)
-                location.reload();
+                // Mettre à jour l'état visuellement sans recharger
+                var statusBadge = checkbox.closest('tr').find('.status-badge');
+                if (response.etat === 'DEFAILLANT') {
+                    statusBadge.removeClass('status-ok').addClass('status-defaillant').text('DÉFAILLANT');
+                } else {
+                    statusBadge.removeClass('status-defaillant').addClass('status-ok').text('BON');
+                }
             } else {
                 alert('Erreur : ' + response.message);
             }

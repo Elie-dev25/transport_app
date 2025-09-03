@@ -154,25 +154,32 @@
               <div class="trajet-type-selection">
                 <h4>Choisissez le type de trajet à planifier :</h4>
                 <div class="trajet-buttons">
-                  <a href="#" id="openDepartAedFromPlan" class="trajet-type-btn aed">
-                    <i class="fas fa-bus"></i>
-                    <span>Départ AED pour Banekane</span>
-                    <small>Bus universitaire vers le campus</small>
+                  <a href="#" id="openTrajetInterneBusUdMFromPlan" class="trajet-type-btn aed">
+                    <div class="icon-container">
+                      <i class="fas fa-bus"></i>
+                    </div>
+                    <div class="text-container">
+                      <span>Trajet interne de bus UdM</span>
+                      <small>Bus universitaire entre les sites</small>
+                    </div>
                   </a>
-                  <a href="#" id="openDepartPrestataireFromPlan" class="trajet-type-btn prestataire">
-                    <i class="fas fa-bus-alt"></i>
-                    <span>Départ Prestataire</span>
-                    <small>Bus externe vers le campus</small>
+                  <a href="#" id="openTrajetPrestataireModerniseFromPlan" class="trajet-type-btn prestataire">
+                    <div class="icon-container">
+                      <i class="fas fa-bus-alt"></i>
+                    </div>
+                    <div class="text-container">
+                      <span>Trajet bus prestataire</span>
+                      <small>Bus externe entre les sites</small>
+                    </div>
                   </a>
-                  <a href="#" id="openDepartBanekaneRetourFromPlan" class="trajet-type-btn retour">
-                    <i class="fas fa-undo-alt"></i>
-                    <span>Départ de Banekane (Retour)</span>
-                    <small>Retour du campus vers les quartiers</small>
-                  </a>
-                  <a href="#" id="openDepartSortieHorsVilleFromPlan" class="trajet-type-btn aed">
-                    <i class="fas fa-road"></i>
-                    <span>Sortie hors de la ville (AED)</span>
-                    <small>Mission/Intervention hors ville</small>
+                  <a href="#" id="openAutresTrajetsFromPlan" class="trajet-type-btn autres">
+                    <div class="icon-container">
+                      <i class="fas fa-route"></i>
+                    </div>
+                    <div class="text-container">
+                      <span>Autres trajets</span>
+                      <small>Trajets spéciaux et missions</small>
+                    </div>
                   </a>
                 </div>
               </div>
@@ -186,12 +193,41 @@
         {% include 'partials/charge_transport/_depart_banekane_retour_modal.html' %}
         {% include 'partials/charge_transport/_depart_sortie_hors_ville_modal.html' %}
 
+        {# Nouveaux modals modernisés #}
+        {% include 'partials/admin/_trajet_interne_bus_udm_modal.html' %}
+        {% include 'partials/admin/_trajet_prestataire_modernise_modal.html' %}
+        {% include 'partials/admin/_autres_trajets_modal.html' %}
+
 
 {% endblock %}
 
 {% block extra_scripts %}
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 <script>
+// Fonction pour rafraîchir les statistiques du dashboard
+function refreshDashboardStats() {
+  $.ajax({
+    url: '{{ url_for("admin.get_stats") }}',
+    method: 'GET',
+    success: function(data) {
+      // Mettre à jour les statistiques principales
+      $('.stat-card').eq(0).find('.stat-value').text(data.stats.bus_actifs);
+      $('.stat-card').eq(1).find('.stat-value').text(data.stats.trajets_jour_aed);
+      $('.stat-card').eq(2).find('.stat-value').text(data.stats.trajets_jour_bus_agence);
+      $('.stat-card').eq(3).find('.stat-value').text(data.stats.etudiants);
+      $('.stat-card').eq(4).find('.stat-value').text(data.stats.bus_maintenance);
+
+      // Mettre à jour le trafic temps réel
+      $('.trafic-card').eq(0).find('.trafic-number').text(data.trafic.arrives);
+      $('.trafic-card').eq(1).find('.trafic-number').text(data.trafic.present);
+      $('.trafic-card').eq(2).find('.trafic-number').text(data.trafic.partis);
+    },
+    error: function() {
+      console.log('Erreur lors du rafraîchissement des statistiques');
+    }
+  });
+}
+
 $(function() {
   $('#openAddBusModal').on('click', function(e) {
     e.preventDefault();
@@ -308,6 +344,28 @@ $(function() {
     }, 100);
   });
 
+  // Nouveaux événements pour les modals modernisés
+  $('#openTrajetInterneBusUdMFromPlan').on('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    $('#planifierTrajetModal').removeClass('show');
+    setTimeout(function(){ $('#trajetInterneBusUdMModal').addClass('show'); }, 100);
+  });
+
+  $('#openTrajetPrestataireModerniseFromPlan').on('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    $('#planifierTrajetModal').removeClass('show');
+    setTimeout(function(){ $('#trajetPrestataireModerniseModal').addClass('show'); }, 100);
+  });
+
+  $('#openAutresTrajetsFromPlan').on('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    $('#planifierTrajetModal').removeClass('show');
+    setTimeout(function(){ $('#autresTrajetsModal').addClass('show'); }, 100);
+  });
+
   // Fermer les modales internes
   $(document).on('click', '#closeDepartAedModal', function() {
     $('#departAedModal').removeClass('show');
@@ -322,6 +380,17 @@ $(function() {
     $('#departSortieHorsVilleModal').removeClass('show').css('display', 'none');
   });
 
+  // Fermer les nouveaux modals modernisés
+  $(document).on('click', '#closeTrajetInterneBusUdMModal', function() {
+    $('#trajetInterneBusUdMModal').removeClass('show');
+  });
+  $(document).on('click', '#closeTrajetPrestataireModerniseModal', function() {
+    $('#trajetPrestataireModerniseModal').removeClass('show');
+  });
+  $(document).on('click', '#closeAutresTrajetsModal', function() {
+    $('#autresTrajetsModal').removeClass('show');
+  });
+
   // Fermer les modales internes en cliquant en dehors
   $(document).on('click', '#departAedModal, #departPrestataireModal, #departBanekaneRetourModal, #departSortieHorsVilleModal', function(e) {
     if (e.target === this) {
@@ -330,6 +399,72 @@ $(function() {
         $(this).css('display', 'none');
       }
     }
+  });
+
+  // Fermer les nouveaux modals modernisés en cliquant en dehors
+  $(document).on('click', '#trajetInterneBusUdMModal, #trajetPrestataireModerniseModal, #autresTrajetsModal', function(e) {
+    if (e.target === this) {
+      $(this).removeClass('show');
+    }
+  });
+
+  // Gestion AJAX pour les nouveaux formulaires modernisés
+  $('#trajetInterneBusUdMForm').on('submit', function(e) {
+    e.preventDefault();
+    $.ajax({
+      url: '{{ trajet_interne_bus_udm_url }}',
+      method: 'POST',
+      data: $(this).serialize(),
+      success: function(resp) {
+        $('#trajetInterneBusUdMModal').removeClass('show');
+        $('body').append('<div class="flash-message success">' + resp.message + '</div>');
+        setTimeout(function() { $('.flash-message.success').fadeOut(500, function() { $(this).remove(); }); }, 3000);
+        // Rafraîchir les statistiques sans recharger la page
+        refreshDashboardStats();
+      },
+      error: function(xhr) {
+        let msg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Erreur lors de l\'enregistrement';
+        $('#trajetInterneBusUdMError').text(msg).show();
+      }
+    });
+  });
+
+  $('#trajetPrestataireModerniseForm').on('submit', function(e) {
+    e.preventDefault();
+    $.ajax({
+      url: '{{ trajet_prestataire_modernise_url }}',
+      method: 'POST',
+      data: $(this).serialize(),
+      success: function(resp) {
+        $('#trajetPrestataireModerniseModal').removeClass('show');
+        $('body').append('<div class="flash-message success">' + resp.message + '</div>');
+        setTimeout(function() { $('.flash-message.success').fadeOut(500, function() { $(this).remove(); }); }, 3000);
+        refreshDashboardStats();
+      },
+      error: function(xhr) {
+        let msg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Erreur lors de l\'enregistrement';
+        $('#trajetPrestataireModerniseError').text(msg).show();
+      }
+    });
+  });
+
+  $('#autresTrajetsForm').on('submit', function(e) {
+    e.preventDefault();
+    $.ajax({
+      url: '{{ autres_trajets_url }}',
+      method: 'POST',
+      data: $(this).serialize(),
+      success: function(resp) {
+        $('#autresTrajetsModal').removeClass('show');
+        $('body').append('<div class="flash-message success">' + resp.message + '</div>');
+        setTimeout(function() { $('.flash-message.success').fadeOut(500, function() { $(this).remove(); }); }, 3000);
+        refreshDashboardStats();
+      },
+      error: function(xhr) {
+        let msg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Erreur lors de l\'enregistrement';
+        $('#autresTrajetsError').text(msg).show();
+      }
+    });
   });
 });
 </script>

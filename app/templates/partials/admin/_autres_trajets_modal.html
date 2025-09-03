@@ -1,0 +1,55 @@
+<!-- Modal Autres Trajets -->
+<div id="autresTrajetsModal" class="modal">
+  <div class="modal-content">
+    <button type="button" id="closeAutresTrajetsModal" class="close-btn"><i class="fas fa-times"></i></button>
+    <div class="modal-header">
+      <h3><i class="fas fa-route"></i> Autres trajets</h3>
+    </div>
+    <div class="modal-body">
+      <div class="alert alert-danger" style="display:none;" id="autresTrajetsError"></div>
+      <form method="POST" id="autresTrajetsForm" class="modal-form" action="{{ autres_trajets_url or url_for('admin.autres_trajets') }}">
+        {{ form_autres_trajets.hidden_tag() }}
+        <div class="form-grid">
+          <div class="form-group">
+            {{ form_autres_trajets.date_heure_depart.label }}
+            {{ form_autres_trajets.date_heure_depart(type='datetime-local') }}
+          </div>
+          
+          <!-- Nouveaux champs lieu de départ et arrivée -->
+          <div class="form-group">
+            {{ form_autres_trajets.lieu_depart.label }}
+            {{ form_autres_trajets.lieu_depart() }}
+          </div>
+          <div class="form-group">
+            {{ form_autres_trajets.lieu_arrivee.label }}
+            {{ form_autres_trajets.lieu_arrivee() }}
+          </div>
+          
+          <div class="form-group">
+            {{ form_autres_trajets.chauffeur_id.label }}
+            {{ form_autres_trajets.chauffeur_id() }}
+          </div>
+          <div class="form-group">
+            {{ form_autres_trajets.numero_bus_udm.label }}
+            {{ form_autres_trajets.numero_bus_udm() }}
+          </div>
+          <div class="form-group">
+            {{ form_autres_trajets.destination.label }}
+            {{ form_autres_trajets.destination() }}
+          </div>
+          <div class="form-group">
+            {{ form_autres_trajets.motif.label }}
+            {{ form_autres_trajets.motif() }}
+          </div>
+          <div class="form-group">
+            {{ form_autres_trajets.kilometrage_actuel.label }}
+            {{ form_autres_trajets.kilometrage_actuel() }}
+          </div>
+        </div>
+        <button type="submit" class="submit-btn modal-submit">{{ form_autres_trajets.submit.label }}</button>
+      </form>
+      <div id="autresTrajetssFeedback"></div>
+    </div>
+  </div>
+</div>
+<!-- End Modal Autres Trajets -->

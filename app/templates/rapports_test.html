@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Rapports - Transport UDM</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="{{ url_for('static', filename='css/rapports.css') }}?v={{ range(1, 10000) | random }}" rel="stylesheet">
+</head>
+<body>
+
+<div class="reports-container">
+    <div class="container-fluid">
+        <!-- Header Section -->
+        <div class="reports-header">
+            <h1 class="reports-title">
+                <i class="fas fa-chart-line me-3"></i>
+                Rapports et Analyses
+            </h1>
+            <p class="reports-subtitle">
+                Tableau de bord complet pour le suivi des performances et des coûts de transport
+            </p>
+        </div>
+
+        <!-- Filters Section -->
+        <div class="filters-section">
+            <div class="filter-group">
+                <div class="filter-item">
+                    <label class="filter-label">Période</label>
+                    <select id="periodeFilter" class="filter-select">
+                        <option value="jour">Aujourd'hui</option>
+                        <option value="semaine">Cette semaine</option>
+                        <option value="mois" selected>Ce mois</option>
+                        <option value="annee">Cette année</option>
+                    </select>
+                </div>
+                <div class="filter-item">
+                    <label class="filter-label">Véhicule</label>
+                    <select id="vehiculeFilter" class="filter-select">
+                        <option value="tous">Tous les véhicules</option>
+                        <option value="aed">AED uniquement</option>
+                        <option value="prestataire">Prestataires uniquement</option>
+                    </select>
+                </div>
+                <button id="refreshBtn" class="refresh-btn">
+                    <i class="fas fa-sync-alt"></i>
+                    Actualiser
+                </button>
+            </div>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="kpi-grid">
+            <div class="kpi-card primary">
+                <div class="kpi-header">
+                    <span class="kpi-title">Total Trajets</span>
+                    <div class="kpi-icon primary">
+                        <i class="fas fa-route"></i>
+                    </div>
+                </div>
+                <div class="kpi-value">1,234</div>
+                <div class="kpi-change positive">
+                    <i class="fas fa-arrow-up"></i>
+                    +12%
+                </div>
+            </div>
+
+            <div class="kpi-card warning">
+                <div class="kpi-header">
+                    <span class="kpi-title">Coût Carburant</span>
+                    <div class="kpi-icon warning">
+                        <i class="fas fa-gas-pump"></i>
+                    </div>
+                </div>
+                <div class="kpi-value">15,678 €</div>
+                <div class="kpi-change negative">
+                    <i class="fas fa-arrow-up"></i>
+                    +5%
+                </div>
+            </div>
+
+            <div class="kpi-card success">
+                <div class="kpi-header">
+                    <span class="kpi-title">Véhicules Actifs</span>
+                    <div class="kpi-icon success">
+                        <i class="fas fa-bus"></i>
+                    </div>
+                </div>
+                <div class="kpi-value">8</div>
+                <div class="kpi-change positive">
+                    <i class="fas fa-arrow-up"></i>
+                    100%
+                </div>
+            </div>
+
+            <div class="kpi-card danger">
+                <div class="kpi-header">
+                    <span class="kpi-title">Pannes Totales</span>
+                    <div class="kpi-icon danger">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                </div>
+                <div class="kpi-value">3</div>
+                <div class="kpi-change positive">
+                    <i class="fas fa-arrow-down"></i>
+                    -8%
+                </div>
+            </div>
+
+            <div class="kpi-card info">
+                <div class="kpi-header">
+                    <span class="kpi-title">Alertes Urgentes</span>
+                    <div class="kpi-icon info">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                </div>
+                <div class="kpi-value">2</div>
+                <div class="kpi-change negative">
+                    <i class="fas fa-exclamation"></i>
+                    Action requise
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="charts-grid">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3 class="chart-title">Performance des Chauffeurs</h3>
+                    <i class="fas fa-user-tie text-primary"></i>
+                </div>
+                <div class="chart-container">
+                    <p class="text-center mt-5">Graphique des performances</p>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3 class="chart-title">Utilisation des Véhicules</h3>
+                    <i class="fas fa-bus text-info"></i>
+                </div>
+                <div class="chart-container">
+                    <p class="text-center mt-5">Graphique d'utilisation</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tables Section -->
+        <div class="tables-section">
+            <div class="table-card">
+                <div class="table-header">
+                    <h3 class="table-title">
+                        <i class="fas fa-exclamation-circle text-warning me-2"></i>
+                        Alertes et Maintenance
+                    </h3>
+                    <p class="table-subtitle">Véhicules nécessitant une attention immédiate</p>
+                </div>
+                <div class="table-responsive">
+                    <table class="modern-table">
+                        <thead>
+                            <tr>
+                                <th>Véhicule</th>
+                                <th>Type d'alerte</th>
+                                <th>Kilométrage</th>
+                                <th>Urgence</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>AED001</strong></td>
+                                <td>Vidange</td>
+                                <td>45,000 km</td>
+                                <td>
+                                    <span class="status-badge danger">CRITIQUE</span>
+                                </td>
+                                <td>Immédiate</td>
+                            </tr>
+                            <tr>
+                                <td><strong>AED002</strong></td>
+                                <td>Vidange</td>
+                                <td>38,000 km</td>
+                                <td>
+                                    <span class="status-badge warning">ATTENTION</span>
+                                </td>
+                                <td>Planifiée</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Export Section -->
+        <div class="export-section">
+            <h3 class="mb-3">
+                <i class="fas fa-download me-2"></i>
+                Exporter les Rapports
+            </h3>
+            <div class="export-buttons">
+                <button class="export-btn pdf">
+                    <i class="fas fa-file-pdf"></i>
+                    Exporter en PDF
+                </button>
+                <button class="export-btn excel">
+                    <i class="fas fa-file-excel"></i>
+                    Exporter en Excel
+                </button>
+                <button class="export-btn csv">
+                    <i class="fas fa-file-csv"></i>
+                    Exporter en CSV
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+// Simple test script
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Page de test des rapports chargée');
+    
+    // Test hover effects
+    const cards = document.querySelectorAll('.kpi-card, .chart-card, .table-card');
+    cards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            console.log('Hover sur:', this.className);
+        });
+    });
+    
+    // Test refresh button
+    document.getElementById('refreshBtn').addEventListener('click', function() {
+        alert('Bouton actualiser cliqué !');
+    });
+});
+</script>
+
+</body>
+</html>

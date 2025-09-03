@@ -14,7 +14,7 @@ from typing import Tuple, Optional
 
 from app.database import db
 from app.models.trajet import Trajet
-from app.models.aed import AED
+from app.models.bus_udm import BusUdM
 from app.models.prestataire import Prestataire
 from app.models.chargetransport import Chargetransport
 
@@ -23,10 +23,10 @@ from app.models.chargetransport import Chargetransport
 AUTONOMIE_KM_PAR_LITRE = 8.0
 
 
-def update_autocontrol_after_km_change(aed: AED, new_km: int, prev_km: Optional[int]) -> None:
+def update_autocontrol_after_km_change(bus_udm: BusUdM, new_km: int, prev_km: Optional[int]) -> None:
     """
     Met à jour automatiquement le niveau de carburant estimé en fonction du delta kilométrique.
-    - Utilise la consommation spécifique du bus (aed.consommation_km_par_litre) si définie,
+    - Utilise la consommation spécifique du bus (bus_udm.consommation_km_par_litre) si définie,
       sinon la constante globale AUTONOMIE_KM_PAR_LITRE.
     - Ne modifie pas les seuils critiques (km_critique_*), qui sont exprimés en km.
     """
@@ -46,16 +46,16 @@ def update_autocontrol_after_km_change(aed: AED, new_km: int, prev_km: Optional[
     # Déterminer l'autonomie (km par litre)
     autonomie = None
     # 1) Consommation spécifique si définie
-    if getattr(aed, 'consommation_km_par_litre', None):
+    if getattr(bus_udm, 'consommation_km_par_litre', None):
         try:
-            autonomie = float(aed.consommation_km_par_litre)
+            autonomie = float(bus_udm.consommation_km_par_litre)
         except (TypeError, ValueError):
             autonomie = None
     # 2) Sinon, calculer à partir des capacités si disponibles: km plein / litres réservoir
-    if autonomie is None and getattr(aed, 'capacite_plein_carburant', None) and getattr(aed, 'capacite_reservoir_litres', None):
+    if autonomie is None and getattr(bus_udm, 'capacite_plein_carburant', None) and getattr(bus_udm, 'capacite_reservoir_litres', None):
         try:
-            km_plein = float(aed.capacite_plein_carburant)
-            litres = float(aed.capacite_reservoir_litres)
+            km_plein = float(bus_udm.capacite_plein_carburant)
+            litres = float(bus_udm.capacite_reservoir_litres)
             if km_plein > 0 and litres and litres > 0:
                 autonomie = km_plein / litres
         except (TypeError, ValueError, ZeroDivisionError):
@@ -68,31 +68,31 @@ def update_autocontrol_after_km_change(aed: AED, new_km: int, prev_km: Optional[
         return
 
     # Mettre à jour le niveau de carburant (si suivi activé)
-    if hasattr(aed, 'niveau_carburant_litres') and aed.niveau_carburant_litres is not None:
+    if hasattr(bus_udm, 'niveau_carburant_litres') and bus_udm.niveau_carburant_litres is not None:
         consommation_l = float(delta) / autonomie
-        nouveau_niveau = (aed.niveau_carburant_litres or 0.0) - consommation_l
+        nouveau_niveau = (bus_udm.niveau_carburant_litres or 0.0) - consommation_l
         # Clamp entre 0 et capacité réservoir si connue
         try:
-            cap = float(aed.capacite_reservoir_litres) if getattr(aed, 'capacite_reservoir_litres', None) else None
+            cap = float(bus_udm.capacite_reservoir_litres) if getattr(bus_udm, 'capacite_reservoir_litres', None) else None
         except (TypeError, ValueError):
             cap = None
         if nouveau_niveau < 0:
             nouveau_niveau = 0.0
         if cap and cap > 0:
             nouveau_niveau = min(nouveau_niveau, cap)
-        aed.niveau_carburant_litres = round(nouveau_niveau, 3)
+        bus_udm.niveau_carburant_litres = round(nouveau_niveau, 3)
         # Recalculer le km critique carburant à partir du niveau courant
         # Priorité: consommation spécifique -> capacités plein / réservoir -> constante globale
         km_par_litre = None
-        if getattr(aed, 'consommation_km_par_litre', None):
+        if getattr(bus_udm, 'consommation_km_par_litre', None):
             try:
-                km_par_litre = float(aed.consommation_km_par_litre)
+                km_par_litre = float(bus_udm.consommation_km_par_litre)
             except (TypeError, ValueError):
                 km_par_litre = None
-        if km_par_litre is None and getattr(aed, 'capacite_plein_carburant', None) and getattr(aed, 'capacite_reservoir_litres', None):
+        if km_par_litre is None and getattr(bus_udm, 'capacite_plein_carburant', None) and getattr(bus_udm, 'capacite_reservoir_litres', None):
             try:
-                km_plein = float(aed.capacite_plein_carburant)
-                litres = float(aed.capacite_reservoir_litres)
+                km_plein = float(bus_udm.capacite_plein_carburant)
+                litres = float(bus_udm.capacite_reservoir_litres)
                 if km_plein > 0 and litres and litres > 0:
                     km_par_litre = km_plein / litres
             except (TypeError, ValueError, ZeroDivisionError):
@@ -101,7 +101,7 @@ def update_autocontrol_after_km_change(aed: AED, new_km: int, prev_km: Optional[
             km_par_litre = float(AUTONOMIE_KM_PAR_LITRE)
         # Mettre à jour l'odomètre critique carburant
         try:
-            aed.km_critique_carburant = round(float(newv) + (aed.niveau_carburant_litres * km_par_litre), 3)
+            bus_udm.km_critique_carburant = round(float(newv) + (bus_udm.niveau_carburant_litres * km_par_litre), 3)
         except Exception:
             # En cas d'erreur de conversion, ne pas casser le flux
             pass
@@ -115,27 +115,28 @@ def enregistrer_depart_aed(form, user) -> Tuple[bool, str]:
     """
     try:
         _ensure_chargetransport_for_user(user.utilisateur_id)
-        # Refus si l'AED est défaillant
-        aed_bus = AED.query.filter_by(numero=form.numero_aed.data).first()
-        if aed_bus and getattr(aed_bus, 'etat_vehicule', None) == 'DEFAILLANT':
-            return False, f"Le bus AED {aed_bus.numero} est immobilisé (DEFAILLANT) et ne peut pas être utilisé pour un trajet."
+        # Refus si le Bus UdM est défaillant
+        bus_udm = BusUdM.query.filter_by(numero=form.numero_aed.data).first()
+        if bus_udm and getattr(bus_udm, 'etat_vehicule', None) == 'DEFAILLANT':
+            return False, f"Le bus UdM {bus_udm.numero} est immobilisé (DEFAILLANT) et ne peut pas être utilisé pour un trajet."
         trajet = Trajet(
+            type_trajet='UDM_INTERNE',
             date_heure_depart=form.date_heure_depart.data,
             point_depart=form.point_depart.data,
             type_passagers=form.type_passagers.data,
             nombre_places_occupees=form.nombre_places_occupees.data,
             chauffeur_id=form.chauffeur_id.data,
-            numero_aed=form.numero_aed.data,
+            numero_bus_udm=form.numero_aed.data,
             immat_bus=None,
             enregistre_par=user.utilisateur_id,
         )
         db.session.add(trajet)
 
-        # Mettre à jour le kilométrage du véhicule AED sélectionné s'il est fourni dans le form
+        # Mettre à jour le kilométrage du véhicule Bus UdM sélectionné s'il est fourni dans le form
         if hasattr(form, 'kilometrage_actuel') and form.kilometrage_actuel.data is not None:
-            aed = AED.query.filter_by(numero=form.numero_aed.data).first()
-            if aed:
-                prev_km = aed.kilometrage
+            bus_udm = BusUdM.query.filter_by(numero=form.numero_aed.data).first()
+            if bus_udm:
+                prev_km = bus_udm.kilometrage
                 new_km = form.kilometrage_actuel.data
                 # Validation: le nouvel odomètre ne doit pas être inférieur à l'ancien
                 try:
@@ -145,9 +146,9 @@ def enregistrer_depart_aed(form, user) -> Tuple[bool, str]:
                 except (TypeError, ValueError):
                     db.session.rollback()
                     return False, "Kilométrage invalide."
-                update_autocontrol_after_km_change(aed, new_km, prev_km)
-                aed.kilometrage = new_km
-                db.session.add(aed)
+                update_autocontrol_after_km_change(bus_udm, new_km, prev_km)
+                bus_udm.kilometrage = new_km
+                db.session.add(bus_udm)
 
         db.session.commit()
         return True, 'Départ AED enregistré avec succès.'
@@ -164,29 +165,29 @@ def enregistrer_depart_sortie_hors_ville(form, user) -> Tuple[bool, str]:
     """
     try:
         _ensure_chargetransport_for_user(user.utilisateur_id)
-        # Refus si l'AED est défaillant
-        aed_bus = AED.query.filter_by(numero=form.numero_aed.data).first()
-        if aed_bus and getattr(aed_bus, 'etat_vehicule', None) == 'DEFAILLANT':
-            return False, f"Le bus AED {aed_bus.numero} est immobilisé (DEFAILLANT) et ne peut pas être utilisé pour un trajet."
+        # Refus si le Bus UdM est défaillant
+        bus_udm = BusUdM.query.filter_by(numero=form.numero_aed.data).first()
+        if bus_udm and getattr(bus_udm, 'etat_vehicule', None) == 'DEFAILLANT':
+            return False, f"Le bus UdM {bus_udm.numero} est immobilisé (DEFAILLANT) et ne peut pas être utilisé pour un trajet."
         trajet = Trajet(
+            type_trajet='AUTRE',
             date_heure_depart=form.date_heure_depart.data,
             point_depart=form.point_depart.data,
             type_passagers=None,  # NULL pour les sorties hors ville
             nombre_places_occupees=None,  # NULL pour les sorties hors ville
             chauffeur_id=form.chauffeur_id.data,
-            numero_aed=form.numero_aed.data,
+            numero_bus_udm=form.numero_aed.data,
             immat_bus=None,
             enregistre_par=user.utilisateur_id,
-            destination=form.destination.data,
             motif=form.motif.data,
         )
         db.session.add(trajet)
 
-        # Mettre à jour le kilométrage du véhicule AED
+        # Mettre à jour le kilométrage du véhicule Bus UdM
         if hasattr(form, 'kilometrage_actuel') and form.kilometrage_actuel.data is not None:
-            aed = AED.query.filter_by(numero=form.numero_aed.data).first()
-            if aed:
-                prev_km = aed.kilometrage
+            bus_udm = BusUdM.query.filter_by(numero=form.numero_aed.data).first()
+            if bus_udm:
+                prev_km = bus_udm.kilometrage
                 new_km = form.kilometrage_actuel.data
                 # Validation: le nouvel odomètre ne doit pas être inférieur à l'ancien
                 try:
@@ -196,9 +197,9 @@ def enregistrer_depart_sortie_hors_ville(form, user) -> Tuple[bool, str]:
                 except (TypeError, ValueError):
                     db.session.rollback()
                     return False, "Kilométrage invalide."
-                update_autocontrol_after_km_change(aed, new_km, prev_km)
-                aed.kilometrage = new_km
-                db.session.add(aed)
+                update_autocontrol_after_km_change(bus_udm, new_km, prev_km)
+                bus_udm.kilometrage = new_km
+                db.session.add(bus_udm)
 
         db.session.commit()
         return True, 'Sortie hors de la ville (AED) enregistrée avec succès.'
@@ -270,26 +271,27 @@ def enregistrer_depart_banekane_retour(form, user) -> Tuple[bool, str]:
         _ensure_chargetransport_for_user(user.utilisateur_id)
         type_bus = getattr(form, 'type_bus').data
         if type_bus == 'AED':
-            # Refus si l'AED est défaillant
-            aed_bus = AED.query.filter_by(numero=form.numero_aed.data).first()
-            if aed_bus and getattr(aed_bus, 'etat_vehicule', None) == 'DEFAILLANT':
-                return False, f"Le bus AED {aed_bus.numero} est immobilisé (DEFAILLANT) et ne peut pas être utilisé pour un trajet."
+            # Refus si le Bus UdM est défaillant
+            bus_udm = BusUdM.query.filter_by(numero=form.numero_aed.data).first()
+            if bus_udm and getattr(bus_udm, 'etat_vehicule', None) == 'DEFAILLANT':
+                return False, f"Le bus UdM {bus_udm.numero} est immobilisé (DEFAILLANT) et ne peut pas être utilisé pour un trajet."
             trajet = Trajet(
+                type_trajet='UDM_INTERNE',
                 date_heure_depart=form.date_heure_depart.data,
                 point_depart='Banekane',
                 type_passagers=form.type_passagers.data,
                 nombre_places_occupees=form.nombre_places_occupees.data,
                 chauffeur_id=form.chauffeur_id.data,
-                numero_aed=form.numero_aed.data,
+                numero_bus_udm=form.numero_aed.data,
                 immat_bus=None,
                 enregistre_par=user.utilisateur_id,
             )
             db.session.add(trajet)
             # MAJ kilométrage si fourni
             if hasattr(form, 'kilometrage_actuel') and form.kilometrage_actuel.data is not None:
-                aed = AED.query.filter_by(numero=form.numero_aed.data).first()
-                if aed:
-                    prev_km = aed.kilometrage
+                bus_udm = BusUdM.query.filter_by(numero=form.numero_aed.data).first()
+                if bus_udm:
+                    prev_km = bus_udm.kilometrage
                     new_km = form.kilometrage_actuel.data
                     # Validation: le nouvel odomètre ne doit pas être inférieur à l'ancien
                     try:
@@ -299,9 +301,9 @@ def enregistrer_depart_banekane_retour(form, user) -> Tuple[bool, str]:
                     except (TypeError, ValueError):
                         db.session.rollback()
                         return False, "Kilométrage invalide."
-                    update_autocontrol_after_km_change(aed, new_km, prev_km)
-                    aed.kilometrage = new_km
-                    db.session.add(aed)
+                    update_autocontrol_after_km_change(bus_udm, new_km, prev_km)
+                    bus_udm.kilometrage = new_km
+                    db.session.add(bus_udm)
             db.session.commit()
             return True, 'Départ de Banekane (retour) enregistré et kilométrage mis à jour !'
         else:
@@ -324,12 +326,13 @@ def enregistrer_depart_banekane_retour(form, user) -> Tuple[bool, str]:
                 immat_bus_value = immat
 
             trajet = Trajet(
+                type_trajet='PRESTATAIRE',
                 date_heure_depart=form.date_heure_depart.data,
                 point_depart='Banekane',
                 type_passagers='ETUDIANT',
                 nombre_places_occupees=form.nombre_places_occupees.data,
                 chauffeur_id=None,
-                numero_aed=None,
+                numero_bus_udm=None,
                 immat_bus=immat_bus_value,
                 enregistre_par=user.utilisateur_id,
             )
@@ -339,3 +342,142 @@ def enregistrer_depart_banekane_retour(form, user) -> Tuple[bool, str]:
     except Exception as e:
         db.session.rollback()
         return False, f'Erreur : {e}'
+
+
+# ========================================
+# NOUVEAUX SERVICES MODERNISÉS
+# ========================================
+
+def enregistrer_trajet_interne_bus_udm(form, user) -> Tuple[bool, str]:
+    """
+    Enregistrer un trajet interne avec bus UdM (remplace enregistrer_depart_aed).
+    Champs attendus: lieu_depart, lieu_arrivee, type_passagers, nombre_places_occupees,
+    chauffeur_id, numero_bus_udm, kilometrage_actuel, date_heure_depart.
+    """
+    try:
+        _ensure_chargetransport_for_user(user.utilisateur_id)
+
+        # Refus si le Bus UdM est défaillant
+        bus_udm = BusUdM.query.filter_by(numero=form.numero_bus_udm.data).first()
+        if bus_udm and getattr(bus_udm, 'etat_vehicule', None) == 'DEFAILLANT':
+            return False, f"Le bus UdM {bus_udm.numero} est immobilisé (DEFAILLANT) et ne peut pas être utilisé pour un trajet."
+
+        trajet = Trajet(
+            type_trajet='UDM_INTERNE',
+            date_heure_depart=form.date_heure_depart.data,
+            point_depart=form.lieu_depart.data,
+            point_arriver=form.lieu_arrivee.data,  # Nom correct selon votre DB
+            type_passagers=form.type_passagers.data,
+            nombre_places_occupees=form.nombre_places_occupees.data,
+            chauffeur_id=form.chauffeur_id.data,
+            numero_bus_udm=form.numero_bus_udm.data,
+            immat_bus=None,
+            enregistre_par=user.utilisateur_id,
+        )
+        db.session.add(trajet)
+
+        # Mettre à jour le kilométrage du véhicule Bus UdM
+        if hasattr(form, 'kilometrage_actuel') and form.kilometrage_actuel.data is not None:
+            bus_udm = BusUdM.query.filter_by(numero=form.numero_bus_udm.data).first()
+            if bus_udm:
+                prev_km = bus_udm.kilometrage
+                new_km = form.kilometrage_actuel.data
+                # Validation: le nouvel odomètre ne doit pas être inférieur à l'ancien
+                try:
+                    if prev_km is not None and int(new_km) < int(prev_km):
+                        db.session.rollback()
+                        return False, f"Kilométrage invalide: {new_km} < {prev_km}."
+                except (TypeError, ValueError):
+                    db.session.rollback()
+                    return False, "Kilométrage invalide."
+                update_autocontrol_after_km_change(bus_udm, new_km, prev_km)
+                bus_udm.kilometrage = new_km
+                db.session.add(bus_udm)
+
+        db.session.commit()
+        return True, f'Trajet interne Bus UdM enregistré avec succès ({form.lieu_depart.data} → {form.lieu_arrivee.data}).'
+    except Exception as e:
+        db.session.rollback()
+        return False, f'Erreur lors de l\'enregistrement : {str(e)}'
+
+
+def enregistrer_trajet_prestataire_modernise(form, user) -> Tuple[bool, str]:
+    """
+    Enregistrer un trajet avec bus prestataire (version modernisée).
+    Champs attendus: lieu_depart, lieu_arrivee, nom_prestataire, immat_bus, etc.
+    """
+    try:
+        _ensure_chargetransport_for_user(user.utilisateur_id)
+
+        trajet = Trajet(
+            type_trajet='PRESTATAIRE',
+            date_heure_depart=form.date_heure_depart.data,
+            point_depart=form.lieu_depart.data,
+            point_arriver=form.lieu_arrivee.data,  # Nom correct selon votre DB
+            type_passagers='ETUDIANT',
+            nombre_places_occupees=form.nombre_places_occupees.data,
+            chauffeur_id=None,
+            numero_bus_udm=None,
+            immat_bus=form.immat_bus.data,
+            enregistre_par=user.utilisateur_id,
+        )
+        db.session.add(trajet)
+        db.session.commit()
+        return True, f'Trajet prestataire enregistré avec succès ({form.lieu_depart.data} → {form.lieu_arrivee.data}).'
+    except Exception as e:
+        db.session.rollback()
+        return False, f'Erreur lors de l\'enregistrement : {str(e)}'
+
+
+def enregistrer_autres_trajets(form, user) -> Tuple[bool, str]:
+    """
+    Enregistrer un autre trajet (remplace sortie hors ville).
+    Champs attendus: lieu_depart, lieu_arrivee, destination, motif, chauffeur_id,
+    numero_bus_udm, kilometrage_actuel, date_heure_depart.
+    """
+    try:
+        _ensure_chargetransport_for_user(user.utilisateur_id)
+
+        # Refus si le Bus UdM est défaillant
+        bus_udm = BusUdM.query.filter_by(numero=form.numero_bus_udm.data).first()
+        if bus_udm and getattr(bus_udm, 'etat_vehicule', None) == 'DEFAILLANT':
+            return False, f"Le bus UdM {bus_udm.numero} est immobilisé (DEFAILLANT) et ne peut pas être utilisé pour un trajet."
+
+        trajet = Trajet(
+            type_trajet='AUTRE',
+            date_heure_depart=form.date_heure_depart.data,
+            point_depart=form.lieu_depart.data,
+            point_arriver=form.lieu_arrivee.data,  # Nom correct selon votre DB
+            type_passagers=None,  # NULL pour les autres trajets
+            nombre_places_occupees=None,  # NULL pour les autres trajets
+            chauffeur_id=form.chauffeur_id.data,
+            numero_bus_udm=form.numero_bus_udm.data,
+            immat_bus=None,
+            enregistre_par=user.utilisateur_id,
+            motif=form.motif.data,
+        )
+        db.session.add(trajet)
+
+        # Mettre à jour le kilométrage du véhicule Bus UdM
+        if hasattr(form, 'kilometrage_actuel') and form.kilometrage_actuel.data is not None:
+            bus_udm = BusUdM.query.filter_by(numero=form.numero_bus_udm.data).first()
+            if bus_udm:
+                prev_km = bus_udm.kilometrage
+                new_km = form.kilometrage_actuel.data
+                # Validation: le nouvel odomètre ne doit pas être inférieur à l'ancien
+                try:
+                    if prev_km is not None and int(new_km) < int(prev_km):
+                        db.session.rollback()
+                        return False, f"Kilométrage invalide: {new_km} < {prev_km}."
+                except (TypeError, ValueError):
+                    db.session.rollback()
+                    return False, "Kilométrage invalide."
+                update_autocontrol_after_km_change(bus_udm, new_km, prev_km)
+                bus_udm.kilometrage = new_km
+                db.session.add(bus_udm)
+
+        db.session.commit()
+        return True, f'Autre trajet enregistré avec succès ({form.lieu_depart.data} → {form.lieu_arrivee.data}).'
+    except Exception as e:
+        db.session.rollback()
+        return False, f'Erreur lors de l\'enregistrement : {str(e)}'

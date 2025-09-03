@@ -1,0 +1,28 @@
+# Flask et extensions principales
+Flask>=3.0.0
+Flask-SQLAlchemy>=3.1.0
+Flask-Login>=0.6.3
+
+# Base de données
+SQLAlchemy>=2.0.25
+PyMySQL>=1.1.0
+
+# Authentification LDAP
+ldap3==2.9.1
+
+# Formulaires
+Flask-WTF>=1.2.0
+WTForms>=3.1.0
+
+# Sécurité
+Werkzeug>=3.0.0
+
+# Utilitaires
+python-dateutil==2.8.2
+
+# Email (optionnel - peut être installé séparément si nécessaire)
+# Flask-Mail==0.9.1
+
+# Tests
+pytest==7.4.2
+pytest-flask==1.2.0

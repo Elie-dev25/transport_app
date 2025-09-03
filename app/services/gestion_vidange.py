@@ -1,5 +1,5 @@
 from app.database import db
-from app.models.aed import AED
+from app.models.bus_udm import BusUdM
 from app.models.vidange import Vidange
 from datetime import datetime
 
@@ -14,10 +14,10 @@ OIL_CAPACITY_KM = {
 }
 
 
-def get_vidange_history(numero_aed=None, date_debut=None, date_fin=None):
-    query = Vidange.query.join(AED, Vidange.aed_id == AED.id)
-    if numero_aed:
-        query = query.filter(AED.numero == numero_aed)
+def get_vidange_history(numero_bus_udm=None, date_debut=None, date_fin=None):
+    query = Vidange.query.join(BusUdM, Vidange.bus_udm_id == BusUdM.id)
+    if numero_bus_udm:
+        query = query.filter(BusUdM.numero == numero_bus_udm)
     if date_debut:
         query = query.filter(Vidange.date_vidange >= date_debut)
     if date_fin:
@@ -26,7 +26,7 @@ def get_vidange_history(numero_aed=None, date_debut=None, date_fin=None):
     return query.order_by(Vidange.date_vidange.desc()).all()
 
 
-def compute_voyant(bus: AED) -> str:
+def compute_voyant(bus: BusUdM) -> str:
     """Calcule le voyant (green/orange/red) pour l'état vidange du bus."""
     voyant = 'green'
     if bus.kilometrage is not None and bus.km_critique_huile is not None:
@@ -44,7 +44,7 @@ def compute_voyant(bus: AED) -> str:
 
 def build_bus_vidange_list():
     """Retourne la liste des bus formatée pour l'écran vidange avec le voyant calculé."""
-    bus_list = AED.query.order_by(AED.numero).all()
+    bus_list = BusUdM.query.order_by(BusUdM.numero).all()
     result = []
     for bus in bus_list:
         result.append({
@@ -64,16 +64,16 @@ def enregistrer_vidange_common(data: dict) -> dict:
     Retourne un payload dict prêt pour jsonify.
     Lève ValueError (400) pour erreurs de validation et LookupError (404) si bus introuvable.
     """
-    aed_id = data.get('aed_id')
+    bus_udm_id = data.get('bus_udm_id')
     kilometrage = data.get('kilometrage')
     type_huile = data.get('type_huile')
     remarque = data.get('remarque')
 
-    if not all([aed_id, kilometrage, type_huile]):
+    if not all([bus_udm_id, kilometrage, type_huile]):
         raise ValueError('Champs manquants.')
 
     # Cast et validations
-    aed_id_int = int(aed_id)
+    bus_udm_id_int = int(bus_udm_id)
     km_int = int(kilometrage)
     if km_int < 0:
         raise ValueError('Le kilométrage ne peut pas être négatif.')
@@ -81,7 +81,7 @@ def enregistrer_vidange_common(data: dict) -> dict:
     if type_clean not in OIL_CAPACITY_KM:
         raise ValueError("Type d'huile invalide. Veuillez choisir un type supporté.")
 
-    bus = AED.query.get(aed_id_int)
+    bus = BusUdM.query.get(bus_udm_id_int)
     if not bus:
         raise LookupError('Bus introuvable.')
 
@@ -91,7 +91,7 @@ def enregistrer_vidange_common(data: dict) -> dict:
 
     # Persister la vidange
     vidange = Vidange(
-        aed_id=aed_id_int,
+        bus_udm_id=bus_udm_id_int,
         date_vidange=datetime.utcnow().date(),
         kilometrage=km_int,
         type_huile=type_clean,

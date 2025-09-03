@@ -1,9 +1,11 @@
 from flask_wtf import FlaskForm
 from wtforms import DateTimeField, SelectField, IntegerField, StringField, SubmitField
-from wtforms.validators import DataRequired, NumberRange, Length
+from wtforms.validators import DataRequired, NumberRange, Length, ValidationError
 from datetime import datetime
 
 class TrajetPrestataireForm(FlaskForm):
+    """Formulaire pour les trajets avec bus prestataire (modernisé)"""
+
     nom_prestataire = SelectField(
         'Nom Prestataire',
         choices=[('Charter', 'Charter'), ('Noblesse', 'Noblesse')],
@@ -28,9 +30,25 @@ class TrajetPrestataireForm(FlaskForm):
         default=datetime.now,
         validators=[DataRequired()]
     )
-    point_depart = SelectField(
-        'Point de départ',
-        choices=[('Mfetum', 'Mfetum'), ('Ancienne mairie', 'Ancienne mairie')],
+
+    # Nouveaux champs lieu de départ et arrivée
+    lieu_depart = SelectField(
+        'Lieu de départ',
+        choices=[
+            ('Mfetum', 'Mfetum'),
+            ('Ancienne Mairie', 'Ancienne Mairie'),
+            ('Banekane', 'Banekane')
+        ],
+        validators=[DataRequired()]
+    )
+
+    lieu_arrivee = SelectField(
+        'Lieu d\'arrivée',
+        choices=[
+            ('Mfetum', 'Mfetum'),
+            ('Ancienne Mairie', 'Ancienne Mairie'),
+            ('Banekane', 'Banekane')
+        ],
         validators=[DataRequired()]
     )
     type_passagers = SelectField(
@@ -44,4 +62,9 @@ class TrajetPrestataireForm(FlaskForm):
         'Places occupées',
         validators=[DataRequired(), NumberRange(min=0)]
     )
-    submit = SubmitField('Enregistrer le départ')
+    submit = SubmitField('Enregistrer le trajet')
+
+    def validate_lieu_arrivee(self, field):
+        """Validation personnalisée : le lieu d'arrivée doit être différent du lieu de départ"""
+        if field.data == self.lieu_depart.data:
+            raise ValidationError('Le lieu d\'arrivée doit être différent du lieu de départ.')

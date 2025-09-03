@@ -2,13 +2,51 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, IntegerField, SelectField, DateField, SubmitField, FloatField
 from wtforms.validators import DataRequired, NumberRange, Length
 
-class AEDForm(FlaskForm):
-    """Formulaire pour l'ajout et la modification d'un bus AED"""
+class BusUdMForm(FlaskForm):
+    """Formulaire pour l'ajout et la modification d'un bus UdM"""
 
     numero = StringField(
         'Numéro du bus',
         validators=[DataRequired(), Length(min=3, max=50)],
-        render_kw={'placeholder': 'Ex: AED-001'}
+        render_kw={'placeholder': 'Ex: UDM-001'}
+    )
+
+    immatriculation = StringField(
+        'Immatriculation',
+        validators=[DataRequired(), Length(min=3, max=20)],
+        render_kw={'placeholder': 'Ex: 1234-AB-01'}
+    )
+
+    # Nouveaux champs obligatoires
+    numero_chassis = StringField(
+        'Numéro de châssis',
+        validators=[DataRequired(), Length(min=5, max=100)],
+        render_kw={'placeholder': 'Ex: VF1234567890123456'}
+    )
+
+    modele = StringField(
+        'Modèle',
+        validators=[DataRequired(), Length(min=2, max=100)],
+        render_kw={'placeholder': 'Ex: Sprinter 515'}
+    )
+
+    type_vehicule = SelectField(
+        'Type de véhicule',
+        choices=[
+            ('', '-- Choisir --'),
+            ('TOURISME', 'Tourisme'),
+            ('COASTER', 'Coaster'),
+            ('MINIBUS', 'Minibus'),
+            ('AUTOCAR', 'Autocar'),
+            ('AUTRE', 'Autre')
+        ],
+        validators=[DataRequired()]
+    )
+
+    marque = StringField(
+        'Marque',
+        validators=[DataRequired(), Length(min=2, max=50)],
+        render_kw={'placeholder': 'Ex: Mercedes, Toyota, Hyundai'}
     )
 
     kilometrage = IntegerField(

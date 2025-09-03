@@ -1,18 +1,18 @@
 from app.database import db
-from app.models.aed import AED
+from app.models.bus_udm import BusUdM
 from datetime import datetime
 
 
-def get_carburation_history(numero_aed=None, date_debut=None, date_fin=None):
+def get_carburation_history(numero_bus_udm=None, date_debut=None, date_fin=None):
     """Retourne l'historique des carburations, trié du plus récent au moins récent.
     date_debut et date_fin sont des objets date optionnels pour filtrer l'intervalle.
     """
     # Import local pour éviter les imports circulaires
     from app.models.carburation import Carburation
 
-    query = Carburation.query.join(AED, Carburation.aed_id == AED.id)
-    if numero_aed:
-        query = query.filter(AED.numero == numero_aed)
+    query = Carburation.query.join(BusUdM, Carburation.bus_udm_id == BusUdM.id)
+    if numero_bus_udm:
+        query = query.filter(BusUdM.numero == numero_bus_udm)
     if date_debut:
         query = query.filter(Carburation.date_carburation >= date_debut)
     if date_fin:
@@ -21,7 +21,7 @@ def get_carburation_history(numero_aed=None, date_debut=None, date_fin=None):
     return query.order_by(Carburation.date_carburation.desc()).all()
 
 
-def compute_voyant_carburant(bus: AED) -> str:
+def compute_voyant_carburant(bus: BusUdM) -> str:
     """Calcule le voyant (green/orange/red) pour l'état carburant du bus."""
     voyant = 'green'
     if bus.kilometrage is not None and bus.km_critique_carburant is not None:
@@ -56,7 +56,7 @@ def compute_voyant_carburant(bus: AED) -> str:
 
 def build_bus_carburation_list():
     """Retourne la liste des bus formatée pour l'écran carburation avec le voyant calculé."""
-    bus_list = AED.query.order_by(AED.numero).all()
+    bus_list = BusUdM.query.order_by(BusUdM.numero).all()
     result = []
     for bus in bus_list:
         km_restant_carburant = None
@@ -86,18 +86,18 @@ def enregistrer_carburation_common(data: dict) -> dict:
     # Import local pour éviter les imports circulaires
     from app.models.carburation import Carburation
     
-    aed_id = data.get('aed_id')
+    bus_udm_id = data.get('bus_udm_id')
     kilometrage = data.get('kilometrage')
     quantite_litres = data.get('quantite_litres')
     prix_unitaire = data.get('prix_unitaire')
     cout_total = data.get('cout_total')
     remarque = data.get('remarque')
 
-    if not all([aed_id, kilometrage, quantite_litres, prix_unitaire]):
+    if not all([bus_udm_id, kilometrage, quantite_litres, prix_unitaire]):
         raise ValueError('Champs manquants.')
 
     # Cast et validations
-    aed_id_int = int(aed_id)
+    bus_udm_id_int = int(bus_udm_id)
     km_int = int(kilometrage)
     quantite_float = float(quantite_litres)
     prix_float = float(prix_unitaire)
@@ -112,7 +112,7 @@ def enregistrer_carburation_common(data: dict) -> dict:
     if prix_float <= 0:
         raise ValueError('Le prix unitaire doit être positif.')
 
-    bus = AED.query.get(aed_id_int)
+    bus = BusUdM.query.get(bus_udm_id_int)
     if not bus:
         raise LookupError('Bus introuvable.')
 
@@ -121,7 +121,7 @@ def enregistrer_carburation_common(data: dict) -> dict:
 
     # Persister la carburation
     carburation = Carburation(
-        aed_id=aed_id_int,
+        bus_udm_id=bus_udm_id_int,
         date_carburation=datetime.utcnow().date(),
         kilometrage=km_int,
         quantite_litres=quantite_float,

@@ -2,13 +2,13 @@ from app.database import db
 from datetime import datetime
 
 
-class PanneAED(db.Model):
-    __tablename__ = 'panne_aed'
+class PanneBusUdM(db.Model):
+    __tablename__ = 'panne_bus_udm'
     
     id = db.Column(db.Integer, primary_key=True)
-    # Association ORM (option 2): référence vers AED.id
-    aed_id = db.Column(db.Integer, db.ForeignKey('aed.id'), nullable=True)
-    numero_aed = db.Column(db.String(50), nullable=False)
+    # Association ORM (option 2): référence vers BusUdM.id
+    bus_udm_id = db.Column(db.Integer, db.ForeignKey('bus_udm.id'), nullable=True)
+    numero_bus_udm = db.Column(db.String(50), nullable=False)
     immatriculation = db.Column(db.String(50), nullable=True)
     kilometrage = db.Column(db.Float, nullable=True)
     date_heure = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
@@ -18,4 +18,4 @@ class PanneAED(db.Model):
     enregistre_par = db.Column(db.String(100), nullable=False)
     
     def __repr__(self):
-        return f'<PanneAED {self.numero_aed} - {self.criticite}>'
+        return f'<PanneBusUdM {self.numero_bus_udm} - {self.criticite}>'

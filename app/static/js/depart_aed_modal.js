@@ -64,7 +64,10 @@ else console.error('Bouton #openDepartAedModal introuvable !');
     setTimeout(function() {
         let notif = document.querySelector('.flash-message.success');
         if (notif) notif.remove();
-        window.location.reload();
+        // Rafraîchir les statistiques si la fonction existe (dashboard admin)
+        if (typeof refreshDashboardStats === 'function') {
+            refreshDashboardStats();
+        }
     }, 3000);
     form.reset();
 } else {

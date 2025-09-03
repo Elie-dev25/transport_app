@@ -10,9 +10,9 @@ class TrajetBanekaneRetourForm(FlaskForm):
     # Sélection du type de bus
     type_bus = RadioField('Type de bus', choices=[('AED', 'Bus AED'), ('PRESTATAIRE', 'Prestataire')], default='AED', validators=[DataRequired()])
 
-    # Champs pour Bus AED
-    chauffeur_id = SelectField('Chauffeur AED', coerce=int)
-    numero_aed = SelectField('Numéro AED')
+    # Champs pour Bus UdM
+    chauffeur_id = SelectField('Chauffeur Bus UdM', coerce=int)
+    numero_aed = SelectField('Numéro Bus UdM')
     type_passagers = SelectField('Type de passagers', choices=[('ETUDIANT', 'Étudiant'), ('PERSONNEL', 'Personnel'), ('MALADE', 'Malade')])
     kilometrage_actuel = IntegerField(
         'Kilométrage actuel du véhicule (km)',

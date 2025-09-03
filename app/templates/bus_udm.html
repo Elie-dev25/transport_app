@@ -1,0 +1,318 @@
+{% extends "_base_admin.html" %}
+
+{% block title %}Bus UdM{% endblock %}
+
+{% set active_page = 'bus' %}
+{% set page_title = 'Liste des Bus UdM' %}
+
+{% block extra_head %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+      /* Styles spécifiques à la page Bus UdM */
+      #docFormModal, #addBusModal {
+        z-index: 10000;
+      }
+
+      /* Styles pour les détails de bus */
+      .details-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      .details-list li {
+        margin: 6px 0;
+      }
+
+      /* Indicateurs colorés */
+      .indicator {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 6px;
+      }
+      .indicator.green { background-color: #10b981; }
+      .indicator.orange { background-color: #f59e0b; }
+      .indicator.red { background-color: #ef4444; }
+
+      /* Styles pour les alertes */
+      .alert-indicator {
+        position: relative;
+        cursor: pointer;
+      }
+      .alert-indicator.has-alerts::after {
+        content: '!';
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background: #ef4444;
+        color: white;
+        border-radius: 50%;
+        width: 16px;
+        height: 16px;
+        font-size: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+    </style>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-body">
+            <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
+                <button id="openAddBusModal" style="width:42px;height:42px;border:none;border-radius:50%;background:#2563eb;color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;" title="Ajouter un Bus UdM">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+        <table style="width:100%;background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(30,64,175,0.07);overflow:hidden;">
+            <thead style="background:linear-gradient(90deg,#1e3a8a,#2563eb);color:#fff;">
+                <tr>
+                    <th style="padding:14px;">Numéro</th>
+                    <th>Immatriculation</th>
+                    <th>Marque</th>
+                    <th>Modèle</th>
+                    <th>Type</th>
+                    <th>Kilométrage</th>
+                    <th>État</th>
+                    <th>Places</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for bus in bus_list %}
+                <tr style="text-align:center;">
+                    <td style="padding:10px 0;">
+                        {{ bus.numero }}
+                        {% if not bus.numero_chassis or not bus.modele or not bus.type_vehicule or not bus.marque %}
+                            <i class="fas fa-exclamation-triangle" style="color:#f59e0b;margin-left:5px;" title="Informations véhicule incomplètes - Nécessite mise à jour"></i>
+                        {% endif %}
+                    </td>
+                    <td>{{ bus.immatriculation if bus.immatriculation else '-' }}</td>
+                    <td>{{ bus.marque if bus.marque else '-' }}</td>
+                    <td>{{ bus.modele if bus.modele else '-' }}</td>
+                    <td>
+                        {% if bus.type_vehicule %}
+                            {% if bus.type_vehicule == 'TOURISME' %}Tourisme
+                            {% elif bus.type_vehicule == 'COASTER' %}Coaster
+                            {% elif bus.type_vehicule == 'MINIBUS' %}Minibus
+                            {% elif bus.type_vehicule == 'AUTOCAR' %}Autocar
+                            {% else %}{{ bus.type_vehicule }}
+                            {% endif %}
+                        {% else %}-
+                        {% endif %}
+                    </td>
+                    <td>{{ bus.kilometrage if bus.kilometrage else '-' }} {{ 'km' if bus.kilometrage else '' }}</td>
+                    <td>{{ bus.etat_vehicule|status_label }}</td>
+                    <td>{{ bus.nombre_places }}</td>
+                    <td>
+                        <div style="display:flex;gap:8px;justify-content:center;">
+                            <button onclick="showBusDetails({{ bus.id }})" style="background:#10b981;color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;" title="Voir détails">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button onclick="openPanneModal('{{ bus.numero }}', '{{ bus.immatriculation }}', {{ bus.kilometrage if bus.kilometrage else 'null' }})" style="background:#f59e0b;color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;" title="Déclarer panne">
+                                <i class="fas fa-triangle-exclamation"></i>
+                            </button>
+                            <button onclick="openDocModal({{ bus.id }})" style="background:#3b82f6;color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;" title="Ajouter document">
+                                <i class="fas fa-file-plus"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal formulaire document -->
+<div id="docFormModal" class="modal">
+  <div class="modal-content" style="max-width:500px;">
+    <div class="modal-header"><h3>Ajouter un document administratif</h3><button type="button" id="closeDocFormModal" class="close-btn">&times;</button></div>
+    <div class="modal-body">
+      <form id="docForm">
+        <div class="form-group">
+          <label>Type de document</label>
+          <select name="type_document" required>
+            <option value="">-- Choisir --</option>
+            <option value="ASSURANCE">Assurance</option>
+            <option value="VISITE_TECHNIQUE">Visite Technique</option>
+            <option value="VIGNETTE">Vignette</option>
+            <option value="FICHE_TECHNIQUE">Fiche Technique</option>
+            <option value="CARTE_GRISE">Carte Grise</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Date début</label><input type="date" name="date_debut" required></div>
+        <div class="form-group" id="dateExpGroup"><label>Date expiration</label><input type="date" name="date_expiration"></div>
+        <div style="text-align:right;margin-top:12px;">
+          <button type="submit" class="submit-btn">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal détails bus -->
+<div id="busDetailsModal" class="modal">
+  <div class="modal-content" style="max-width:500px;">
+    <div class="modal-header">
+      <h3>Détails du Bus UdM</h3>
+      <button type="button" id="closeBusDetailsModal" class="close-btn">&times;</button>
+    </div>
+    <div class="modal-body" id="busDetailsBody">
+      <!-- Contenu injecté via JS -->
+    </div>
+  </div>
+</div>
+
+{% include 'partials/admin/_declaration_panne_modal.html' %}
+
+{% include 'partials/admin/_add_bus_modal.html' %}
+
+<!-- Réutilise la modale d'ajout de bus du dashboard -->
+<script>
+
+$(function() {
+  // Gestion de la modale d'ajout de Bus UdM
+  $('#openAddBusModal').on('click', function(e) {
+    e.preventDefault();
+    $('#addBusModal').addClass('show');
+  });
+  
+  $('#closeAddBusModal').on('click', function() {
+    $('#addBusModal').removeClass('show');
+    $('#addBusForm')[0].reset();
+  });
+  
+  // Fermer la modale si on clique en dehors du contenu
+  $('#addBusModal').on('click', function(e) {
+    if (e.target === this) {
+      $(this).removeClass('show');
+      $('#addBusForm')[0].reset();
+    }
+  });
+  
+  // Soumission du formulaire d'ajout de Bus UdM
+  $('#addBusForm').on('submit', function(e) {
+    e.preventDefault();
+    $.ajax({
+      url: '/admin/ajouter_bus_ajax',
+      method: 'POST',
+      data: $(this).serialize(),
+      success: function(resp) {
+        $('#addBusModal').removeClass('show');
+        $('#addBusForm')[0].reset();
+        if (resp.success) {
+          Swal.fire('Succès', resp.message, 'success').then(() => {
+            location.reload();
+          });
+        } else {
+          Swal.fire('Erreur', resp.message, 'error');
+        }
+      },
+      error: function() {
+        Swal.fire('Erreur', 'Impossible d\'ajouter le bus UdM', 'error');
+      }
+    });
+  });
+
+  // Gestion de la modale de déclaration de panne
+  $('#openPanneModal').on('click', function(e) {
+    e.preventDefault();
+    $('#panneModal').addClass('show');
+  });
+
+  $('#closePanneModal').on('click', function() {
+    $('#panneModal').removeClass('show');
+    $('#panneForm')[0].reset();
+  });
+
+  // Fermer la modale si on clique en dehors du contenu
+  $('#panneModal').on('click', function(e) {
+    if (e.target === this) {
+      $(this).removeClass('show');
+      $('#panneForm')[0].reset();
+    }
+  });
+
+  // Variable globale pour stocker les données du bus sélectionné
+  window.selectedBusData = null;
+  // Index des Bus UdM par numéro pour autocomplétion
+  window.busUdMIndexByNumero = {};
+  // Charger la liste des Bus UdM pour alimenter le datalist de la modale panne
+  function loadBusUdMListForDatalist(){
+    $.get('/admin/bus_udm_list_ajax', function(resp){
+      if(resp && resp.success){
+        const list = resp.bus_udm || [];
+        const options = list.map(b=>{
+          // Construire un index pour auto-fill
+          window.busUdMIndexByNumero[b.numero] = b;
+          const label = b.immatriculation ? `${b.numero} — ${b.immatriculation}` : b.numero;
+          return `<option value="${b.numero}" label="${label}"></option>`;
+        }).join('');
+        $('#busUdMNumerosList').html(options);
+      }
+    });
+  }
+
+  loadBusUdMListForDatalist();
+});
+
+// Fonction pour ouvrir la modale de panne avec des données pré-remplies
+function openPanneModal(numero, immatriculation, kilometrage) {
+  $('#numero_bus_udm_panne').val(numero);
+  $('#immatriculation_panne').val(immatriculation || '');
+  $('#kilometrage_panne').val(kilometrage || '');
+  $('#panneModal').addClass('show');
+}
+
+// Fonction pour afficher les détails d'un bus
+function showBusDetails(busId) {
+  $.get('/admin/details_bus_ajax/' + busId, function(data) {
+    if (data.success) {
+      const bus = data.bus;
+      const docs = data.documents || [];
+      
+      let html = `
+        <div class="details-list">
+          <li><strong>Numéro:</strong> ${bus.numero}</li>
+          <li><strong>Immatriculation:</strong> ${bus.immatriculation || '-'}</li>
+          <li><strong>Marque:</strong> ${bus.marque || '-'}</li>
+          <li><strong>Modèle:</strong> ${bus.modele || '-'}</li>
+          <li><strong>Type:</strong> ${bus.type_vehicule || '-'}</li>
+          <li><strong>Kilométrage:</strong> ${bus.kilometrage || '-'} km</li>
+          <li><strong>État:</strong> ${bus.etat_vehicule}</li>
+          <li><strong>Places:</strong> ${bus.nombre_places}</li>
+          <li><strong>Type huile:</strong> ${bus.type_huile || '-'}</li>
+          <li><strong>Dernière vidange:</strong> ${bus.date_derniere_vidange || '-'}</li>
+          <li><strong>Dernière maintenance:</strong> ${bus.derniere_maintenance || '-'}</li>
+        </div>
+      `;
+      
+      if (docs.length > 0) {
+        html += '<h4 style="margin-top:20px;">Documents administratifs</h4>';
+        html += '<div class="details-list">';
+        docs.forEach(doc => {
+          const statusClass = doc.status === 'RED' ? 'red' : (doc.status === 'ORANGE' ? 'orange' : 'green');
+          html += `<li><span class="indicator ${statusClass}"></span><strong>${doc.type_document}:</strong> ${doc.date_debut} - ${doc.date_expiration || 'Permanent'}</li>`;
+        });
+        html += '</div>';
+      }
+      
+      $('#busDetailsBody').html(html);
+      $('#busDetailsModal').addClass('show');
+    }
+  });
+}
+
+// Fonction pour ouvrir la modale de document
+function openDocModal(busId) {
+  window.selectedBusId = busId;
+  $('#docFormModal').addClass('show');
+}
+
+{% endblock %}

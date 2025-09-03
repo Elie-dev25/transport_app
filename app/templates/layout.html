@@ -23,13 +23,20 @@
         .flash-message.danger { background: #d9534f; }
     </style>
     <script>
-        // Script pour masquer automatiquement la notification après 3 secondes
+        // Masquer automatiquement toutes les notifications après 5 secondes (avec fade-out)
         document.addEventListener('DOMContentLoaded', function() {
-            var flash = document.querySelector('.flash-message');
-            if (flash) {
-                setTimeout(function() {
-                    flash.style.display = 'none';
-                }, 3000);
+            var flashes = document.querySelectorAll('.flash-message');
+            if (flashes && flashes.length) {
+                flashes.forEach(function(flash) {
+                    setTimeout(function() {
+                        try {
+                            flash.style.opacity = '0';
+                            setTimeout(function() { flash.style.display = 'none'; }, 500);
+                        } catch (e) {
+                            flash.style.display = 'none';
+                        }
+                    }, 5000);
+                });
             }
         });
     </script>

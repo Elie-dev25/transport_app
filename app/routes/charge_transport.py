@@ -3,7 +3,7 @@ from flask_login import current_user
 from app.forms.trajet_depart_form import TrajetDepartForm
 from app.forms.trajet_prestataire_form import TrajetPrestataireForm
 from app.models.chauffeur import Chauffeur
-from app.models.aed import AED
+from app.models.bus_udm import BusUdM
 from app.models.prestataire import Prestataire
 from app.models.trajet import Trajet
 from app.database import db
@@ -37,9 +37,9 @@ def dashboard():
 
     # Exemple d'autres stats (à ajuster plus tard)
     stats = {
-        'bus_actifs': AED.query.filter_by(etat_vehicule='BON').count(),
-        'bus_en_maintenance': AED.query.filter_by(etat_vehicule='DEFAILLANT').count(),
-        'bus_maintenance': AED.query.filter_by(etat_vehicule='DEFAILLANT').count(),
+        'bus_actifs': BusUdM.query.filter_by(etat_vehicule='BON').count(),
+        'bus_en_maintenance': BusUdM.query.filter_by(etat_vehicule='DEFAILLANT').count(),
+        'bus_maintenance': BusUdM.query.filter_by(etat_vehicule='DEFAILLANT').count(),
         'trajets_jour_aed': trajets_jour_aed,
         'trajets_jour_prestataire': trajets_jour_prestataire,
         'trajets_jour_change': 0,
@@ -52,9 +52,9 @@ def dashboard():
     from app.forms.trajet_banekane_retour_form import TrajetBanekaneRetourForm
     form_banekane_retour = TrajetBanekaneRetourForm()
     form.chauffeur_id.choices = [(c.chauffeur_id, f"{c.nom} {c.prenom}") for c in Chauffeur.query.all()]
-    form.numero_aed.choices = [(a.numero, a.numero) for a in AED.query.all()]
+    form.numero_aed.choices = [(a.numero, a.numero) for a in BusUdM.query.all()]
     form_banekane_retour.chauffeur_id.choices = [(c.chauffeur_id, f"{c.nom} {c.prenom}") for c in Chauffeur.query.all()]
-    form_banekane_retour.numero_aed.choices = [(a.numero, a.numero) for a in AED.query.all()]
+    form_banekane_retour.numero_aed.choices = [(a.numero, a.numero) for a in BusUdM.query.all()]
     if form.validate_on_submit():
         ok, msg = enregistrer_depart_aed(form, current_user)
         flash(msg, 'success' if ok else 'danger')
@@ -95,9 +95,8 @@ def depart_aed():
         form = TrajetDepartForm()
         # Actualiser les choix dépendants de la BD
         from app.models.chauffeur import Chauffeur
-        from app.models.aed import AED
         form.chauffeur_id.choices = [(c.chauffeur_id, f"{c.nom} {c.prenom}") for c in Chauffeur.query.all()]
-        form.numero_aed.choices = [(a.numero, a.numero) for a in AED.query.all()]
+        form.numero_aed.choices = [(a.numero, a.numero) for a in BusUdM.query.all()]
         if form.validate_on_submit():
             ok, msg = enregistrer_depart_aed(form, current_user)
             return jsonify({'success': ok, 'message': msg}), (200 if ok else 500)
@@ -131,9 +130,8 @@ def depart_banekane_retour():
         form = TrajetBanekaneRetourForm()
         # Remplir dynamiquement les choix
         from app.models.chauffeur import Chauffeur
-        from app.models.aed import AED
         form.chauffeur_id.choices = [(c.chauffeur_id, f"{c.nom} {c.prenom}") for c in Chauffeur.query.all()]
-        form.numero_aed.choices = [(a.numero, a.numero) for a in AED.query.all()]
+        form.numero_aed.choices = [(a.numero, a.numero) for a in BusUdM.query.all()]
         if form.validate_on_submit():
             ok, msg = enregistrer_depart_banekane_retour(form, current_user)
             return jsonify({'success': ok, 'message': msg}), (200 if ok else 500)
