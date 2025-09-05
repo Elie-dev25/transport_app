@@ -8,10 +8,10 @@ class DocumentBusUdM(db.Model):
     numero_bus_udm = db.Column(db.String(50), db.ForeignKey('bus_udm.numero'), nullable=False)
     type_document = db.Column(
         Enum(
-            'ASSURANCE',
             'VISITE_TECHNIQUE',
-            'VIGNETTE',
-            'FICHE_TECHNIQUE',
+            'ASSURANCE_VIGNETTE',
+            'TAXE_STATIONNEMENT',
+            'TAXE_PUBLICITAIRE',
             'CARTE_GRISE',
             name='typedocumentenum'
         ),

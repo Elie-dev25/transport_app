@@ -1,0 +1,186 @@
+{% extends "_base_admin.html" %}
+
+{% block title %}Fiche personnel Bus UdM{% endblock %}
+
+{% set active_page = 'bus' %}
+{% set page_title = 'Fiche personnel Bus UdM' %}
+
+{% block dashboard_content %}
+<div class="container-fluid">
+  <div class="card">
+    <div class="card-body">
+      <h2 style="margin-top:0;display:flex;align-items:center;gap:10px;">
+        <i class="fas fa-bus"></i>
+        Bus {{ bus.numero }}
+      </h2>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:12px;">
+        <div class="detail-item"><strong>Numéro:</strong> {{ bus.numero }}</div>
+        <div class="detail-item"><strong>Immatriculation:</strong> {{ bus.immatriculation or '-' }}</div>
+        <div class="detail-item"><strong>Marque:</strong> {{ bus.marque or '-' }}</div>
+        <div class="detail-item"><strong>Modèle:</strong> {{ bus.modele or '-' }}</div>
+        <div class="detail-item"><strong>Type:</strong> {{ bus.type_vehicule or '-' }}</div>
+        <div class="detail-item"><strong>Kilométrage:</strong> {{ bus.kilometrage or '-' }} {% if bus.kilometrage %}km{% endif %}</div>
+        <div class="detail-item"><strong>État:</strong> {{ bus.etat_vehicule|status_label if bus.etat_vehicule else '-' }}</div>
+        <div class="detail-item"><strong>Places:</strong> {{ bus.nombre_places }}</div>
+        <div class="detail-item"><strong>Type d'huile:</strong> {{ bus.type_huile or '-' }}</div>
+        <div class="detail-item"><strong>Dernière vidange:</strong> {{ bus.date_derniere_vidange or '-' }}</div>
+        <div class="detail-item"><strong>Dernière maintenance:</strong> {{ bus.derniere_maintenance or '-' }}</div>
+      </div>
+
+      <hr style="margin:20px 0;"/>
+
+      <h3 style="margin:0 0 10px 0;display:flex;align-items:center;gap:8px;">
+        <i class="fas fa-file"></i>
+        Documents administratifs
+      </h3>
+      {% if documents and documents|length %}
+      <table style="width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;">
+        <thead style="background:#f3f4f6;">
+          <tr>
+            <th style="text-align:left;padding:10px 12px;">Type</th>
+            <th style="text-align:left;padding:10px 12px;">Date de production</th>
+            <th style="text-align:left;padding:10px 12px;">Date expiration</th>
+            <th style="text-align:left;padding:10px 12px;">Validité</th>
+            <th style="text-align:left;padding:10px 12px;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for d in documents %}
+          <tr>
+            <td style="padding:8px 12px;">{{ d.type_document }}</td>
+            <td style="padding:8px 12px;">{{ d.date_debut.strftime('%d/%m/%Y') if d.date_debut else '-' }}</td>
+            <td style="padding:8px 12px;">{{ d.date_expiration.strftime('%d/%m/%Y') if d.date_expiration else 'Permanent' }}</td>
+            <td style="padding:8px 12px;">
+              {% set color = '#3b82f6' %}
+              {% if d.status == 'ROUGE' %}
+                {% set color = '#ef4444' %}
+              {% elif d.status == 'ORANGE' %}
+                {% set color = '#f59e0b' %}
+              {% endif %}
+              <span title="{{ d.status }}{% if d.percent_left is not none %} - {{ d.percent_left }}% restants{% endif %}"
+                    style="display:inline-block;width:12px;height:12px;border-radius:9999px;background: {{ color }};"></span>
+              <span style="margin-left:8px; color:#64748b; font-size:12px;">{{ d.status }}</span>
+            </td>
+            <td style="padding:8px 12px;">
+              <button class="submit-btn" 
+                      data-action="edit-doc" 
+                      data-document-id="{{ d.document_id if d.document_id is defined else '' }}"
+                      data-date-debut="{{ d.date_debut.isoformat() if d.date_debut else '' }}"
+                      data-date-expiration="{{ d.date_expiration.isoformat() if d.date_expiration else '' }}"
+                      style="padding:6px 10px; font-size:12px;">
+                Mettre à jour
+              </button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p style="color:#64748b;">Aucun document enregistré.</p>
+      {% endif %}
+
+      {% if trajets_recents and trajets_recents|length %}
+      <hr style="margin:20px 0;"/>
+      <h3 style="margin:0 0 10px 0;display:flex;align-items:center;gap:8px;">
+        <i class="fas fa-road"></i>
+        Trajets récents
+      </h3>
+      <ul style="margin:0;padding-left:18px;">
+        {% for t in trajets_recents %}
+          <li>{{ t }}</li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+
+      <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap;">
+        <a href="{{ url_for('admin.bus') }}" class="action-btn" style="display:inline-flex;align-items:center;gap:6px;background:#2563eb;color:#fff;padding:8px 14px;border-radius:8px;text-decoration:none;">
+          <i class="fas fa-arrow-left"></i>
+          Retour à la liste
+        </a>
+
+        <button id="addDocInlineBtn" type="button" class="action-btn" style="display:inline-flex;align-items:center;gap:6px;background:#10b981;color:#fff;padding:8px 14px;border-radius:8px;border:none;cursor:pointer;">
+          <i class="fas fa-file-circle-plus"></i>
+          Ajouter un document
+        </button>
+
+        
+      </div>
+    </div>
+  </div>
+  {% include 'partials/admin/_document_modal.html' %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  (function(){
+    // Ouvrir la modale partagée en mode ajout/édition et soumettre en AJAX sans redirection
+    var openAdd = document.getElementById('addDocInlineBtn');
+    var modal = document.getElementById('docFormModal');
+    var closeBtn = document.getElementById('closeDocFormModal');
+    var form = document.getElementById('docForm');
+    var selectType = form ? form.querySelector('select[name="type_document"]') : null;
+    var inputDebut = form ? form.querySelector('input[name="date_debut"]') : null;
+    var inputExp = form ? form.querySelector('input[name="date_expiration"]') : null;
+    var currentDocumentId = null; // null => ajout, sinon édition
+
+    function openModal(){ if(modal){ modal.classList.add('show'); } }
+    function closeModal(){ if(modal){ modal.classList.remove('show'); form && form.reset && form.reset(); selectType && (selectType.disabled = false); currentDocumentId = null; } }
+
+    if (openAdd) openAdd.addEventListener('click', function(){
+      currentDocumentId = null;
+      if (selectType) selectType.disabled = false; // ajout: type modifiable
+      openModal();
+    });
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    if (modal) modal.addEventListener('click', function(e){ if(e.target === modal) closeModal(); });
+
+    // Délégation: clic sur un bouton "Mettre à jour la validité" par ligne
+    document.addEventListener('click', function(e){
+      var btn = e.target.closest('button[data-action="edit-doc"]');
+      if (!btn) return;
+      e.preventDefault();
+      currentDocumentId = btn.getAttribute('data-document-id');
+      var dDeb = btn.getAttribute('data-date-debut') || '';
+      var dExp = btn.getAttribute('data-date-expiration') || '';
+      if (selectType) selectType.disabled = true; // édition: type non modifiable ici
+      if (inputDebut) inputDebut.value = dDeb; // format ISO AAAA-MM-JJ
+      if (inputExp) inputExp.value = dExp;
+      openModal();
+    });
+
+    if (form) {
+      form.addEventListener('submit', function(e){
+        e.preventDefault();
+        var fd = new FormData(form);
+        var url;
+        if (currentDocumentId) {
+          // Édition: only dates are used server-side
+          url = '{{ url_for('admin.modifier_document_udm_ajax', document_id=0) }}'.replace('0', String(currentDocumentId));
+        } else {
+          url = '{{ url_for('admin.ajouter_document_udm_ajax', bus_id=bus.id) }}';
+        }
+        fetch(url, { method: 'POST', body: fd })
+          .then(function(r){ return r.json(); })
+          .then(function(resp){
+            if (resp && resp.success) {
+              alert(currentDocumentId ? 'Validité mise à jour avec succès.' : 'Document enregistré avec succès.');
+              closeModal();
+              window.location.reload();
+            } else {
+              alert((resp && resp.message) ? resp.message : 'Erreur lors de l\'enregistrement');
+            }
+          })
+          .catch(function(){ alert('Erreur réseau'); });
+      });
+    }
+  })();
+  </script>
+{% endblock %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
+{% endblock %}
+
+

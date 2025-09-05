@@ -33,17 +33,23 @@
     display: block;
 }
 
-/* === TABLET (768px et moins) === */
+/* === TABLET (768px et/* Mobile sidebar adjustments */
 @media (max-width: 768px) {
-    /* Sidebar */
     .sidebar {
         transform: translateX(-100%);
-        width: 100%;
-        max-width: 280px;
     }
-
+    
     .sidebar.active {
         transform: translateX(0);
+    }
+    
+    /* Logo responsive sur mobile */
+    .logo img {
+        max-height: 40px !important;
+    }
+    
+    .sidebar-header {
+        padding: 20px 15px;
     }
 
     /* Layout */

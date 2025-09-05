@@ -1,0 +1,611 @@
+{% extends "_base_admin.html" %}
+{% block title %}Rapport {{ entity_name }} - Gestion Transport{% endblock %}
+
+{% set active_page = 'rapports' %}
+{% set page_title = 'Rapport de trajet - ' + entity_name %}
+{% set current_periode = request.args.get('periode', 'mois') %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/rapports.css') }}">
+<style>
+.entity-header {
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    color: white;
+    padding: 2rem;
+    border-radius: 10px;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.2);
+}
+
+.entity-header.noblesse {
+    background: linear-gradient(135deg, #6f42c1, #8a63d2);
+    box-shadow: 0 4px 15px rgba(111, 66, 193, 0.2);
+}
+
+.entity-header.charter {
+    background: linear-gradient(135deg, #fd7e14, #ff922b);
+    box-shadow: 0 4px 15px rgba(253, 126, 20, 0.2);
+}
+
+.entity-header.udm {
+    background: linear-gradient(135deg, #28a745, #34ce57);
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.2);
+}
+
+.entity-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.info-item i {
+    width: 20px;
+    text-align: center;
+}
+
+.filters-section {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 10px;
+    margin-bottom: 2rem;
+    border: 1px solid #e9ecef;
+}
+
+.filter-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.filter-btn {
+    padding: 0.5rem 1rem;
+    border: 2px solid #007bff;
+    background: white;
+    color: #007bff;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.filter-btn.active {
+    background: #007bff;
+    color: white;
+}
+
+.filter-btn:hover {
+    background: #007bff;
+    color: white;
+    text-decoration: none;
+}
+
+.filter-btn.noblesse.active {
+    background: #6f42c1;
+    border-color: #6f42c1;
+}
+
+.filter-btn.noblesse:hover {
+    background: #6f42c1;
+    border-color: #6f42c1;
+}
+
+.filter-btn.charter.active {
+    background: #fd7e14;
+    border-color: #fd7e14;
+}
+
+.filter-btn.charter:hover {
+    background: #fd7e14;
+    border-color: #fd7e14;
+}
+
+.filter-btn.udm.active {
+    background: #28a745;
+    border-color: #28a745;
+}
+
+.filter-btn.udm:hover {
+    background: #28a745;
+    border-color: #28a745;
+}
+
+/* Styles pour le filtre personnalisé */
+.custom-filter-section {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #007bff;
+}
+
+.custom-filter-section h4 {
+    margin-bottom: 1rem;
+    color: #495057;
+    font-size: 1.1rem;
+}
+
+.date-inputs {
+    display: flex;
+    gap: 1rem;
+    align-items: end;
+    flex-wrap: wrap;
+}
+
+.date-input-group {
+    display: flex;
+    flex-direction: column;
+    min-width: 150px;
+}
+
+.date-input-group label {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #495057;
+    font-size: 0.9rem;
+}
+
+.date-input-group input {
+    padding: 0.5rem;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.btn-custom-filter {
+    padding: 0.5rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    color: white;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    height: fit-content;
+}
+
+.btn-custom-filter:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.btn-custom-filter.noblesse {
+    background: #6f42c1;
+}
+
+.btn-custom-filter.charter {
+    background: #fd7e14;
+}
+
+.btn-custom-filter.udm {
+    background: #28a745;
+}
+
+/* Styles pour le conteneur de tableau avec scroll */
+.table-container {
+    max-height: 600px;
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.table-container table {
+    margin-bottom: 0;
+}
+
+.table-container thead th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: white;
+    box-shadow: 0 2px 2px -1px rgba(0,0,0,0.1);
+}
+
+/* Styles pour l'impression */
+@media print {
+    .table-container {
+        max-height: none !important;
+        overflow: visible !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+    
+    .table-container thead th {
+        position: static !important;
+        box-shadow: none !important;
+    }
+    
+    table {
+        page-break-inside: auto !important;
+    }
+    
+    tr {
+        page-break-inside: avoid !important;
+        page-break-after: auto !important;
+    }
+    
+    thead {
+        display: table-header-group !important;
+    }
+    
+    tfoot {
+        display: table-footer-group !important;
+    }
+    
+    /* Masquer les éléments non nécessaires à l'impression */
+    .filter-buttons,
+    .custom-filter-section,
+    .btn-print,
+    .btn-secondary {
+        display: none !important;
+    }
+    
+    /* Ajuster les marges pour l'impression */
+    body {
+        margin: 0 !important;
+        padding: 20px !important;
+    }
+    
+    .rapport-entity-container {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+}
+
+.stats-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-box {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    border-left: 4px solid #007bff;
+}
+
+.stat-box.noblesse {
+    border-left-color: #6f42c1;
+}
+
+.stat-box.charter {
+    border-left-color: #fd7e14;
+}
+
+.stat-box.udm {
+    border-left-color: #28a745;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #007bff;
+    margin-bottom: 0.5rem;
+}
+
+.stat-number.noblesse {
+    color: #6f42c1;
+}
+
+.stat-number.charter {
+    color: #fd7e14;
+}
+
+.stat-number.udm {
+    color: #28a745;
+}
+
+.stat-label {
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.trajets-table {
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.trajets-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.trajets-table th {
+    background: #007bff;
+    color: white;
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+}
+
+.trajets-table th.noblesse {
+    background: #6f42c1;
+}
+
+.trajets-table th.charter {
+    background: #fd7e14;
+}
+
+.trajets-table th.udm {
+    background: #28a745;
+}
+
+.trajets-table td {
+    padding: 1rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.trajets-table tr:hover {
+    background: #f8f9fa;
+}
+
+.no-trajets {
+    text-align: center;
+    padding: 3rem;
+    color: #6c757d;
+}
+
+.print-section {
+    margin-top: 2rem;
+    text-align: center;
+}
+
+.btn-print {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 0.75rem 2rem;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background 0.3s ease;
+}
+
+.btn-print:hover {
+    background: #218838;
+}
+
+.btn-print.noblesse {
+    background: #6f42c1;
+}
+
+.btn-print.noblesse:hover {
+    background: #5a32a3;
+}
+
+.btn-print.charter {
+    background: #fd7e14;
+}
+
+.btn-print.charter:hover {
+    background: #e8690b;
+}
+
+@media print {
+    .filters-section, .print-section, .navbar, .sidebar {
+        display: none !important;
+    }
+    
+    .entity-header {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}
+</style>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="rapport-entity-container">
+    <!-- En-tête de l'entité -->
+    <div class="entity-header {% if entity_name == 'Noblesse' %}noblesse{% elif entity_name == 'Charter' %}charter{% else %}udm{% endif %}">
+        <h1>
+            <i class="fas fa-{% if entity_name == 'Noblesse' %}bus{% elif entity_name == 'Charter' %}bus{% else %}university{% endif %}"></i> 
+            Rapport de trajet - {{ entity_name }}
+        </h1>
+        <div class="entity-info">
+            <div class="info-item">
+                <i class="fas fa-tag"></i>
+                <span><strong>Type:</strong> {% if entity_type == 'prestataire' %}Prestataire{% else %}Bus UdM{% endif %}</span>
+            </div>
+            <div class="info-item">
+                <i class="fas fa-calendar"></i>
+                {% set d1 = request.args.get('date_debut') %}
+                {% set d2 = request.args.get('date_fin') %}
+                <span><strong>Période:</strong>
+                    {% if d1 and d2 %}
+                        Du {{ d1 }} au {{ d2 }}
+                    {% else %}
+                        {% if current_periode == 'jour' %}Aujourd'hui{% elif current_periode == 'semaine' %}Cette semaine{% else %}Ce mois{% endif %}
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtres par période -->
+    <div class="filters-section">
+        <h3><i class="fas fa-filter"></i> Filtres par période</h3>
+        <div class="filter-buttons">
+            {% if entity_name == 'Noblesse' %}
+                {% set route_name = 'admin.rapport_noblesse' %}
+            {% elif entity_name == 'Charter' %}
+                {% set route_name = 'admin.rapport_charter' %}
+            {% else %}
+                {% set route_name = 'admin.rapport_bus_udm' %}
+            {% endif %}
+            {% set current_periode = request.args.get('periode', 'mois') %}
+            
+            <a href="{{ url_for(route_name, periode='jour') }}" 
+               class="filter-btn {% if entity_name == 'Noblesse' %}noblesse{% elif entity_name == 'Charter' %}charter{% else %}udm{% endif %} {% if current_periode == 'jour' %}active{% endif %}">
+                <i class="fas fa-calendar-day"></i> Aujourd'hui
+            </a>
+            <a href="{{ url_for(route_name, periode='semaine') }}" 
+               class="filter-btn {% if entity_name == 'Noblesse' %}noblesse{% elif entity_name == 'Charter' %}charter{% else %}udm{% endif %} {% if current_periode == 'semaine' %}active{% endif %}">
+                <i class="fas fa-calendar-week"></i> Cette semaine
+            </a>
+            <a href="{{ url_for(route_name, periode='mois') }}" 
+               class="filter-btn {% if entity_name == 'Noblesse' %}noblesse{% elif entity_name == 'Charter' %}charter{% else %}udm{% endif %} {% if current_periode == 'mois' %}active{% endif %}">
+                <i class="fas fa-calendar-alt"></i> Ce mois
+            </a>
+        </div>
+        
+        <!-- Filtre personnalisé -->
+        <div class="custom-filter-section">
+            <h4><i class="fas fa-calendar-plus"></i> Période personnalisée</h4>
+            <form method="GET" class="custom-filter-form">
+                <div class="date-inputs">
+                    <div class="date-input-group">
+                        <label for="date_debut">Date de début:</label>
+                        <input type="date" id="date_debut" name="date_debut" 
+                               value="{{ request.args.get('date_debut', '') }}" 
+                               class="form-control">
+                    </div>
+                    <div class="date-input-group">
+                        <label for="date_fin">Date de fin:</label>
+                        <input type="date" id="date_fin" name="date_fin" 
+                               value="{{ request.args.get('date_fin', '') }}" 
+                               class="form-control">
+                    </div>
+                    <button type="submit" class="btn-custom-filter {% if entity_name == 'Noblesse' %}noblesse{% elif entity_name == 'Charter' %}charter{% else %}udm{% endif %}">
+                        <i class="fas fa-search"></i> Filtrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Résumé statistiques -->
+    <div class="stats-summary">
+        <div class="stat-box {% if entity_name == 'Noblesse' %}noblesse{% elif entity_name == 'Charter' %}charter{% else %}udm{% endif %}">
+            <div class="stat-number {% if entity_name == 'Noblesse' %}noblesse{% elif entity_name == 'Charter' %}charter{% else %}udm{% endif %}">{{ total_trajets }}</div>
+            <div class="stat-label">Trajets effectués</div>
+        </div>
+        <div class="stat-box {% if entity_name == 'Noblesse' %}noblesse{% elif entity_name == 'Charter' %}charter{% else %}udm{% endif %}">
+            <div class="stat-number {% if entity_name == 'Noblesse' %}noblesse{% elif entity_name == 'Charter' %}charter{% else %}udm{% endif %}">{{ total_passagers }}</div>
+            <div class="stat-label">{% if entity_name == 'Bus UdM' %}Passagers transportés{% else %}Étudiants transportés{% endif %}</div>
+        </div>
+        <div class="stat-box {% if entity_name == 'Noblesse' %}noblesse{% elif entity_name == 'Charter' %}charter{% else %}udm{% endif %}">
+            <div class="stat-number {% if entity_name == 'Noblesse' %}noblesse{% elif entity_name == 'Charter' %}charter{% else %}udm{% endif %}">
+                {% if total_trajets > 0 %}
+                    {{ "%.1f"|format(total_passagers / total_trajets) }}
+                {% else %}
+                    0
+                {% endif %}
+            </div>
+            <div class="stat-label">Moyenne passagers/trajet</div>
+        </div>
+    </div>
+
+    <!-- Tableau des trajets -->
+    <div class="trajets-table">
+        <h3></h3>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="{% if entity_name == 'Noblesse' %}noblesse{% elif entity_name == 'Charter' %}charter{% else %}udm{% endif %}"><i class="fas fa-calendar"></i> Date et heure</th>
+                        <th class="{% if entity_name == 'Noblesse' %}noblesse{% elif entity_name == 'Charter' %}charter{% else %}udm{% endif %}"><i class="fas fa-map-marker-alt"></i> Départ</th>
+                        <th class="{% if entity_name == 'Noblesse' %}noblesse{% elif entity_name == 'Charter' %}charter{% else %}udm{% endif %}"><i class="fas fa-map-marker-alt"></i> Arrivée</th>
+                        {% if entity_name != 'Bus UdM' %}
+                        <th class="{% if entity_name == 'Noblesse' %}noblesse{% elif entity_name == 'Charter' %}charter{% else %}udm{% endif %}"><i class="fas fa-id-card"></i> Immatriculation</th>
+                        {% else %}
+                        <th class="{% if entity_name == 'Noblesse' %}noblesse{% elif entity_name == 'Charter' %}charter{% else %}udm{% endif %}"><i class="fas fa-bus"></i> Bus N°</th>
+                        {% endif %}
+                        <th class="{% if entity_name == 'Noblesse' %}noblesse{% elif entity_name == 'Charter' %}charter{% else %}udm{% endif %}"><i class="fas fa-users"></i> Passagers</th>
+                        <th class="{% if entity_name == 'Noblesse' %}noblesse{% elif entity_name == 'Charter' %}charter{% else %}udm{% endif %}"><i class="fas fa-id-badge"></i> Chauffeur</th>
+                        {% if entity_name == 'Bus UdM' %}
+                        <th class="{% if entity_name == 'Noblesse' %}noblesse{% elif entity_name == 'Charter' %}charter{% else %}udm{% endif %}"><i class="fas fa-user-tie"></i> Type</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for trajet in trajets %}
+                        <tr>
+                            <td>{{ trajet.date_heure_depart.strftime('%d/%m/%Y %H:%M') }}</td>
+                            <td>{{ trajet.point_depart }}</td>
+                            <td>{{ trajet.point_arriver or 'Non spécifié' }}</td>
+                            <td>
+                                {% if entity_name != 'Bus UdM' %}
+                                    {{ trajet.immat_bus or 'N/A' }}
+                                {% else %}
+                                    {{ trajet.numero_bus_udm or 'N/A' }}
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <span class="badge badge-primary">{{ trajet.nombre_places_occupees or 0 }}</span>
+                            </td>
+                            <td>
+                                {% if entity_name == 'Bus UdM' %}
+                                    {# Chauffeur interne via relation #}
+                                    {% if trajet.chauffeur %}
+                                        {{ trajet.chauffeur.nom }} {{ trajet.chauffeur.prenom }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                {% else %}
+                                    {# Prestataire: nom_chauffeur saisi texte #}
+                                    {{ trajet.nom_chauffeur or 'N/A' }}
+                                {% endif %}
+                            </td>
+                            {% if entity_name == 'Bus UdM' %}
+                            <td>
+                                <span class="badge badge-{% if trajet.type_passagers == 'ETUDIANT' %}success{% elif trajet.type_passagers == 'PERSONNEL' %}info{% else %}warning{% endif %}">
+                                    {{ trajet.type_passagers or 'N/A' }}
+                                </span>
+                            </td>
+                            {% endif %}
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="{% if entity_name == 'Bus UdM' %}7{% else %}6{% endif %}" class="text-center text-muted">
+                                <i class="fas fa-info-circle"></i> Aucun trajet trouvé pour cette période
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Section impression -->
+    <div class="print-section">
+        <button class="btn-print {% if entity_name == 'Noblesse' %}noblesse{% elif entity_name == 'Charter' %}charter{% else %}udm{% endif %}" onclick="window.print()">
+            <i class="fas fa-print"></i> Imprimer ce rapport
+        </button>
+        <a href="{{ url_for('admin.rapports') }}" class="btn btn-secondary ml-3">
+            <i class="fas fa-arrow-left"></i> Retour aux rapports
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Ajouter la classe pour le style d'impression
+document.addEventListener('DOMContentLoaded', function() {
+    // Améliorer l'affichage des badges
+    const badges = document.querySelectorAll('.badge');
+    badges.forEach(badge => {
+        if (badge.textContent.trim() === 'ETUDIANT') {
+            badge.classList.add('badge-success');
+        } else if (badge.textContent.trim() === 'PERSONNEL') {
+            badge.classList.add('badge-warning');
+        } else if (badge.textContent.trim() === 'MALADE') {
+            badge.classList.add('badge-danger');
+        }
+    });
+});
+</script>
+{% endblock %}

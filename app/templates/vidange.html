@@ -46,7 +46,7 @@
                         </td>
                         <td>
                             <button class="action-btn" title="Effectuer une vidange" type="button"
-                                data-open-vidange="1"
+                                data-open-formulaire-direct="1"
                                 data-bus-id="{{ bus.id }}"
                                 data-numero="{{ bus.numero|e }}"
                                 data-demandeur="{{ (((current_user.nom ~ ' ' ~ current_user.prenom)|trim) or current_user.login)|e }}">
@@ -64,47 +64,7 @@
 </div>
 
 
-{# --- Modales (only once, outside the loop) --- #}
-<div id="ficheVidangeModal" class="modal" aria-hidden="true">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3><i class="fas fa-oil-can"></i> Fiche de Vidange</h3>
-            <button type="button" class="close-btn" onclick="closeVidangeModal()">&times;</button>
-        </div>
-        <div class="modal-body">
-        <div id="fiche-vidange-content">
-            <div class="fiche-vidange-form">
-                <div style="margin-bottom:18px;">
-                    <strong>Numéro de demande :</strong> <span id="fiche-numero-demande">-</span>
-                </div>
-                <div style="margin-bottom:18px;">
-                    <strong>Date et heure :</strong> <span id="fiche-date-heure">-</span>
-                </div>
-                <div style="margin-bottom:18px;">
-                    <strong>Demandeur :</strong> <span id="fiche-demandeur">-</span>
-                </div>
-                <div style="margin-bottom:18px;">
-                    <strong>Numéro du véhicule :</strong> <span id="fiche-numero-vehicule">-</span>
-                </div>
-                <div style="display:flex;gap:32px;margin-top:32px;justify-content:center;">
-                    <div style="text-align:center;">
-                        <strong>Signature Responsable 1</strong>
-                        <div class="signature-line"></div>
-                    </div>
-                    <div style="text-align:center;">
-                        <strong>Signature Responsable 2</strong>
-                        <div class="signature-line"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-            <div style="display:flex;gap:16px;justify-content:center;margin-top:24px;">
-                <button class="action-btn" onclick="printFicheVidange()"><i class="fas fa-print"></i> Imprimer</button>
-                <button class="action-btn" onclick="openFormulaireVidange(null)"><i class="fas fa-check"></i> Confirmer la vidange</button>
-            </div>
-        </div>
-    </div>
-</div>
+{# --- Modales --- #}
 
 <!-- Modale formulaire de confirmation vidange (single instance) -->
 <div id="formulaireVidangeModal" class="modal" aria-hidden="true">
@@ -115,10 +75,10 @@
         </div>
         <div class="modal-body">
         <form id="formulaire-vidange">
-            <input type="hidden" id="aed_id_hidden" name="aed_id_hidden">
+            <input type="hidden" id="bus_udm_id_hidden" name="bus_udm_id_hidden">
             <div style="margin-bottom:18px;">
-                <label for="numero_aed">Numéro AED :</label>
-                <input type="text" id="numero_aed" name="numero_aed" readonly style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;background:#f3f4f6;">
+                <label for="numero_udm">Numéro UdM :</label>
+                <input type="text" id="numero_udm" name="numero_udm" readonly style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;background:#f3f4f6;">
             </div>
             <div style="margin-bottom:18px;">
                 <label for="kilometrage">Kilométrage :</label>
@@ -153,8 +113,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const kilometrage = document.getElementById('kilometrage').value;
         const type_huile = document.getElementById('type_huile').value;
         const remarque = document.getElementById('remarque').value;
-        const aed_id = document.getElementById('aed_id_hidden').value;
-        if (!aed_id) {
+        const bus_udm_id = document.getElementById('bus_udm_id_hidden').value;
+        if (!bus_udm_id) {
             alert("Erreur : aucun véhicule sélectionné. Veuillez ouvrir la fiche de vidange avant de confirmer.");
             return;
         }
@@ -170,7 +130,7 @@ document.addEventListener('DOMContentLoaded', function () {
             method: 'POST',
             headers: headers,
             body: JSON.stringify({
-                aed_id: aed_id,
+                bus_udm_id: bus_udm_id,
                 kilometrage: kilometrage,
                 type_huile: type_huile,
                 remarque: remarque
@@ -213,7 +173,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
                 
                 closeFormulaireVidangeModal();
-                closeVidangeModal();
             } else {
                 alert('Erreur lors de l\'enregistrement de la vidange.');
             }
@@ -230,16 +189,16 @@ document.addEventListener('DOMContentLoaded', function () {
     <div class="dashboard-content">
         <h2 class="section-title"><i class="fas fa-history"></i> Historique des Vidanges</h2>
         <div class="vidange-filter" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-            <label for="numero_aed"><i class="fas fa-bus"></i> Filtrer :</label>
-            <select name="numero_aed" id="numero_aed" onchange="filterHistoriqueVidange(this.value)">
+            <label for="numero_udm"><i class="fas fa-bus"></i> Filtrer :</label>
+            <select name="numero_udm" id="numero_udm" onchange="filterHistoriqueVidange(this.value)">
                 <option value="">Tous</option>
                 {% for numero in numeros_aed %}
                     <option value="{{ numero }}" {% if numero == selected_numero %}selected{% endif %}>{{ numero }}</option>
                 {% endfor %}
             </select>
-            <input type="date" id="vid_date_debut" value="{{ selected_date_debut or '' }}" onchange="filterHistoriqueVidange(document.getElementById('numero_aed').value)" />
+            <input type="date" id="vid_date_debut" value="{{ selected_date_debut or '' }}" onchange="filterHistoriqueVidange(document.getElementById('numero_udm').value)" />
             <span>au</span>
-            <input type="date" id="vid_date_fin" value="{{ selected_date_fin or '' }}" onchange="filterHistoriqueVidange(document.getElementById('numero_aed').value)" />
+            <input type="date" id="vid_date_fin" value="{{ selected_date_fin or '' }}" onchange="filterHistoriqueVidange(document.getElementById('numero_udm').value)" />
             <button type="button" title="Effacer filtres" aria-label="Effacer filtres" onclick="clearHistoriqueVidangeFilters()" style="border:none;background:transparent;color:#ef4444;width:24px;height:24px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;">
                 <i class="fas fa-times" style="font-size:14px;"></i>
             </button>
@@ -251,7 +210,7 @@ document.addEventListener('DOMContentLoaded', function () {
             <table class="vidange-table" style="margin: 0;">
                 <thead style="position: sticky; top: 0; background: #f9fafb; z-index: 10;">
                     <tr>
-                        <th>Numéro AED</th>
+                        <th>Numéro UdM</th>
                         <th>Date Vidange</th>
                         <th>Kilométrage</th>
                         <th>Type d'huile</th>
@@ -261,7 +220,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <tbody id="historique-vid-body">
                 {% for v in historique_vidange %}
                     <tr>
-                        <td>{{ v.aed.numero }}</td>
+                        <td>{{ v.bus_udm.numero }}</td>
                         <td>{{ v.date_vidange|date_fr }}</td>
                         <td>{{ v.kilometrage }}</td>
                         <td>{{ v.type_huile or '-' }}</td>

@@ -16,6 +16,9 @@ class PanneBusUdM(db.Model):
     criticite = db.Column(db.String(20), nullable=False)  # FAIBLE, MOYENNE, HAUTE
     immobilisation = db.Column(db.Boolean, nullable=False, default=False)
     enregistre_par = db.Column(db.String(100), nullable=False)
+    # Suivi de résolution
+    resolue = db.Column(db.Boolean, nullable=False, default=False)
+    date_resolution = db.Column(db.DateTime, nullable=True)
     
     def __repr__(self):
         return f'<PanneBusUdM {self.numero_bus_udm} - {self.criticite}>'

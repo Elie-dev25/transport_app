@@ -15,3 +15,7 @@ def role_required(*roles):
             return f(*args, **kwargs)
         return decorated_function
     return decorator
+
+# Décorateur spécifique pour les administrateurs
+def admin_only(view):
+    return role_required('ADMIN')(view)

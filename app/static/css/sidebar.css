@@ -23,17 +23,22 @@
 }
 
 .logo {
-    width: 60px;
-    height: 60px;
-    background: linear-gradient(135deg, #01D758, #00c04e);
-    border-radius: 50%;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     margin-bottom: 15px;
-    font-size: 24px;
-    font-weight: bold;
-    box-shadow: 0 8px 25px rgba(1, 215, 88, 0.3);
+}
+
+.logo img {
+    max-height: 50px;
+    width: auto;
+    border-radius: 8px;
+    transition: transform 0.2s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.logo img:hover {
+    transform: scale(1.05);
 }
 
 .admin-info h2 {

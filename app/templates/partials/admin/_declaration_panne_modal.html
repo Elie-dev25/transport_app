@@ -1,10 +1,78 @@
 <!-- Modal Déclaration de Panne -->
-<div id="panneModal" class="modal">
+<div id="panneModal" class="modal" aria-hidden="true" hidden>
     <div class="modal-content" style="max-width: 600px;">
         <div class="modal-header">
             <h3><i class="fas fa-triangle-exclamation"></i> Déclaration de Panne</h3>
             <button type="button" id="closePanneModal" class="close-btn">&times;</button>
         </div>
+
+<script>
+// Helpers universels pour la modale Déclaration de Panne
+document.addEventListener('DOMContentLoaded', function() {
+  // Index global réutilisable entre pages
+  window.busUdMIndexByNumero = window.busUdMIndexByNumero || {};
+
+  function populateUdMNumbersIfNeeded() {
+    const dl = document.getElementById('busUdMNumerosList');
+    // Si déjà peuplé, ne pas recharger
+    if (dl && dl.options && dl.options.length > 0) return;
+    // Si jQuery est dispo, utiliser $.get, sinon fallback fetch
+    const onData = (list) => {
+      if (!dl) return;
+      const frag = document.createDocumentFragment();
+      (list || []).forEach(b => {
+        window.busUdMIndexByNumero[b.numero] = b;
+        const opt = document.createElement('option');
+        opt.value = b.numero;
+        opt.label = b.immatriculation ? `${b.numero} — ${b.immatriculation}` : b.numero;
+        frag.appendChild(opt);
+      });
+      dl.innerHTML = '';
+      dl.appendChild(frag);
+    };
+
+    if (window.$ && $.get) {
+      $.get('/admin/bus_udm_list_ajax', function(resp){
+        if (resp && resp.success) onData(resp.bus_udm || []);
+      });
+    } else {
+      fetch('/admin/bus_udm_list_ajax')
+        .then(r => r.json())
+        .then(resp => { if (resp && resp.success) onData(resp.bus_udm || []); })
+        .catch(()=>{});
+    }
+  }
+
+  // Auto-fill et readonly sur immatriculation selon le numéro choisi
+  function bindNumeroChangeBehavior() {
+    const numeroInput = document.getElementById('numero_bus_udm_panne');
+    const immatInput = document.getElementById('immatriculation_panne');
+    if (!numeroInput || !immatInput) return;
+
+    const updateImmat = () => {
+      const numero = (numeroInput.value || '').trim();
+      const b = window.busUdMIndexByNumero ? window.busUdMIndexByNumero[numero] : null;
+      if (numero && b) {
+        immatInput.value = b.immatriculation || '';
+        immatInput.setAttribute('readonly', 'readonly');
+      } else if (!numero) {
+        immatInput.value = '';
+        immatInput.removeAttribute('readonly');
+      } else {
+        // Numéro saisi non listé: on laisse éditable pour ne pas bloquer l'utilisateur
+        immatInput.removeAttribute('readonly');
+      }
+    };
+
+    numeroInput.addEventListener('input', updateImmat);
+    numeroInput.addEventListener('change', updateImmat);
+  }
+
+  populateUdMNumbersIfNeeded();
+  bindNumeroChangeBehavior();
+});
+</script>
+
         <div class="modal-body">
             <form id="panneForm">
                 <div class="form-row">

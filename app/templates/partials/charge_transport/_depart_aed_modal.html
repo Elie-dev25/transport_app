@@ -8,39 +8,39 @@
     <div class="modal-body">
       <div class="alert alert-danger" style="display:none;" id="departAedError"></div>
       <form method="POST" id="departAedForm" class="modal-form" action="{{ depart_aed_url or url_for('charge_transport.depart_aed') }}">
-        {{ form.hidden_tag() }}
+        {{ form_aed.hidden_tag() }}
         <div class="form-grid">
             <div class="form-group">
-                {{ form.date_heure_depart.label }}
-                {{ form.date_heure_depart(type='datetime-local') }}
+                {{ form_aed.date_heure_depart.label }}
+                {{ form_aed.date_heure_depart(type='datetime-local') }}
             </div>
             <div class="form-group">
-                {{ form.point_depart.label }}
-                {{ form.point_depart() }}
+                {{ form_aed.point_depart.label }}
+                {{ form_aed.point_depart() }}
             </div>
             <div class="form-group">
-                {{ form.type_passagers.label }}
-                {{ form.type_passagers() }}
+                {{ form_aed.type_passagers.label }}
+                {{ form_aed.type_passagers() }}
             </div>
 
             <div class="form-group">
-                {{ form.nombre_places_occupees.label }}
-                {{ form.nombre_places_occupees() }}
+                {{ form_aed.nombre_places_occupees.label }}
+                {{ form_aed.nombre_places_occupees() }}
             </div>
             <div class="form-group">
-                {{ form.chauffeur_id.label }}
-                {{ form.chauffeur_id() }}
+                {{ form_aed.chauffeur_id.label }}
+                {{ form_aed.chauffeur_id() }}
             </div>
             <div class="form-group">
-                {{ form.numero_aed.label }}
-                {{ form.numero_aed() }}
+                {{ form_aed.numero_aed.label }}
+                {{ form_aed.numero_aed() }}
             </div>
             <div class="form-group">
-                {{ form.kilometrage_actuel.label }}
-                {{ form.kilometrage_actuel() }}
+                {{ form_aed.kilometrage_actuel.label }}
+                {{ form_aed.kilometrage_actuel() }}
             </div>
         </div>
-        <button type="submit" class="submit-btn modal-submit">{{ form.submit.label }}</button>
+        <button type="submit" class="submit-btn modal-submit">{{ form_aed.submit.label }}</button>
       </form>
       <div id="departAedFeedback"></div>
     </div>

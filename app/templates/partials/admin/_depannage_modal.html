@@ -1,0 +1,54 @@
+<!-- Modal Formulaire de Dépannage -->
+<div id="formulaireDepannageModal" class="modal" aria-hidden="true" hidden>
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header">
+            <h3><i class="fas fa-screwdriver-wrench"></i> Enregistrer une réparation</h3>
+            <button type="button" id="closeDepannageModal" class="close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="formulaire-depannage">
+                <input type="hidden" id="panne_id_hidden" name="panne_id">
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="numero_bus_udm_dep">Bus UdM</label>
+                        <input type="text" id="numero_bus_udm_dep" name="numero_bus_udm" readonly style="background-color: #f3f4f6;">
+                    </div>
+                    <div class="form-group">
+                        <label for="immatriculation_dep">Immatriculation</label>
+                        <input type="text" id="immatriculation_dep" name="immatriculation" readonly style="background-color: #f3f4f6;">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="kilometrage_dep">Kilométrage</label>
+                        <input type="number" id="kilometrage_dep" name="kilometrage" step="0.1" min="0" placeholder="Ex: 152340">
+                    </div>
+                    <div class="form-group">
+                        <label for="cout_reparation_dep">Coût réparation (FCFA)</label>
+                        <input type="number" id="cout_reparation_dep" name="cout_reparation" step="0.01" min="0" placeholder="Ex: 50000">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="description_panne_dep">Panne <span style="color:#ef4444;">*</span></label>
+                    <textarea id="description_panne_dep" name="description_panne" rows="3" required 
+                              placeholder="Décrivez brièvement la panne"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="cause_panne_dep">Cause de la panne</label>
+                    <textarea id="cause_panne_dep" name="cause_panne" rows="2" 
+                              placeholder="Cause identifiée (optionnel)"></textarea>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="submit-btn">
+                        <i class="fas fa-save"></i> Enregistrer la réparation
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

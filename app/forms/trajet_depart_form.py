@@ -14,7 +14,7 @@ class TrajetDepartForm(FlaskForm):
     type_passagers = SelectField('Type de passagers', choices=[('ETUDIANT', 'Étudiant'), ('PERSONNEL', 'Personnel'), ('MALADE', 'Malade')], validators=[DataRequired()])
     nombre_places_occupees = IntegerField('Nombre de places occupées', validators=[DataRequired(), NumberRange(min=0)])
     chauffeur_id = SelectField('Chauffeur', coerce=int, validators=[DataRequired()])
-    numero_aed = SelectField('Numéro Bus UdM', validators=[DataRequired()])
+    numero_aed = SelectField('Numéro Bus UdM', validators=[DataRequired()])  # Garde le nom pour compatibilité template
     kilometrage_actuel = IntegerField(
         'Kilométrage actuel du véhicule (km)',
         validators=[DataRequired(), NumberRange(min=0, max=999999)],

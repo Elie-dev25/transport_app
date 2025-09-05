@@ -19,7 +19,9 @@
 {% block sidebar %}
 <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
-        <div class="logo">UDM</div>
+        <div class="logo">
+            <img src="{{ url_for('static', filename='img/Logo_Université_des_Montagnes.jpg') }}" alt="UDM Logo" style="height: 50px; width: auto; border-radius: 8px;">
+        </div>
         <div class="admin-info">
             <h2>{{ sidebar_title | default('Admin Panel') }}</h2>
             <p>{{ sidebar_subtitle | default('Transport Universitaire') }}</p>

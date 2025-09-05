@@ -125,8 +125,19 @@ def trajet_interne_bus_udm():
 def trajet_prestataire_modernise():
     """Route pour les trajets prestataire modernisés"""
     from app.forms.trajet_prestataire_form import TrajetPrestataireForm
+    from app.models.prestataire import Prestataire
 
     form = TrajetPrestataireForm(request.form)
+    
+    # Peupler les choix de prestataires dynamiquement
+    try:
+        form.nom_prestataire.choices = [(p.id, p.nom_prestataire) for p in Prestataire.query.all()]
+    except Exception:
+        form.nom_prestataire.choices = []
+
+    print(f"DEBUG - Erreurs de validation: {form.errors}")
+    print(f"DEBUG - Données reçues: {dict(request.form)}")
+    print(f"DEBUG - Choix prestataires: {form.nom_prestataire.choices}")
 
     if not form.validate():
         return jsonify({'success': False, 'message': 'Formulaire invalide', 'errors': form.errors}), 400

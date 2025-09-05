@@ -1,0 +1,667 @@
+{% extends "_base_admin.html" %}
+{% block title %}Rapports - Gestion Transport{% endblock %}
+
+{% set active_page = 'rapports' %}
+{% set page_title = 'Rapports et Analyses' %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/rapports.css') }}">
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="rapports-container">
+    <!-- Header avec statistiques rapides -->
+    <div class="rapports-header">
+        <div class="header-content">
+            <h1><i class="fas fa-chart-bar"></i> Tableau de Bord</h1>
+            <p>Vue d'ensemble des performances du système de transport UdM</p>
+        </div>
+        <div class="header-actions">
+            <button id="refresh-data" class="btn btn-success">
+                <i class="fas fa-sync-alt"></i> Actualiser
+            </button>
+            <button id="export-pdf" class="btn btn-primary">
+                <i class="fas fa-file-pdf"></i> Export PDF
+            </button>
+        </div>
+    </div>
+
+    <!-- Statistiques Rapides -->
+    <div class="stats-overview">
+        <div class="stats-grid">
+            <div class="stat-card today-card">
+                <div class="stat-header">
+                    <h3>Aujourd'hui</h3>
+                    <i class="fas fa-calendar-day"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-item">
+                        <span class="stat-label">Trajets</span>
+                        <span class="stat-value" id="today-trajets">{{ stats.today.total_trajets }}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Passagers</span>
+                        <span class="stat-value" id="today-passagers">{{ stats.today.total_passagers }}</span>
+                    </div>
+                    <div class="stat-breakdown">
+                        <small>Bus UdM: {{ stats.today.trajets_udm }} | Prestataires: {{ stats.today.trajets_prestataire }}</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card week-card">
+                <div class="stat-header">
+                    <h3>Cette Semaine</h3>
+                    <i class="fas fa-calendar-week"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-item">
+                        <span class="stat-label">Trajets</span>
+                        <span class="stat-value" id="week-trajets">{{ stats.week.total_trajets }}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Passagers</span>
+                        <span class="stat-value" id="week-passagers">{{ stats.week.total_passagers }}</span>
+                    </div>
+                    <div class="stat-breakdown">
+                        <small>Moyenne: {{ stats.week.moyenne_passagers_jour }} passagers/jour</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card month-card">
+                <div class="stat-header">
+                    <h3>Ce Mois</h3>
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-item">
+                        <span class="stat-label">Trajets</span>
+                        <span class="stat-value" id="month-trajets">{{ stats.month.total_trajets }}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Passagers</span>
+                        <span class="stat-value" id="month-passagers">{{ stats.month.total_passagers }}</span>
+                    </div>
+                    <div class="stat-breakdown">
+                        <small>{{ stats.month.jours_periode }} jours de données</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card fleet-card">
+                <div class="stat-header">
+                    <h3>Flotte</h3>
+                    <i class="fas fa-bus"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-item">
+                        <span class="stat-label">Bus Actifs</span>
+                        <span class="stat-value" id="fleet-actifs">{{ stats.fleet.bus_actifs }}/{{ stats.fleet.total_bus }}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Km Total</span>
+                        <span class="stat-value" id="fleet-km">{{ "{:,}".format(stats.fleet.km_total) }}</span>
+                    </div>
+                    <div class="stat-breakdown">
+                        <small>Maintenance: {{ stats.fleet.bus_maintenance }} bus</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section Rapports Détaillés -->
+    <div class="quick-actions" style="margin-top:32px;">
+        <h2 class="section-title">
+            <i class="fas fa-file-alt"></i>
+            Rapports Détaillés
+        </h2>
+        <div class="actions-grid">
+            <a href="{{ url_for('admin.rapport_noblesse') }}" class="action-btn">
+                <i class="fas fa-bus"></i>
+                <span>Rapport Noblesse</span>
+            </a>
+
+            <a href="{{ url_for('admin.rapport_charter') }}" class="action-btn">
+                <i class="fas fa-bus"></i>
+                <span>Rapport Charter</span>
+            </a>
+
+            <a href="{{ url_for('admin.rapport_bus_udm') }}" class="action-btn">
+                <i class="fas fa-university"></i>
+                <span>Rapport Bus UdM</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Section Performances Chauffeurs -->
+    <div class="performances-section" style="margin-top:32px;">
+        <h2 class="section-title">
+            <i class="fas fa-tachometer-alt"></i>
+            Performances Chauffeurs
+        </h2>
+        
+        <!-- Filtres pour les performances -->
+        <div class="performance-filters">
+            <div class="filter-buttons-performance">
+                <button class="filter-btn-perf active" data-periode="jour" onclick="changePerformancePeriod('jour', this)">
+                    <i class="fas fa-calendar-day"></i> Aujourd'hui
+                </button>
+                <button class="filter-btn-perf" data-periode="semaine" onclick="changePerformancePeriod('semaine', this)">
+                    <i class="fas fa-calendar-week"></i> Cette semaine
+                </button>
+                <button class="filter-btn-perf" data-periode="mois" onclick="changePerformancePeriod('mois', this)">
+                    <i class="fas fa-calendar-alt"></i> Ce mois
+                </button>
+            </div>
+            
+            <!-- Filtre personnalisé -->
+            <div class="custom-filter-performance">
+                <div class="date-inputs-performance">
+                    <div class="date-input-group-performance">
+                        <label for="perf_date_debut">Du:</label>
+                        <input type="date" id="perf_date_debut" class="form-control-sm">
+                    </div>
+                    <div class="date-input-group-performance">
+                        <label for="perf_date_fin">Au:</label>
+                        <input type="date" id="perf_date_fin" class="form-control-sm">
+                    </div>
+                    <button id="apply-custom-filter" class="btn-custom-perf" onclick="applyCustomPerformanceFilter()">
+                        <i class="fas fa-search"></i> Filtrer
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Graphique des performances -->
+        <div class="chart-card performance-chart">
+            <div class="chart-header">
+                <h3><i class="fas fa-chart-bar"></i> Nombre de trajets par chauffeur</h3>
+                <div class="chart-info">
+                    <span id="performance-period-label">Aujourd'hui</span>
+                </div>
+            </div>
+            <div class="chart-container" style="height: 400px; position: relative; background: #f8f9fa; border: 2px dashed #dee2e6; display: flex; align-items: center; justify-content: center;">
+                <div id="chart-placeholder" style="text-align: center; color: #6c757d;">
+                    <i class="fas fa-chart-bar" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
+                    <p>Graphique en cours de chargement...</p>
+                    <button onclick="testGraphique()" class="btn btn-primary btn-sm">Test Graphique</button>
+                </div>
+                <canvas id="performanceChart" style="display: none;"></canvas>
+            </div>
+            <div class="chart-legend">
+                <small class="text-muted">
+                    <i class="fas fa-info-circle"></i> 
+                    Affichage du nombre de trajets effectués par chaque chauffeur de bus AED
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section Utilisation des Bus UdM -->
+    <div class="bus-usage-section" style="margin-top:32px;">
+        <h2 class="section-title">
+            <i class="fas fa-chart-pie"></i>
+            Utilisation des Bus UdM
+        </h2>
+        
+        <!-- Filtres pour l'utilisation des bus -->
+        <div class="performance-filters">
+            <div class="filter-buttons-performance">
+                <button class="filter-btn-perf active" data-periode="jour" onclick="changeBusUsagePeriod('jour', this)">
+                    <i class="fas fa-calendar-day"></i> Aujourd'hui
+                </button>
+                <button class="filter-btn-perf" data-periode="semaine" onclick="changeBusUsagePeriod('semaine', this)">
+                    <i class="fas fa-calendar-week"></i> Cette semaine
+                </button>
+                <button class="filter-btn-perf" data-periode="mois" onclick="changeBusUsagePeriod('mois', this)">
+                    <i class="fas fa-calendar-alt"></i> Ce mois
+                </button>
+            </div>
+            
+            <!-- Filtre personnalisé -->
+            <div class="custom-filter-performance">
+                <div class="date-inputs-performance">
+                    <div class="date-input-group-performance">
+                        <label for="bus_date_debut">Du:</label>
+                        <input type="date" id="bus_date_debut" class="form-control-sm">
+                    </div>
+                    <div class="date-input-group-performance">
+                        <label for="bus_date_fin">Au:</label>
+                        <input type="date" id="bus_date_fin" class="form-control-sm">
+                    </div>
+                    <button id="apply-custom-bus-filter" class="btn-custom-perf" onclick="applyCustomBusUsageFilter()">
+                        <i class="fas fa-search"></i> Filtrer
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Graphique d'utilisation des bus -->
+        <div class="chart-card bus-usage-chart">
+            <div class="chart-header">
+                <h3><i class="fas fa-chart-pie"></i> Répartition de l'utilisation par bus</h3>
+                <div class="chart-info">
+                    <span id="bus-usage-period-label">Aujourd'hui</span>
+                </div>
+            </div>
+            <div class="chart-container" style="height: 400px; position: relative; background: #f8f9fa; border: 2px dashed #dee2e6; display: flex; align-items: center; justify-content: center;">
+                <div id="bus-chart-placeholder" style="text-align: center; color: #6c757d;">
+                    <i class="fas fa-chart-pie" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
+                    <p>Graphique en cours de chargement...</p>
+                    <button onclick="testBusUsageChart()" class="btn btn-primary btn-sm">Test Graphique Bus</button>
+                </div>
+                <canvas id="busUsageChart" style="display: none;"></canvas>
+            </div>
+            <div class="chart-legend">
+                <small class="text-muted">
+                    <i class="fas fa-info-circle"></i> 
+                    Affichage du nombre de trajets effectués par chaque bus UdM
+                </small>
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+
+
+</div>
+{% endblock %}
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Variables globales pour les graphiques
+let performanceChart = null;
+let busUsageChart = null;
+
+// Fonctions pour changer de période
+function changePerformancePeriod(periode, button) {
+    // Retirer la classe active des autres boutons
+    document.querySelectorAll('.filter-btn-perf').forEach(b => b.classList.remove('active'));
+    
+    // Ajouter la classe active au bouton cliqué
+    button.classList.add('active');
+    
+    // Charger les nouvelles données
+    loadPerformanceData(periode);
+}
+
+function applyCustomPerformanceFilter() {
+    const dateDebut = document.getElementById('perf_date_debut').value;
+    const dateFin = document.getElementById('perf_date_fin').value;
+    
+    if (dateDebut && dateFin) {
+        // Retirer la classe active des boutons de filtre rapide
+        document.querySelectorAll('.filter-btn-perf').forEach(b => b.classList.remove('active'));
+        
+        // Charger les données pour la période personnalisée
+        loadPerformanceData('personnalise', dateDebut, dateFin);
+    } else {
+        alert('Veuillez sélectionner une date de début et une date de fin.');
+    }
+}
+
+// Charger les données de performance
+function loadPerformanceData(periode, dateDebut = null, dateFin = null) {
+    const baseUrl = "{{ url_for('admin.api_performances_chauffeurs') }}";
+    let url = `${baseUrl}?periode=${periode}`;
+    
+    if (dateDebut && dateFin) {
+        url += `&date_debut=${dateDebut}&date_fin=${dateFin}`;
+    }
+    
+    console.log('Chargement des données depuis:', url);
+    
+    fetch(url)
+        .then(response => {
+            console.log('Réponse reçue:', response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Données reçues:', data);
+
+            if (!performanceChart) {
+                console.error('Le graphique n\'est pas initialisé');
+                return;
+            }
+
+            // Mettre à jour le graphique de manière défensive
+            const labels = Array.isArray(data?.labels) ? data.labels : [];
+            const ds = (data && data.datasets && Array.isArray(data.datasets) && data.datasets[0]) ? data.datasets[0] : { data: [], backgroundColor: [], borderColor: [] };
+
+            performanceChart.data.labels = labels;
+            performanceChart.data.datasets[0].data = Array.isArray(ds.data) ? ds.data : [];
+            performanceChart.data.datasets[0].backgroundColor = Array.isArray(ds.backgroundColor) ? ds.backgroundColor : [];
+            performanceChart.data.datasets[0].borderColor = Array.isArray(ds.borderColor) ? ds.borderColor : [];
+            performanceChart.update();
+
+            console.log('Graphique mis à jour avec', data.labels ? data.labels.length : 0, 'chauffeurs');
+            
+            // Mettre à jour le label de période
+            const periodLabel = document.getElementById('performance-period-label');
+            if (dateDebut && dateFin) {
+                periodLabel.textContent = `Du ${data.periode_info.start_date} au ${data.periode_info.end_date}`;
+            } else {
+                const labels = {
+                    'jour': 'Aujourd\'hui',
+                    'semaine': 'Cette semaine',
+                    'mois': 'Ce mois'
+                };
+                periodLabel.textContent = labels[periode] || 'Période personnalisée';
+            }
+        })
+        .catch(error => {
+            console.error('Erreur lors du chargement des données:', error);
+            
+            // Afficher un message d'erreur dans le graphique
+            if (performanceChart) {
+                performanceChart.data.labels = ['Aucune donnée'];
+                performanceChart.data.datasets[0].data = [0];
+                performanceChart.data.datasets[0].backgroundColor = ['#dc3545'];
+                performanceChart.data.datasets[0].borderColor = ['#dc3545'];
+                performanceChart.update();
+            }
+        });
+}
+
+// Initialisation au chargement de la page
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Initialisation des performances chauffeurs...');
+    
+    // Vérifier Chart.js
+    if (typeof Chart === 'undefined') {
+        console.error('Chart.js non chargé');
+        return;
+    }
+    
+    // Initialiser les graphiques immédiatement
+    initPerformanceChart();
+    initBusUsageChart();
+});
+
+// Initialiser le graphique des performances
+function initPerformanceChart() {
+    const canvas = document.getElementById('performanceChart');
+    const placeholder = document.getElementById('chart-placeholder');
+    
+    if (!canvas) {
+        console.error('Canvas performanceChart non trouvé');
+        return;
+    }
+    
+    // Masquer le placeholder et afficher le canvas
+    if (placeholder) {
+        placeholder.style.display = 'none';
+    }
+    canvas.style.display = 'block';
+    
+    const ctx = canvas.getContext('2d');
+    
+    performanceChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Chargement...'],
+            datasets: [{
+                label: 'Nombre de trajets',
+                data: [0],
+                backgroundColor: ['#28a745'],
+                borderColor: ['#28a745'],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        title: function(context) {
+                            return 'Chauffeur: ' + context[0].label;
+                        },
+                        label: function(context) {
+                            return 'Trajets effectués: ' + context.parsed.y;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Nombre de trajets'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Chauffeurs'
+                    },
+                    ticks: {
+                        maxRotation: 45,
+                        minRotation: 45
+                    }
+                }
+            }
+        }
+    });
+    
+    console.log('Graphique créé, chargement des données...');
+    
+    // Charger les données initiales
+    setTimeout(() => {
+        loadPerformanceData('jour');
+    }, 1000);
+}
+
+// Fonction de test pour remplir le graphique avec des données factices
+function testGraphique() {
+    if (!performanceChart) {
+        alert('Graphique non initialisé');
+        return;
+    }
+    const labels = ['Chauffeur A', 'Chauffeur B', 'Chauffeur C', 'Chauffeur D'];
+    const data = [5, 8, 2, 10];
+    const colors = data.map(v => v >= 10 ? '#28a745' : v >= 5 ? '#34ce57' : v >= 2 ? '#ffc107' : '#dc3545');
+
+    performanceChart.data.labels = labels;
+    performanceChart.data.datasets[0].data = data;
+    performanceChart.data.datasets[0].backgroundColor = colors;
+    performanceChart.data.datasets[0].borderColor = colors;
+    performanceChart.update();
+
+    const periodLabel = document.getElementById('performance-period-label');
+    if (periodLabel) {
+        periodLabel.textContent = 'Données de test';
+    }
+}
+
+// Fonctions pour le graphique d'utilisation des bus
+function changeBusUsagePeriod(periode, button) {
+    // Retirer la classe active des autres boutons
+    document.querySelectorAll('.filter-btn-perf').forEach(b => b.classList.remove('active'));
+    
+    // Ajouter la classe active au bouton cliqué
+    button.classList.add('active');
+    
+    // Charger les nouvelles données
+    loadBusUsageData(periode);
+}
+
+function applyCustomBusUsageFilter() {
+    const dateDebut = document.getElementById('bus_date_debut').value;
+    const dateFin = document.getElementById('bus_date_fin').value;
+    
+    if (dateDebut && dateFin) {
+        // Retirer la classe active des boutons de filtre rapide
+        document.querySelectorAll('.filter-btn-perf').forEach(b => b.classList.remove('active'));
+        
+        // Charger les données pour la période personnalisée
+        loadBusUsageData('personnalise', dateDebut, dateFin);
+    } else {
+        alert('Veuillez sélectionner une date de début et une date de fin.');
+    }
+}
+
+// Charger les données d'utilisation des bus
+function loadBusUsageData(periode, dateDebut = null, dateFin = null) {
+    const baseUrl = "{{ url_for('admin.api_bus_usage') }}";
+    let url = `${baseUrl}?periode=${periode}`;
+    
+    if (dateDebut && dateFin) {
+        url += `&date_debut=${dateDebut}&date_fin=${dateFin}`;
+    }
+    
+    console.log('Chargement des données bus depuis:', url);
+    
+    fetch(url)
+        .then(response => {
+            console.log('Réponse bus reçue:', response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Données bus reçues:', data);
+
+            if (!busUsageChart) {
+                console.error('Le graphique bus n\'est pas initialisé');
+                return;
+            }
+
+            // Mettre à jour le graphique circulaire de manière défensive
+            const labels = Array.isArray(data?.labels) ? data.labels : [];
+            const ds = (data && data.datasets && Array.isArray(data.datasets) && data.datasets[0]) ? data.datasets[0] : { data: [], backgroundColor: [], borderColor: [] };
+
+            busUsageChart.data.labels = labels;
+            busUsageChart.data.datasets[0].data = Array.isArray(ds.data) ? ds.data : [];
+            busUsageChart.data.datasets[0].backgroundColor = Array.isArray(ds.backgroundColor) ? ds.backgroundColor : [];
+            busUsageChart.data.datasets[0].borderColor = Array.isArray(ds.borderColor) ? ds.borderColor : [];
+            busUsageChart.update();
+
+            console.log('Graphique bus mis à jour avec', data.labels ? data.labels.length : 0, 'bus');
+            
+            // Mettre à jour le label de période
+            const periodLabel = document.getElementById('bus-usage-period-label');
+            if (dateDebut && dateFin) {
+                periodLabel.textContent = `Du ${data.periode_info.start_date} au ${data.periode_info.end_date}`;
+            } else {
+                const labels = {
+                    'jour': 'Aujourd\'hui',
+                    'semaine': 'Cette semaine',
+                    'mois': 'Ce mois'
+                };
+                periodLabel.textContent = labels[periode] || 'Période personnalisée';
+            }
+        })
+        .catch(error => {
+            console.error('Erreur lors du chargement des données bus:', error);
+            
+            // Afficher un message d'erreur dans le graphique
+            if (busUsageChart) {
+                busUsageChart.data.labels = ['Aucune donnée'];
+                busUsageChart.data.datasets[0].data = [1];
+                busUsageChart.data.datasets[0].backgroundColor = ['#dc3545'];
+                busUsageChart.data.datasets[0].borderColor = ['#dc3545'];
+                busUsageChart.update();
+            }
+        });
+}
+
+// Initialiser le graphique d'utilisation des bus
+function initBusUsageChart() {
+    const canvas = document.getElementById('busUsageChart');
+    const placeholder = document.getElementById('bus-chart-placeholder');
+    
+    if (!canvas) {
+        console.error('Canvas busUsageChart non trouvé');
+        return;
+    }
+    
+    // Masquer le placeholder et afficher le canvas
+    if (placeholder) {
+        placeholder.style.display = 'none';
+    }
+    canvas.style.display = 'block';
+    
+    const ctx = canvas.getContext('2d');
+    
+    busUsageChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: ['Chargement...'],
+            datasets: [{
+                label: 'Nombre de trajets',
+                data: [1],
+                backgroundColor: ['#28a745'],
+                borderColor: ['#ffffff'],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'right'
+                },
+                tooltip: {
+                    callbacks: {
+                        title: function(context) {
+                            return 'Bus: ' + context[0].label;
+                        },
+                        label: function(context) {
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = ((context.parsed / total) * 100).toFixed(1);
+                            return `Trajets: ${context.parsed} (${percentage}%)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+    console.log('Graphique bus créé, chargement des données...');
+    
+    // Charger les données initiales
+    setTimeout(() => {
+        loadBusUsageData('jour');
+    }, 1000);
+}
+
+// Fonction de test pour remplir le graphique bus avec des données factices
+function testBusUsageChart() {
+    if (!busUsageChart) {
+        alert('Graphique bus non initialisé');
+        return;
+    }
+    const labels = ['Bus 001', 'Bus 002', 'Bus 003', 'Bus 004', 'Bus 005'];
+    const data = [15, 8, 12, 5, 20];
+    const colors = ['#28a745', '#17a2b8', '#ffc107', '#fd7e14', '#6f42c1'];
+
+    busUsageChart.data.labels = labels;
+    busUsageChart.data.datasets[0].data = data;
+    busUsageChart.data.datasets[0].backgroundColor = colors;
+    busUsageChart.data.datasets[0].borderColor = colors.map(() => '#ffffff');
+    busUsageChart.update();
+
+    const periodLabel = document.getElementById('bus-usage-period-label');
+    if (periodLabel) {
+        periodLabel.textContent = 'Données de test';
+    }
+}
+</script>
+<script src="{{ url_for('static', filename='js/rapports.js') }}"></script>
+{% endblock %}

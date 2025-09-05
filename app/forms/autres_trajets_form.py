@@ -24,14 +24,10 @@ class AutresTrajetsForm(FlaskForm):
         validators=[DataRequired()]
     )
     
-    lieu_arrivee = SelectField(
+    lieu_arrivee = StringField(
         'Lieu d\'arrivée', 
-        choices=[
-            ('Mfetum', 'Mfetum'), 
-            ('Ancienne Mairie', 'Ancienne Mairie'), 
-            ('Banekane', 'Banekane')
-        ], 
-        validators=[DataRequired()]
+        validators=[DataRequired(), Length(max=100)],
+        render_kw={'placeholder': 'Entrez le lieu d\'arrivée (ex: Hôpital Central, Aéroport, etc.)'}
     )
     
     chauffeur_id = SelectField(
@@ -45,12 +41,7 @@ class AutresTrajetsForm(FlaskForm):
         validators=[DataRequired()]
     )
 
-    # Champs spécifiques pour autres trajets
-    destination = StringField(
-        'Destination spécifique', 
-        validators=[Length(max=100)],
-        render_kw={'placeholder': 'Ex: Hôpital, Aéroport, etc. (optionnel)'}
-    )
+    # Supprimé le champ destination redondant avec lieu_arrivee
     
     motif = StringField(
         'Motif du trajet', 
@@ -68,5 +59,5 @@ class AutresTrajetsForm(FlaskForm):
     
     def validate_lieu_arrivee(self, field):
         """Validation personnalisée : le lieu d'arrivée doit être différent du lieu de départ"""
-        if field.data == self.lieu_depart.data:
+        if field.data and field.data.strip().lower() == self.lieu_depart.data.lower():
             raise ValidationError('Le lieu d\'arrivée doit être différent du lieu de départ.')

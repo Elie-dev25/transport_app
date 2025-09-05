@@ -8,7 +8,7 @@ class TrajetPrestataireForm(FlaskForm):
 
     nom_prestataire = SelectField(
         'Nom Prestataire',
-        choices=[('Charter', 'Charter'), ('Noblesse', 'Noblesse')],
+        coerce=int,
         validators=[DataRequired()]
     )
     immat_bus = StringField(
@@ -53,10 +53,9 @@ class TrajetPrestataireForm(FlaskForm):
     )
     type_passagers = SelectField(
         'Type de passagers',
-        choices=[('ETUDIANT', 'Étudiant')],
+        choices=[('ETUDIANT', 'Étudiant'), ('PERSONNEL', 'Personnel'), ('MALADE', 'Malade'), ('INVITER', 'Invité'), ('MALADE_PERSONNEL', 'Malade Personnel')],
         default='ETUDIANT',
-        validators=[DataRequired()],
-        render_kw={'disabled': True}
+        validators=[DataRequired()]
     )
     nombre_places_occupees = IntegerField(
         'Places occupées',

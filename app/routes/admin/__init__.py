@@ -10,4 +10,5 @@ from . import gestion_trajets
 from . import rapports
 from . import maintenance
 from . import gestion_utilisateurs
+from . import parametres
 from . import utils
