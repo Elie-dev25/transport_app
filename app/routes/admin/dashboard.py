@@ -1,66 +1,44 @@
 from flask import render_template, url_for, jsonify
 from flask_login import current_user
 from datetime import date, datetime
-from app.models.bus_udm import BusUdM
-from app.models.trajet import Trajet
-from app.models.chauffeur import Chauffeur
-from app.database import db
-from app.utils.trafic import daily_student_trafic
+
+# Services centralisés (Phase 1 Refactoring)
+from app.services.dashboard_service import DashboardService
+from app.services.form_service import FormService
+
+# Formulaires
 from app.forms.trajet_depart_form import TrajetDepartForm
 from app.forms.trajet_prestataire_form import TrajetPrestataireForm
-from app.models.prestataire import Prestataire
 from app.forms.trajet_banekane_retour_form import TrajetBanekaneRetourForm
 from app.forms.trajet_sortie_hors_ville_form import TrajetSortieHorsVilleForm
-# Nouveaux formulaires modernisés
 from app.forms.trajet_interne_bus_udm_form import TrajetInterneBusUdMForm
 from app.forms.autres_trajets_form import AutresTrajetsForm
-from app.routes.common import role_required
+
+# Décorateurs et blueprint
+from app.routes.common import role_required, superviseur_access, business_action_required
 from . import bp
 
-# Définition du décorateur admin_only
+# Définition du décorateur admin_only (permet aussi superviseur en lecture seule)
 def admin_only(view):
-    return role_required('ADMIN')(view)
+    return superviseur_access(view)
 
-# Route du tableau de bord administrateur
+# Route du tableau de bord administrateur (accès complet + superviseur lecture seule)
 @admin_only
 @bp.route('/dashboard')
 def dashboard():
-    today = date.today()
-    trajets_jour_aed = Trajet.query.filter(db.func.date(Trajet.date_heure_depart) == today, Trajet.numero_bus_udm != None).count()
-    trajets_jour_bus_agence = Trajet.query.filter(db.func.date(Trajet.date_heure_depart) == today, Trajet.immat_bus != None).count()
+    """
+    Dashboard admin refactorisé - Phase 1
+    Utilise DashboardService pour éliminer la duplication de code
+    """
+    # Utiliser le service centralisé au lieu du code dupliqué
+    stats = DashboardService.get_common_stats()
+    role_stats = DashboardService.get_role_specific_stats('ADMIN')
 
-    # Calcul des étudiants présents sur le campus (arrivées - départs)
-    # Arrivées : départs depuis Mfetum/Ancienne mairie vers le campus
-    arrives = db.session.query(db.func.sum(Trajet.nombre_places_occupees)).filter(
-        db.func.date(Trajet.date_heure_depart) == today,
-        Trajet.type_passagers == 'ETUDIANT',
-        Trajet.point_depart.in_(['Mfetum', 'Ancienne mairie'])
-    ).scalar() or 0
-    
-    # Départs : départs depuis Banekane (campus) vers l'extérieur
-    departs = db.session.query(db.func.sum(Trajet.nombre_places_occupees)).filter(
-        db.func.date(Trajet.date_heure_depart) == today,
-        Trajet.type_passagers == 'ETUDIANT',
-        Trajet.point_depart == 'Banekane'
-    ).scalar() or 0
-    
-    # Étudiants présents = arrivées - départs
-    etudiants = arrives - departs
+    # Fusionner les statistiques
+    stats.update(role_stats)
 
-    stats = {
-        'bus_actifs': BusUdM.query.filter_by(etat_vehicule='BON').count(),
-        'bus_actifs_change': 0,
-        'bus_inactifs': BusUdM.query.filter_by(etat_vehicule='DEFAILLANT').count(),
-        'chauffeurs': Chauffeur.query.count(),
-        'trajets_jour_aed': trajets_jour_aed,
-        'trajets_jour_bus_agence': trajets_jour_bus_agence,
-        'trajets_jour_change': 0,
-        'bus_maintenance': BusUdM.query.filter_by(etat_vehicule='DEFAILLANT').count(),
-        'etudiants': etudiants
-    }
-
-    # Trafic temps réel
-    trafic = daily_student_trafic()
+    # Trafic temps réel (déjà inclus dans stats via DashboardService)
+    trafic = stats.get('trafic', {})
 
     # Formulaires
     form_aed = TrajetDepartForm()
@@ -71,45 +49,23 @@ def dashboard():
     form_trajet_interne = TrajetInterneBusUdMForm()
     form_autres_trajets = AutresTrajetsForm()
 
-    # Renseigner les choix dynamiques dépendants de la BD
+    # Utiliser FormService pour peupler tous les formulaires (élimine 30+ lignes dupliquées)
     try:
-        # Récupérer les chauffeurs, bus et prestataires
-        chauffeurs = [(c.chauffeur_id, f"{c.nom} {c.prenom}") for c in Chauffeur.query.all()]
-        bus_udm = [(b.numero, b.numero) for b in BusUdM.query.all()]
-        prestataires = [(p.id, p.nom_prestataire) for p in Prestataire.query.all()]
-
-        # Anciens formulaires
-        form_aed.chauffeur_id.choices = chauffeurs
-        form_aed.numero_aed.choices = bus_udm  # Note: utilise encore numero_aed
-        form_bus.nom_prestataire.choices = prestataires
-        form_banekane_retour.chauffeur_id.choices = chauffeurs
-        form_banekane_retour.numero_aed.choices = bus_udm
-        form_sortie.chauffeur_id.choices = chauffeurs
-        form_sortie.numero_aed.choices = bus_udm
-
-        # Nouveaux formulaires modernisés
-        form_trajet_interne.chauffeur_id.choices = chauffeurs
-        form_trajet_interne.numero_bus_udm.choices = bus_udm
-        form_autres_trajets.chauffeur_id.choices = chauffeurs
-        form_autres_trajets.numero_bus_udm.choices = bus_udm
-
+        FormService.populate_multiple_forms(
+            form_aed, form_bus, form_banekane_retour, form_sortie,
+            form_trajet_interne, form_autres_trajets,
+            bus_filter='BON_ONLY'  # Admin peut voir tous les bus en bon état
+        )
     except Exception as e:
         print(f"Erreur lors du remplissage des listes déroulantes: {e}")
-        # En cas d'erreur DB, laisser les choix vides pour ne pas casser le rendu
-        form_aed.chauffeur_id.choices = []
-        form_aed.numero_aed.choices = []
-        form_bus.nom_prestataire.choices = []
-        form_banekane_retour.chauffeur_id.choices = []
-        form_banekane_retour.numero_aed.choices = []
-        form_sortie.chauffeur_id.choices = []
-        form_sortie.numero_aed.choices = []
+        # FormService gère déjà les erreurs en interne
         form_trajet_interne.chauffeur_id.choices = []
         form_trajet_interne.numero_bus_udm.choices = []
         form_autres_trajets.chauffeur_id.choices = []
         form_autres_trajets.numero_bus_udm.choices = []
 
     return render_template(
-        'dashboard_admin.html',
+        'roles/admin/dashboard_admin.html',
         stats=stats,
         trafic=trafic,
         form_aed=form_aed,
@@ -123,54 +79,61 @@ def dashboard():
 @bp.route('/stats', methods=['GET'])
 @admin_only
 def get_stats():
-    """API pour récupérer les statistiques du dashboard en JSON"""
-    today = datetime.now().date()
-    
-    # Statistiques principales
-    bus_actifs = BusUdM.query.filter(BusUdM.etat_vehicule != 'DEFAILLANT').count()
-    trajets_jour_aed = Trajet.query.filter(db.func.date(Trajet.date_heure_depart) == today, Trajet.numero_bus_udm != None).count()
-    trajets_jour_bus_agence = Trajet.query.filter(db.func.date(Trajet.date_heure_depart) == today, Trajet.immat_bus != None).count()
-    
-    # Calcul des étudiants présents sur le campus (arrivées - départs)
-    # Arrivées : départs depuis Mfetum/Ancienne mairie vers le campus
-    arrives_api = db.session.query(db.func.sum(Trajet.nombre_places_occupees)).filter(
-        db.func.date(Trajet.date_heure_depart) == today,
-        Trajet.type_passagers == 'ETUDIANT',
-        Trajet.point_depart.in_(['Mfetum', 'Ancienne mairie'])
-    ).scalar() or 0
-    
-    # Départs : départs depuis Banekane (campus) vers l'extérieur
-    departs_api = db.session.query(db.func.sum(Trajet.nombre_places_occupees)).filter(
-        db.func.date(Trajet.date_heure_depart) == today,
-        Trajet.type_passagers == 'ETUDIANT',
-        Trajet.point_depart == 'Banekane'
-    ).scalar() or 0
-    
-    # Étudiants présents = arrivées - départs
-    etudiants = arrives_api - departs_api
-    
-    # Bus en maintenance
-    bus_maintenance = BusUdM.query.filter(BusUdM.etat_vehicule == 'DEFAILLANT').count()
-    
-    # Trafic temps réel - utiliser la même logique que trafic.py
-    # Arrivées = étudiants venus sur le campus (depuis Mfetum/Ancienne mairie)
-    arrives = arrives_api
-    # Départs = étudiants partis du campus (depuis Banekane)  
-    partis = departs_api
-    # Présents = arrivées - départs
+    """
+    API pour récupérer les statistiques du dashboard en JSON
+    Refactorisé - Phase 1 : utilise DashboardService
+    """
+    # Utiliser le service centralisé au lieu du code dupliqué
+    stats = DashboardService.get_common_stats()
+    role_stats = DashboardService.get_role_specific_stats('ADMIN')
+
+    # Fusionner les statistiques
+    stats.update(role_stats)
+
+    # Extraire les données pour l'API
+    trafic = stats.get('trafic', {})
+    arrives = trafic.get('arrives', 0)
+    partis = trafic.get('partis', 0)
     present = max(0, arrives - partis)
     
     return jsonify({
         'stats': {
-            'bus_actifs': bus_actifs,
-            'trajets_jour_aed': trajets_jour_aed,
-            'trajets_jour_bus_agence': trajets_jour_bus_agence,
-            'etudiants': etudiants,
-            'bus_maintenance': bus_maintenance
+            'bus_actifs': stats.get('bus_actifs', 0),
+            'trajets_jour_aed': stats.get('trajets_jour_aed', 0),
+            'trajets_jour_bus_agence': stats.get('trajets_jour_bus_agence', 0),
+            'etudiants': stats.get('etudiants', 0),
+            'bus_maintenance': stats.get('bus_maintenance', 0)
         },
         'trafic': {
             'arrives': arrives,
             'present': present,
             'partis': partis
-        }
+        },
+        'timestamp': datetime.now().isoformat()
     })
+
+# Route de consultation pour superviseurs (lecture seule)
+@superviseur_access
+@bp.route('/consultation')
+def consultation():
+    """
+    Dashboard en lecture seule pour les superviseurs
+    Refactorisé - Phase 1 : utilise DashboardService
+    """
+    # Utiliser le service centralisé au lieu du code dupliqué
+    stats = DashboardService.get_common_stats()
+    role_stats = DashboardService.get_role_specific_stats('SUPERVISEUR')
+
+    # Fusionner les statistiques
+    stats.update(role_stats)
+    trafic = stats.get('trafic', {})
+
+    # Derniers trajets pour affichage (utiliser QueryService si nécessaire)
+    from app.models.trajet import Trajet  # Import local pour éviter les erreurs
+    derniers_trajets = Trajet.query.order_by(Trajet.date_heure_depart.desc()).limit(10).all()
+
+    return render_template('roles/admin/consultation.html',
+                         stats=stats,
+                         trafic=trafic,
+                         derniers_trajets=derniers_trajets,
+                         active_page='consultation')

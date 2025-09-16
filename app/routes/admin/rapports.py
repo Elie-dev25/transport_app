@@ -14,11 +14,12 @@ from app.models.carburation import Carburation
 from app.models.prestataire import Prestataire
 from app.models.chauffeur import Chauffeur
 from app.models.vidange import Vidange
-from app.routes.common import admin_only
+from app.routes.common import admin_only, superviseur_access
 
 from . import bp
 
 # Routes pour les rapports détaillés
+@superviseur_access
 @bp.route('/rapport-noblesse')
 def rapport_noblesse():
     """Rapport détaillé pour les trajets Noblesse (avec filtres)."""
@@ -67,13 +68,23 @@ def rapport_noblesse():
         total_trajets = len(trajets)
         total_passagers = sum([t.nombre_places_occupees or 0 for t in trajets])
 
+        # Formatage de la date pour l'affichage
+        from datetime import datetime
+        mois_noms = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+                     'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']
+        date_actuelle = datetime.now()
+        mois_actuel = mois_noms[date_actuelle.month - 1]
+        periode_formatee = f"{mois_actuel} {date_actuelle.year}"
+
         return render_template(
-            'rapport_entity.html',
+            'legacy/rapport_entity.html',
             entity_name='Noblesse',
             trajets=trajets,
             total_trajets=total_trajets,
             total_passagers=total_passagers,
-            entity_type='prestataire'
+            entity_type='prestataire',
+            superviseur_mode=False,
+            periode_formatee=periode_formatee
         )
     except Exception as e:
         print(f"ERREUR rapport_noblesse: {e}")
@@ -124,13 +135,22 @@ def rapport_charter():
         total_trajets = len(trajets)
         total_passagers = sum([t.nombre_places_occupees or 0 for t in trajets])
 
+        # Formatage de la date pour l'affichage
+        mois_noms = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+                     'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']
+        date_actuelle = datetime.now()
+        mois_actuel = mois_noms[date_actuelle.month - 1]
+        periode_formatee = f"{mois_actuel} {date_actuelle.year}"
+
         return render_template(
-            'rapport_entity.html',
+            'legacy/rapport_entity.html',
             entity_name='Charter',
             trajets=trajets,
             total_trajets=total_trajets,
             total_passagers=total_passagers,
-            entity_type='prestataire'
+            entity_type='prestataire',
+            superviseur_mode=False,
+            periode_formatee=periode_formatee
         )
     except Exception as e:
         print(f"ERREUR rapport_charter: {e}")
@@ -185,8 +205,15 @@ def rapport_bus_udm():
         personnel = sum([t.nombre_places_occupees or 0 for t in trajets if t.type_passagers == 'PERSONNEL'])
         malades = sum([t.nombre_places_occupees or 0 for t in trajets if t.type_passagers == 'MALADE'])
 
+        # Formatage de la date pour l'affichage
+        mois_noms = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+                     'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']
+        date_actuelle = datetime.now()
+        mois_actuel = mois_noms[date_actuelle.month - 1]
+        periode_formatee = f"{mois_actuel} {date_actuelle.year}"
+
         return render_template(
-            'rapport_entity.html',
+            'legacy/rapport_entity.html',
             entity_name='Bus UdM',
             trajets=trajets,
             total_trajets=total_trajets,
@@ -196,7 +223,9 @@ def rapport_bus_udm():
                 'etudiants': etudiants,
                 'personnel': personnel,
                 'malades': malades
-            }
+            },
+            superviseur_mode=False,
+            periode_formatee=periode_formatee
         )
     except Exception as e:
         print(f"ERREUR rapport_bus_udm: {e}")
@@ -218,7 +247,7 @@ def rapports():
         'fleet': get_fleet_stats()
     }
 
-    return render_template('rapports.html', stats=stats)
+    return render_template('pages/rapports.html', stats=stats)
 
 @bp.route('/rapports/noblesse')
 def rapport_noblesse_alias():

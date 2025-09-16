@@ -1,0 +1,32 @@
+@startuml Communication_Planifier_Trajet
+skinparam defaultFontName Arial
+skinparam shadowing false
+skinparam dpi 150
+left to right direction
+
+actor "Charge Transport" as CT
+rectangle "Web UI" as UI
+rectangle "TrajetController" as TrajC
+rectangle "TrajetService" as TrajS
+rectangle "ChauffeurService" as ChS
+rectangle "BusService" as BusS
+database "DB" as DB
+
+CT -[#black]-> UI : 1: saisir trajet(type, date, point, ...)
+UI -[#black]-> TrajC : 2: POST /trajet
+TrajC -[#black]-> ChS : 3: verifier_disponibilite_chauffeur(chauffeur_id)
+ChS -[#black]-> DB : 3.1: get_statuts(chauffeur_id)
+DB -[#black]-> ChS : 3.2: statuts
+ChS -[#black]-> TrajC : 3.3: OK/KO
+TrajC -[#black]-> BusS : 4: verifier_disponibilite_bus(bus_id|numero)
+BusS -[#black]-> DB : 4.1: get_bus_state()
+DB -[#black]-> BusS : 4.2: etat, planification
+BusS -[#black]-> TrajC : 4.3: OK/KO
+TrajC -[#black]-> TrajS : 5: creer_trajet(data)
+TrajS -[#black]-> DB : 5.1: insert(trajet)
+DB -[#black]-> TrajS : 5.2: trajet_id
+TrajS -[#black]-> TrajC : 5.3: trajet créé
+TrajC -[#black]-> UI : 6: confirmation(trajet_id)
+UI -[#black]-> CT : 7: affiche récapitulatif
+
+@enduml

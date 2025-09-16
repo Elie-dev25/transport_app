@@ -26,3 +26,6 @@ python-dateutil==2.8.2
 # Tests
 pytest==7.4.2
 pytest-flask==1.2.0
+
+# Export PDF (optionnel)
+reportlab>=3.6.0

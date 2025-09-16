@@ -7,9 +7,10 @@ from app.database import db
 from app.routes.common import role_required
 from . import bp
 
-# Définition du décorateur admin_only
+# Définition du décorateur admin_only (ADMIN et RESPONSABLE avec traçabilité)
 def admin_only(view):
-    return role_required('ADMIN')(view)
+    from app.routes.common import admin_or_responsable
+    return admin_or_responsable(view)
 
 # Route pour la page Chauffeurs qui affiche la liste des chauffeurs depuis la base
 @admin_only
@@ -25,14 +26,14 @@ def chauffeurs():
         for statut in chauffeur.statuts_actuels:
             print(f"  - {statut.statut}: {statut.date_debut} -> {statut.date_fin}")
     
-    return render_template('chauffeurs.html', chauffeur_list=chauffeur_list, active_page='chauffeurs')
+    return render_template('legacy/chauffeurs.html', chauffeur_list=chauffeur_list, active_page='chauffeurs')
 
 # Route pour la page Utilisateurs qui affiche la liste des utilisateurs depuis la base
 @admin_only
 @bp.route('/utilisateurs')
 def utilisateurs():
     user_list = Utilisateur.query.order_by(Utilisateur.nom, Utilisateur.prenom).all()
-    return render_template('utilisateurs.html', user_list=user_list, active_page='utilisateurs')
+    return render_template('pages/utilisateurs.html', user_list=user_list, active_page='utilisateurs')
 
 # Route pour supprimer un chauffeur en AJAX
 @admin_only
@@ -150,5 +151,64 @@ def get_statuts_chauffeur_ajax(chauffeur_id: int):
         )
         data = [s.to_dict() for s in statuts]
         return jsonify({'success': True, 'statuts': data})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+# Route pour récupérer la planification complète des chauffeurs (pour impression)
+@admin_only
+@bp.route('/get_chauffeurs_planning_ajax', methods=['GET'])
+def get_chauffeurs_planning_ajax():
+    try:
+        from datetime import datetime, timedelta
+
+        # Récupérer tous les chauffeurs avec leurs statuts actuels et futurs
+        chauffeurs = Chauffeur.query.order_by(Chauffeur.nom).all()
+        planning_data = []
+
+        for chauffeur in chauffeurs:
+            # Récupérer tous les statuts (actuels et futurs) pour ce chauffeur
+            now = datetime.now()
+            statuts = (
+                ChauffeurStatut.query
+                .filter(
+                    ChauffeurStatut.chauffeur_id == chauffeur.chauffeur_id,
+                    ChauffeurStatut.date_fin >= now  # Statuts actuels et futurs
+                )
+                .order_by(ChauffeurStatut.date_debut)
+                .all()
+            )
+
+            if statuts:
+                for statut in statuts:
+                    # Calculer la durée
+                    duree_jours = (statut.date_fin - statut.date_debut).days + 1
+                    duree_str = f"{duree_jours} jour{'s' if duree_jours > 1 else ''}"
+
+                    # Mapper les statuts pour un affichage plus lisible
+                    statut_display = {
+                        'CONGE': 'Congé',
+                        'PERMANENCE': 'Permanence',
+                        'SERVICE_WEEKEND': 'Service Week-end',
+                        'SERVICE_SEMAINE': 'Service Semaine'
+                    }.get(statut.statut, statut.statut)
+
+                    planning_data.append({
+                        'chauffeur': f"{chauffeur.nom} {chauffeur.prenom}",
+                        'statut': statut_display,
+                        'date_debut': statut.date_debut.strftime('%d/%m/%Y'),
+                        'date_fin': statut.date_fin.strftime('%d/%m/%Y'),
+                        'duree': duree_str
+                    })
+            else:
+                # Chauffeur sans statut spécifique
+                planning_data.append({
+                    'chauffeur': f"{chauffeur.nom} {chauffeur.prenom}",
+                    'statut': 'Disponible',
+                    'date_debut': '-',
+                    'date_fin': '-',
+                    'duree': '-'
+                })
+
+        return jsonify({'success': True, 'planning': planning_data})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500

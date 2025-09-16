@@ -1,32 +1,58 @@
-from flask_wtf import FlaskForm
-from wtforms import DateTimeField, SelectField, IntegerField, StringField, HiddenField, SubmitField, RadioField
-from wtforms.validators import DataRequired, NumberRange, Length
-from datetime import datetime
+"""
+Formulaire de retour Banekane (legacy)
+Phase 2 - Refactorisé pour utiliser les classes de base (élimine 25+ lignes dupliquées)
+"""
 
-class TrajetBanekaneRetourForm(FlaskForm):
-    # Point de départ fixé à Banekane (hidden pour POST, affiché disabled côté UI)
-    point_depart = HiddenField('Point de départ', default='Banekane', validators=[DataRequired()])
+from wtforms import HiddenField, RadioField, SelectField, StringField, SubmitField
+from wtforms.validators import Length
+from .base_forms import BaseTrajetForm
+from .constants import FormChoices, FormLabels
+from .validators import CommonValidators
 
-    # Sélection du type de bus
-    type_bus = RadioField('Type de bus', choices=[('AED', 'Bus AED'), ('PRESTATAIRE', 'Prestataire')], default='AED', validators=[DataRequired()])
 
-    # Champs pour Bus UdM
-    chauffeur_id = SelectField('Chauffeur Bus UdM', coerce=int)
-    numero_aed = SelectField('Numéro Bus UdM')
-    type_passagers = SelectField('Type de passagers', choices=[('ETUDIANT', 'Étudiant'), ('PERSONNEL', 'Personnel'), ('MALADE', 'Malade')])
-    kilometrage_actuel = IntegerField(
-        'Kilométrage actuel du véhicule (km)',
-        validators=[NumberRange(min=0, max=999999)],
-        render_kw={'placeholder': 'Ex: 15200'}
+class TrajetBanekaneRetourForm(BaseTrajetForm):
+    """
+    Formulaire de retour Banekane (legacy) - maintient la compatibilité
+    Hérite de BaseTrajetForm avec champs spécifiques
+    """
+
+    # Point de départ fixé à Banekane
+    point_depart = HiddenField(
+        'Point de départ',
+        default='Banekane',
+        validators=[CommonValidators.REQUIRED]
     )
 
-    # Champs pour Prestataire
-    nom_agence = SelectField('Nom Prestataire', choices=[('Charter', 'Charter'), ('Noblesse', 'Noblesse')])
+    # Sélection du type de bus
+    type_bus = RadioField(
+        'Type de bus',
+        choices=FormChoices.TYPE_BUS,
+        default='AED',
+        validators=[CommonValidators.REQUIRED]
+    )
+
+    # Champs pour Bus UdM
+    numero_bus_udm = SelectField('Numéro Bus UdM', choices=[])
+
+    # Point d'arrivée (destination du retour)
+    point_arriver = SelectField(
+        'Point d\'arrivée',
+        choices=FormChoices.LIEUX,
+        validators=CommonValidators.LIEU_ARRIVEE
+    )
+
+    # Champs pour Prestataire (legacy)
+    nom_agence = SelectField(
+        'Nom Prestataire',
+        choices=FormChoices.PRESTATAIRES_LEGACY
+    )
     immat_bus = StringField('Immatriculation Bus', [Length(max=20)])
     nom_chauffeur_agence = StringField('Nom du chauffeur (Prestataire)', [Length(max=100)])
 
-    # Champs communs
-    nombre_places_occupees = IntegerField('Nombre de places occupées', validators=[DataRequired(), NumberRange(min=0)])
-    date_heure_depart = DateTimeField('Date et heure de départ', format='%Y-%m-%dT%H:%M', default=datetime.now, validators=[DataRequired()])
+    # Bouton de soumission spécifique
+    submit = SubmitField(FormLabels.BTN_ENREGISTRER_RETOUR)
 
-    submit = SubmitField('Enregistrer le retour')
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Configuration legacy si nécessaire
+        pass

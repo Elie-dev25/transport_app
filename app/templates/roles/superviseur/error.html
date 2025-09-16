@@ -1,0 +1,72 @@
+{% extends "_base_dashboard.html" %}
+
+{% block title %}Erreur - Superviseur{% endblock %}
+
+{% set sidebar_title = "Superviseur Panel" %}
+{% set sidebar_subtitle = "Transport Universitaire" %}
+
+{% block nav_menu %}
+<div class="nav-item">
+    <a href="{{ url_for('superviseur.dashboard') }}" class="nav-link">
+        <i class="fas fa-tachometer-alt"></i> 
+        Tableau de Bord <span class="badge bg-info ms-1">Lecture</span>
+    </a>
+</div>
+<div class="nav-item">
+    <a href="{{ url_for('superviseur.bus_udm') }}" class="nav-link">
+        <i class="fas fa-bus"></i> Bus UdM
+    </a>
+</div>
+<div class="nav-item">
+    <a href="{{ url_for('superviseur.maintenance') }}" class="nav-link">
+        <i class="fas fa-wrench"></i> Maintenance
+        <span class="badge bg-info ms-1">Lecture</span>
+    </a>
+</div>
+<div class="nav-item">
+    <a href="{{ url_for('superviseur.rapports') }}" class="nav-link">
+        <i class="fas fa-chart-bar"></i> Rapports
+        <span class="badge bg-success ms-1">Export</span>
+    </a>
+</div>
+{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Erreur
+                    </h5>
+                </div>
+                <div class="card-body text-center">
+                    <div class="mb-4">
+                        <i class="fas fa-exclamation-triangle fa-4x text-danger"></i>
+                    </div>
+                    
+                    <h4 class="text-danger mb-3">Une erreur s'est produite</h4>
+                    
+                    <p class="lead">{{ message or "Une erreur inattendue s'est produite." }}</p>
+                    
+                    <div class="mt-4">
+                        <a href="{{ url_for('superviseur.dashboard') }}" class="btn btn-primary me-2">
+                            <i class="fas fa-home me-1"></i>
+                            Retour au tableau de bord
+                        </a>
+                        
+                        <button onclick="history.back()" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>
+                            Page précédente
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

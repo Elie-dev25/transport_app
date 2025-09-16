@@ -1,0 +1,52 @@
+@startuml Conception_Model_Trajets
+hide circle
+skinparam classAttributeIconSize 0
+skinparam defaultFontName Arial
+skinparam defaultMonospaceFontName Arial
+skinparam defaultFontSize 10
+skinparam linetype ortho
+skinparam shadowing false
+skinparam wrapWidth 1200
+skinparam nodesep 6
+skinparam ranksep 220
+top to bottom direction
+
+title Sous-diagramme 3/4 — Trajets et Prestataires
+
+package "Domaine - Trajets & Prestataires" {
+class Trajet {
+  - trajet_id : int
+  - busudm_id : int
+  - chauffeur_id : int
+  - charge_id : int
+  - prestataire_id : int
+  - type_trajet : enum
+  - date_heure_depart : datetime
+  - point_depart : enum
+  - nombre_places_occupees : int
+  - point_arriver : varchar
+  - motif : varchar
+  + planifier() : void
+  + demarrer() : void
+  + terminer() : void
+  + annuler(raison : String) : void
+}
+
+class Prestataire {
+  - prestataire_id : int
+  - nom_prestataire : varchar
+  - telephone : varchar
+  - localisation : varchar
+  - email : varchar
+  + proposerTrajet(trajet : Trajet) : void
+  + accepterContrat() : void
+}
+}
+
+' Associations de ce sous-domaine
+Trajet "0..*" -- "0..1" Prestataire : engager
+Trajet "0..*" -- "0..1" Chauffeur : conduire
+Trajet "0..*" -- "0..1" BusUDM : utiliser
+Trajet "0..*" -- "0..1" ChargeTransport : enregistrer
+
+@enduml

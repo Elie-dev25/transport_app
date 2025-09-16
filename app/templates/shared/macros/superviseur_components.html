@@ -1,0 +1,288 @@
+{# ================== MACROS SUPERVISEUR ================== #}
+{# Composants réutilisables pour les pages superviseur #}
+
+{# === CARTE STATISTIQUE === #}
+{% macro stat_card(value, label, icon, color='primary', change=None) %}
+<div class="stat-card {{ color }}">
+    <div class="stat-header">
+        <div>
+            <div class="stat-value">{{ value or 0 }}</div>
+            <div class="stat-label">{{ label }}</div>
+        </div>
+        <div class="stat-icon {{ color }}">
+            <i class="fas fa-{{ icon }}"></i>
+        </div>
+    </div>
+    {% if change %}
+    <div class="stat-change {{ 'positive' if change >= 0 else 'negative' }}">
+        <i class="fas fa-arrow-{{ 'up' if change >= 0 else 'down' }}"></i>
+        <span>{{ change }}</span>
+    </div>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{# === GRILLE DE STATISTIQUES === #}
+{% macro stats_grid(stats_list) %}
+<div class="stats-grid">
+    {% for stat in stats_list %}
+        {{ stat_card(stat.value, stat.label, stat.icon, stat.color, stat.change) }}
+    {% endfor %}
+</div>
+{% endmacro %}
+
+{# === SECTION AVEC TITRE === #}
+{% macro section_header(title, icon, subtitle=None) %}
+<div class="section-header">
+    <h2 class="section-title">
+        <i class="fas fa-{{ icon }}"></i>
+        {{ title }}
+    </h2>
+    {% if subtitle %}
+    <p class="section-subtitle">{{ subtitle }}</p>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{# === PAGE HEADER AVEC BREADCRUMB === #}
+{% macro page_header(title, icon, subtitle=None, breadcrumb=None) %}
+<div class="page-header">
+    {% if breadcrumb %}
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('superviseur.dashboard') }}">Dashboard</a></li>
+            {% for item in breadcrumb %}
+            <li class="breadcrumb-item {% if loop.last %}active{% endif %}" {% if loop.last %}aria-current="page"{% endif %}>
+                {% if not loop.last and item.url %}
+                <a href="{{ item.url }}">{{ item.name }}</a>
+                {% else %}
+                {{ item.name }}
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ol>
+    </nav>
+    {% endif %}
+
+    <div class="d-flex align-items-center justify-content-between">
+        <div>
+            <h1 class="page-title">
+                <i class="fas fa-{{ icon }} me-2"></i>
+                {{ title }}
+            </h1>
+            {% if subtitle %}
+            <p class="page-subtitle text-muted mb-0">{{ subtitle }}</p>
+            {% endif %}
+        </div>
+        <div class="page-actions">
+            {{ caller() if caller }}
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+{# === CONTENEUR DE TABLEAU === #}
+{% macro table_container(title, icon, search=False, subtitle=None) %}
+<div class="table-container">
+    {{ section_header(title, icon, subtitle) }}
+
+    {% if search %}
+    <div class="table-search">
+        <input type="text" class="search-input" placeholder="Rechercher..." id="tableSearch">
+    </div>
+    {% endif %}
+
+    <div class="table-responsive">
+        {{ caller() }}
+    </div>
+</div>
+{% endmacro %}
+
+{# === BADGE DE STATUT === #}
+{% macro status_badge(status, icon=None, custom_class=None) %}
+{% set badge_class = custom_class or {
+    'ACTIF': 'active',
+    'INACTIF': 'inactive', 
+    'DEFAILLANT': 'maintenance',
+    'DISPONIBLE': 'available',
+    'EN_MAINTENANCE': 'maintenance',
+    'RESOLU': 'active',
+    'OUVERT': 'inactive',
+    'ADMIN': 'primary',
+    'SUPERVISEUR': 'info',
+    'CHAUFFEUR': 'success',
+    'MECANICIEN': 'warning',
+    'CHARGE': 'secondary'
+}.get(status, 'secondary') %}
+
+<span class="status-badge {{ badge_class }}">
+    {% if icon %}<i class="fas fa-{{ icon }} me-1"></i>{% endif %}
+    {{ status }}
+</span>
+{% endmacro %}
+
+{# === BOUTONS D'ACTION DANS TABLEAU === #}
+{% macro table_actions(actions) %}
+<div class="table-actions">
+    {% for action in actions %}
+    <a href="{{ action.url }}" class="table-btn {{ action.type }}" 
+       {% if action.title %}title="{{ action.title }}"{% endif %}>
+        <i class="fas fa-{{ action.icon }}"></i>
+        {% if action.text %}{{ action.text }}{% endif %}
+    </a>
+    {% endfor %}
+</div>
+{% endmacro %}
+
+{# === BOUTON D'ACTION PRINCIPAL === #}
+{% macro action_button(url, text, icon, color='primary', size='normal') %}
+<a href="{{ url }}" class="btn btn-{{ color }} {% if size == 'large' %}btn-lg{% endif %}">
+    <i class="fas fa-{{ icon }}"></i>
+    {{ text }}
+</a>
+{% endmacro %}
+
+{# === GRILLE D'ACTIONS RAPIDES === #}
+{% macro quick_actions(actions) %}
+<div class="quick-actions">
+    {{ section_header('Actions Rapides', 'bolt') }}
+    <div class="actions-grid">
+        {% for action in actions %}
+        <a href="{{ action.url }}" class="action-btn">
+            <i class="fas fa-{{ action.icon }}"></i>
+            <span>{{ action.text }}</span>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endmacro %}
+
+{# === CARTE D'INFORMATION === #}
+{% macro info_card(title, content, icon, color='info') %}
+<div class="card border-{{ color }}">
+    <div class="card-header bg-{{ color }} text-white">
+        <h6 class="card-title mb-0">
+            <i class="fas fa-{{ icon }} me-2"></i>{{ title }}
+        </h6>
+    </div>
+    <div class="card-body">
+        {{ content|safe }}
+    </div>
+</div>
+{% endmacro %}
+
+{# === PAGINATION === #}
+{% macro pagination(current_page, total_pages, base_url) %}
+{% if total_pages > 1 %}
+<div class="table-pagination">
+    <div class="pagination-info">
+        Page {{ current_page }} sur {{ total_pages }}
+    </div>
+    <div class="pagination-controls">
+        {% if current_page > 1 %}
+        <a href="{{ base_url }}?page={{ current_page - 1 }}" class="pagination-btn">
+            <i class="fas fa-chevron-left"></i>
+        </a>
+        {% endif %}
+        
+        {% for page in range(1, total_pages + 1) %}
+        {% if page == current_page %}
+        <span class="pagination-btn active">{{ page }}</span>
+        {% else %}
+        <a href="{{ base_url }}?page={{ page }}" class="pagination-btn">{{ page }}</a>
+        {% endif %}
+        {% endfor %}
+        
+        {% if current_page < total_pages %}
+        <a href="{{ base_url }}?page={{ current_page + 1 }}" class="pagination-btn">
+            <i class="fas fa-chevron-right"></i>
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+{% endmacro %}
+
+{# === ALERTE/NOTIFICATION === #}
+{% macro alert(message, type='info', icon=None, dismissible=True) %}
+<div class="alert alert-{{ type }} {% if dismissible %}alert-dismissible fade show{% endif %}" role="alert">
+    {% if icon %}<i class="fas fa-{{ icon }} me-2"></i>{% endif %}
+    {{ message }}
+    {% if dismissible %}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{# === MÉTRIQUES EN TEMPS RÉEL === #}
+{% macro trafic_section(trafic_data) %}
+<div class="trafic-section">
+    {{ section_header('Trafic Temps Réel', 'chart-line') }}
+    <div class="trafic-grid">
+        {% for item in trafic_data %}
+        <div class="trafic-card {{ item.type }}">
+            <div class="trafic-number">{{ item.value }}</div>
+            <div class="trafic-label">{{ item.label }}</div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endmacro %}
+
+{# === TABLEAU STANDARD === #}
+{% macro data_table(headers, rows, actions=None, search=True) %}
+<table class="table table-striped table-hover">
+    <thead>
+        <tr>
+            {% for header in headers %}
+            <th>{{ header }}</th>
+            {% endfor %}
+            {% if actions %}<th>Actions</th>{% endif %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in rows %}
+        <tr>
+            {% for cell in row %}
+            <td>{{ cell }}</td>
+            {% endfor %}
+            {% if actions %}
+            <td>{{ table_actions(actions) }}</td>
+            {% endif %}
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="{{ headers|length + (1 if actions else 0) }}" class="text-center text-muted py-4">
+                Aucune donnée disponible
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endmacro %}
+
+{# === CARTE D'INFORMATION === #}
+{% macro info_card(title, icon, content, color="primary") %}
+<div class="info-card border-{{ color }}">
+    <div class="info-card-header">
+        <h5 class="mb-0">
+            <i class="fas fa-{{ icon }} text-{{ color }} me-2"></i>
+            {{ title }}
+        </h5>
+    </div>
+    <div class="info-card-body">
+        {{ content|safe }}
+    </div>
+</div>
+{% endmacro %}
+
+{# === GRILLE DE CARTES === #}
+{% macro cards_grid(cards, columns=3) %}
+<div class="row">
+    {% for card in cards %}
+    <div class="col-md-{{ 12 // columns }} mb-4">
+        {{ info_card(card.title, card.icon, card.content, card.color|default('primary')) }}
+    </div>
+    {% endfor %}
+</div>
+{% endmacro %}

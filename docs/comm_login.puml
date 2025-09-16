@@ -1,0 +1,28 @@
+@startuml Communication_Login
+skinparam defaultFontName Arial
+skinparam shadowing false
+skinparam dpi 150
+left to right direction
+
+' Diagramme de communication: Authentification
+actor "Utilisateur" as User
+rectangle "Web UI" as UI
+rectangle "AuthController" as AuthC
+rectangle "AuthService (Flask-Login)" as AuthS
+database "DB" as DB
+rectangle "NotificationService" as Notif
+
+User -[#black]-> UI : 1: saisir identifiants
+UI -[#black]-> AuthC : 2: POST /login(login, pwd)
+AuthC -[#black]-> AuthS : 3: authenticate(login, pwd)
+AuthS -[#black]-> DB : 3.1: find_user_by_login(login)
+DB -[#black]-> AuthS : 3.2: user, hash, role
+AuthS -[#black]-> AuthS : 3.3: verify_password()
+AuthS -[#black]-> AuthC : 3.4: issue_session(user)
+AuthC -[#black]-> UI : 4: redirect(dashboard)
+UI -[#black]-> User : 5: afficher tableau de bord
+
+' Optionnel: notification de nouvelle connexion
+AuthC -[#gray]-> Notif : 4.1: send_login_event(user) <<extend>>
+
+@enduml

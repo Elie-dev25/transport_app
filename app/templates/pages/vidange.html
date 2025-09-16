@@ -1,0 +1,293 @@
+{% extends base_template if base_template is defined else "roles/admin/_base_admin.html" %}
+{% from 'shared/macros/tableaux_components.html' import table_container, status_badge, level_indicator, voyant_indicator, icon_cell, date_cell, number_cell %}
+
+{% block title %}Vidange{% endblock %}
+
+{% set active_page = 'vidange' %}
+{% set page_title = 'Gestion des Vidanges' %}
+{% set readonly = readonly or superviseur_mode %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tableaux.css') }}">
+<script src="{{ url_for('static', filename='js/tableaux.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="container-fluid">
+    <!-- Tableau des bus pour vidange -->
+    {% call table_container('Gestion des Vidanges', 'oil-can', search=true, subtitle='Suivi et planification des vidanges de véhicules', table_id='vidangeTable') %}
+        <table class="table table-striped table-hover sortable">
+            <thead>
+                <tr>
+                    <th>Numéro</th>
+                    <th>Kilométrage</th>
+                    <th>Seuil Critique</th>
+                    <th>Dernière Vidange</th>
+                    <th>État</th>
+                    {% if not readonly %}
+                    <th class="no-sort">Actions</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for bus in bus_vidange %}
+                <tr data-bus-id="{{ bus.id }}">
+                    <td>{{ number_cell(bus.numero, 'AED-') }}</td>
+                    <td>
+                        {% if bus.kilometrage %}
+                            {{ icon_cell('tachometer-alt', "{:,}".format(bus.kilometrage) + ' km') }}
+                        {% else %}
+                            <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if bus.km_critique_huile %}
+                            {{ icon_cell('exclamation-triangle', "{:,}".format(bus.km_critique_huile) + ' km', 'warning') }}
+                        {% else %}
+                            <span class="text-muted">Non défini</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ date_cell(bus.date_derniere_vidange) }}</td>
+                    <td>
+                        {% if bus.voyant == 'green' %}
+                            {{ status_badge('OK', 'success', 'check-circle') }}
+                        {% elif bus.voyant == 'orange' %}
+                            {{ status_badge('Bientôt à faire', 'warning', 'clock') }}
+                        {% else %}
+                            {{ status_badge('À faire !', 'danger', 'exclamation-triangle') }}
+                        {% endif %}
+                    </td>
+                    {% if not readonly %}
+                    <td>
+                        <div class="table-actions">
+                            <button class="table-btn action" title="Effectuer une vidange" type="button"
+                                data-open-formulaire-direct="1"
+                                data-bus-id="{{ bus.id }}"
+                                data-numero="{{ bus.numero|e }}"
+                                data-demandeur="{{ (((current_user.nom ~ ' ' ~ current_user.prenom)|trim) or current_user.login)|e }}">
+                                <i class="fas fa-oil-can"></i>
+                                Vidanger
+                            </button>
+                        </div>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="table-empty">
+                        <i class="fas fa-oil-can"></i>
+                        <h5>Aucun bus enregistré</h5>
+                        <p>Les véhicules apparaîtront ici pour la gestion des vidanges.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endcall %}
+</div>
+
+
+{# --- Modales --- #}
+
+<!-- Modale formulaire de confirmation vidange (single instance) -->
+<div id="formulaireVidangeModal" class="modal" aria-hidden="true">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-oil-can"></i> Formulaire de confirmation vidange</h3>
+            <button type="button" class="close-btn" onclick="closeFormulaireVidangeModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+        <form id="formulaire-vidange">
+            <input type="hidden" id="bus_udm_id_hidden" name="bus_udm_id_hidden">
+            <div style="margin-bottom:18px;">
+                <label for="numero_udm">Numéro UdM :</label>
+                <input type="text" id="numero_udm" name="numero_udm" readonly style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;background:#f3f4f6;">
+            </div>
+            <div style="margin-bottom:18px;">
+                <label for="kilometrage">Kilométrage :</label>
+                <input type="number" id="kilometrage" name="kilometrage" min="0" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
+            </div>
+            <div style="margin-bottom:18px;">
+                <label for="type_huile">Type d'huile :</label>
+                <select id="type_huile" name="type_huile" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
+                    <option value="Quartz 5000 20W-50">Quartz 5000 20W-50</option>
+                    <option value="Quartz 7000 10W-40">Quartz 7000 10W-40</option>
+                    <option value="Quartz 9000 5W-40">Quartz 9000 5W-40</option>
+                    <option value="Rubia TIR 7400 15W-40">Rubia TIR 7400 15W-40</option>
+                    <option value="Rubia TIR 9900 FE 5W-30">Rubia TIR 9900 FE 5W-30</option>
+                    <option value="Rubia Fleet HD 400 15W-40">Rubia Fleet HD 400 15W-40</option>
+                </select>
+            </div>
+            <div style="margin-bottom:18px;">
+                <label for="remarque">Remarque :</label>
+                <textarea id="remarque" name="remarque" rows="3" style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;"></textarea>
+            </div>
+            <button type="submit" class="action-btn" style="width:100%;margin-top:12px;"><i class="fas fa-save"></i> Enregistrer la vidange</button>
+        </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('formulaire-vidange');
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const kilometrage = document.getElementById('kilometrage').value;
+        const type_huile = document.getElementById('type_huile').value;
+        const remarque = document.getElementById('remarque').value;
+        const bus_udm_id = document.getElementById('bus_udm_id_hidden').value;
+        if (!bus_udm_id) {
+            alert("Erreur : aucun véhicule sélectionné. Veuillez ouvrir la fiche de vidange avant de confirmer.");
+            return;
+        }
+
+        // Prepare CSRF header if available
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+        if (csrfToken) headers['X-CSRFToken'] = csrfToken;
+
+        fetch('{{ post_url }}', {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify({
+                bus_udm_id: bus_udm_id,
+                kilometrage: kilometrage,
+                type_huile: type_huile,
+                remarque: remarque
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Vidange enregistrée avec succès !');
+                
+                // Mettre à jour la ligne du tableau si les données sont retournées
+                if (data.bus_updated) {
+                    const busRow = document.querySelector(`tr[data-bus-id="${data.bus_updated.id}"]`);
+                    if (busRow) {
+                        const cells = busRow.querySelectorAll('td');
+                        if (cells.length >= 5) {
+                            // Mettre à jour kilométrage (colonne 1)
+                            cells[1].textContent = data.bus_updated.kilometrage || '-';
+                            // Mettre à jour km critique huile (colonne 2)
+                            cells[2].textContent = data.bus_updated.km_critique_huile || '-';
+                            // Mettre à jour dernière vidange (colonne 3)
+                            cells[3].textContent = data.bus_updated.date_derniere_vidange || '-';
+                            // Mettre à jour voyant (colonne 4)
+                            const indicator = cells[4].querySelector('.indicator');
+                            if (indicator) {
+                                indicator.className = `indicator ${data.bus_updated.voyant}`;
+                            }
+                            const statusText = cells[4].querySelector('span:last-child');
+                            if (statusText) {
+                                if (data.bus_updated.voyant === 'green') {
+                                    statusText.textContent = 'OK';
+                                } else if (data.bus_updated.voyant === 'orange') {
+                                    statusText.textContent = 'Bientôt à faire';
+                                } else {
+                                    statusText.textContent = 'À faire !';
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                closeFormulaireVidangeModal();
+            } else {
+                alert('Erreur lors de l\'enregistrement de la vidange.');
+            }
+        })
+        .catch(() => {
+            alert('Erreur serveur.');
+        });
+    });
+});
+</script>
+
+    {# --- Historique des Vidanges --- #}
+    <div style="margin-top: 40px;">
+        {% call table_container('Historique des Vidanges', 'history', search=false, subtitle='Historique complet des vidanges effectuées', table_id='historiqueTable') %}
+            <!-- Filtres -->
+            <div class="table-filters" style="margin-bottom: 20px; padding: 15px; background: #f8fafc; border-radius: 10px;">
+                <div style="display:flex;gap:15px;align-items:center;flex-wrap:wrap;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <label for="numero_udm" style="font-weight:500;"><i class="fas fa-bus"></i> Véhicule :</label>
+                        <select name="numero_udm" id="numero_udm" onchange="filterHistoriqueVidange(this.value)"
+                                style="padding:8px 12px;border:2px solid #e5e7eb;border-radius:8px;background:white;">
+                            <option value="">Tous les véhicules</option>
+                            {% for numero in numeros_aed %}
+                                <option value="{{ numero }}" {% if numero == selected_numero %}selected{% endif %}>AED-{{ numero }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <label style="font-weight:500;"><i class="fas fa-calendar"></i> Période :</label>
+                        <input type="date" id="vid_date_debut" value="{{ selected_date_debut or '' }}"
+                               onchange="filterHistoriqueVidange(document.getElementById('numero_udm').value)"
+                               style="padding:8px;border:2px solid #e5e7eb;border-radius:8px;" />
+                        <span style="color:#6b7280;">au</span>
+                        <input type="date" id="vid_date_fin" value="{{ selected_date_fin or '' }}"
+                               onchange="filterHistoriqueVidange(document.getElementById('numero_udm').value)"
+                               style="padding:8px;border:2px solid #e5e7eb;border-radius:8px;" />
+                    </div>
+                    <button type="button" title="Effacer filtres" onclick="clearHistoriqueVidangeFilters()"
+                            class="table-btn delete" style="margin-left:10px;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <span id="vid_loader" style="display:none;align-items:center;gap:6px;color:#6b7280;">
+                        <i class="fas fa-spinner fa-spin"></i> Chargement...
+                    </span>
+                </div>
+            </div>
+
+            <!-- Tableau historique -->
+            <div style="max-height: 400px; overflow-y: auto;">
+                <table class="table table-striped table-hover">
+                    <thead style="position: sticky; top: 0; z-index: 10;">
+                        <tr>
+                            <th>Véhicule</th>
+                            <th>Date</th>
+                            <th>Kilométrage</th>
+                            <th>Type d'huile</th>
+                            <th>Remarque</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historique-vid-body">
+                    {% for v in historique_vidange %}
+                        <tr>
+                            <td>{{ number_cell(v.bus_udm.numero, 'AED-') }}</td>
+                            <td>{{ date_cell(v.date_vidange) }}</td>
+                            <td>{{ icon_cell('tachometer-alt', "{:,}".format(v.kilometrage) + ' km') }}</td>
+                            <td>{{ icon_cell('oil-can', v.type_huile or 'Non spécifié') }}</td>
+                            <td>
+                                {% if v.remarque %}
+                                    <span class="text-muted">{{ v.remarque }}</span>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="table-empty">
+                                <i class="fas fa-history"></i>
+                                <h5>Aucune vidange enregistrée</h5>
+                                <p>L'historique des vidanges apparaîtra ici.</p>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endcall %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,208 @@
+{#
+Include pour les statistiques de dashboard
+Phase 4 - Centralise l'affichage des stats dans tous les dashboards
+#}
+
+{% from 'shared/macros/common_macros.html' import render_stats_cards, render_trafic_info %}
+
+{# Configuration des cartes de statistiques par défaut #}
+{% set default_stats_config = {
+    'bus_actifs': {
+        'title': 'Bus Actifs',
+        'icon': 'fas fa-bus',
+        'icon_class': 'text-success',
+        'card_class': 'border-success',
+        'col_size': 3
+    },
+    'trajets_jour_aed': {
+        'title': 'Trajets Bus UdM',
+        'icon': 'fas fa-route',
+        'icon_class': 'text-primary',
+        'card_class': 'border-primary',
+        'col_size': 3
+    },
+    'trajets_jour_bus_agence': {
+        'title': 'Trajets Prestataires',
+        'icon': 'fas fa-truck',
+        'icon_class': 'text-info',
+        'card_class': 'border-info',
+        'col_size': 3
+    },
+    'etudiants': {
+        'title': 'Étudiants sur Campus',
+        'icon': 'fas fa-users',
+        'icon_class': 'text-warning',
+        'card_class': 'border-warning',
+        'col_size': 3
+    },
+    'bus_maintenance': {
+        'title': 'Bus en Maintenance',
+        'icon': 'fas fa-wrench',
+        'icon_class': 'text-danger',
+        'card_class': 'border-danger',
+        'col_size': 3
+    },
+    'chauffeurs_disponibles': {
+        'title': 'Chauffeurs Disponibles',
+        'icon': 'fas fa-user-tie',
+        'icon_class': 'text-success',
+        'card_class': 'border-success',
+        'col_size': 3
+    }
+} %}
+
+{# Affichage des statistiques principales #}
+<div class="mb-4">
+    <h3 class="mb-3">
+        <i class="fas fa-chart-bar"></i> Statistiques du Jour
+    </h3>
+    
+    {# Utiliser la configuration personnalisée si fournie, sinon la configuration par défaut #}
+    {% set stats_config = custom_stats_config if custom_stats_config is defined else default_stats_config %}
+    
+    {{ render_stats_cards(stats, stats_config) }}
+</div>
+
+{# Affichage du trafic étudiants si disponible #}
+{% if trafic is defined and trafic %}
+<div class="mb-4">
+    <h3 class="mb-3">
+        <i class="fas fa-exchange-alt"></i> Trafic en Temps Réel
+    </h3>
+    
+    <div class="row">
+        <div class="col-md-6">
+            {{ render_trafic_info(trafic, show_details=true) }}
+        </div>
+        
+        {# Graphique ou informations supplémentaires #}
+        <div class="col-md-6">
+            <div class="card border-secondary">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-line"></i> Tendances</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <h5 class="text-success">
+                                {% if trafic.arrives > trafic.partis %}
+                                    <i class="fas fa-arrow-up"></i> +{{ trafic.arrives - trafic.partis }}
+                                {% elif trafic.partis > trafic.arrives %}
+                                    <i class="fas fa-arrow-down"></i> -{{ trafic.partis - trafic.arrives }}
+                                {% else %}
+                                    <i class="fas fa-equals"></i> 0
+                                {% endif %}
+                            </h5>
+                            <small>Variation nette</small>
+                        </div>
+                        <div class="col-6">
+                            <h5 class="text-info">
+                                {{ ((trafic.arrives / (trafic.arrives + trafic.partis)) * 100)|round(1) if (trafic.arrives + trafic.partis) > 0 else 0 }}%
+                            </h5>
+                            <small>Taux d'arrivée</small>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="progress mb-2">
+                        {% set total_movement = trafic.arrives + trafic.partis %}
+                        {% if total_movement > 0 %}
+                            <div class="progress-bar bg-success" style="width: {{ (trafic.arrives / total_movement) * 100 }}%"></div>
+                            <div class="progress-bar bg-warning" style="width: {{ (trafic.partis / total_movement) * 100 }}%"></div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <small><span class="badge badge-success">Arrivées</span></small>
+                        <small><span class="badge badge-warning">Départs</span></small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{# Statistiques spécifiques au rôle si définies #}
+{% if role_specific_stats is defined and role_specific_stats %}
+<div class="mb-4">
+    <h3 class="mb-3">
+        <i class="fas fa-user-cog"></i> Statistiques Personnelles
+    </h3>
+    
+    {% if current_user.role == 'CHAUFFEUR' %}
+        {# Statistiques spécifiques chauffeur #}
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card border-primary">
+                    <div class="card-body text-center">
+                        <i class="fas fa-route fa-2x text-primary mb-3"></i>
+                        <h4>{{ role_specific_stats.get('mes_trajets_aujourdhui', 0) }}</h4>
+                        <p>Mes Trajets Aujourd'hui</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-success">
+                    <div class="card-body text-center">
+                        <i class="fas fa-arrow-right fa-2x text-success mb-3"></i>
+                        <h4>{{ role_specific_stats.get('etudiants_pour_campus', 0) }}</h4>
+                        <p>Étudiants Amenés</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-warning">
+                    <div class="card-body text-center">
+                        <i class="fas fa-arrow-left fa-2x text-warning mb-3"></i>
+                        <h4>{{ role_specific_stats.get('personnes_du_campus', 0) }}</h4>
+                        <p>Personnes Reconduites</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% elif current_user.role == 'MECANICIEN' %}
+        {# Statistiques spécifiques mécanicien #}
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card border-danger">
+                    <div class="card-body text-center">
+                        <i class="fas fa-wrench fa-2x text-danger mb-3"></i>
+                        <h4>{{ role_specific_stats.get('reparations_en_cours', 0) }}</h4>
+                        <p>Réparations en Cours</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card border-success">
+                    <div class="card-body text-center">
+                        <i class="fas fa-check-circle fa-2x text-success mb-3"></i>
+                        <h4>{{ role_specific_stats.get('reparations_terminees', 0) }}</h4>
+                        <p>Réparations Terminées</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endif %}
+
+{# Alertes et notifications importantes #}
+{% if important_alerts is defined and important_alerts %}
+<div class="mb-4">
+    <h3 class="mb-3">
+        <i class="fas fa-exclamation-triangle"></i> Alertes Importantes
+    </h3>
+    
+    {% for alert in important_alerts %}
+    <div class="alert alert-{{ alert.type|default('warning') }} alert-dismissible fade show" role="alert">
+        <i class="{{ alert.icon|default('fas fa-exclamation-triangle') }}"></i>
+        <strong>{{ alert.title|default('Attention') }}:</strong> {{ alert.message }}
+        <button type="button" class="close" data-dismiss="alert">
+            <span>&times;</span>
+        </button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}

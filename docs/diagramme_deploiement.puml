@@ -1,0 +1,135 @@
+@startuml Diagramme_Deploiement_Transport_UDM
+' =============================================
+' Diagramme de déploiement (Dev local + Prod)
+' =============================================
+skinparam defaultFontName Arial
+skinparam shadowing false
+skinparam dpi 150
+left to right direction
+skinparam wrapWidth 2000
+
+' =====================
+' ACTEURS / CLIENTS
+' =====================
+actor "Administrateur" as ADM
+actor "Responsable" as RESP
+actor "Superviseur" as SUP
+actor "Charge Transport" as CT
+actor "Chauffeur" as CH
+actor "Mécanicien" as MEC
+
+node "Client (Navigateur Web)" as BROWSER {
+  [Chrome/Edge/Firefox]
+}
+
+ADM --> BROWSER
+RESP --> BROWSER
+SUP --> BROWSER
+CT --> BROWSER
+CH --> BROWSER
+MEC --> BROWSER
+
+' =====================
+' ENVIRONNEMENT DEV LOCAL
+' =====================
+node "PC Développeur (Windows)" as DEV {
+  node "Python 3.13 + venv" as PYDEV {
+    artifact "Flask App (Transport UdM)" as FLASK_DEV <<Flask>>
+    artifact "SQLAlchemy ORM" as ORM_DEV
+  }
+  database "SQLite (instance/transport_udm.db)" as SQLITE_DEV
+  node "PlantUML Preview (IDE)" as PUML_DEV
+}
+
+BROWSER --> FLASK_DEV : HTTP 127.0.0.1:5000
+FLASK_DEV --> SQLITE_DEV : sqlite file I/O
+FLASK_DEV ..> PUML_DEV : génération/preview docs (local)
+
+' =====================
+' ENVIRONNEMENT PRODUCTION (cible de référence)
+' =====================
+node "Data Center / Cloud" as DC {
+  node "Zone Publique" as ZPUB {
+    node "Reverse Proxy" as NGINX <<Nginx>> {
+      [TLS termination]
+    }
+  }
+  node "Zone Applicative" as ZAPP {
+    node "Serveur Applicatif" as APP {
+      node "Python Runtime" as PYPROD {
+        artifact "Gunicorn/uWSGI" as WSGI <<WSGI>>
+        artifact "Flask App (Transport UdM)" as FLASK_PROD <<Flask>>
+        artifact "SQLAlchemy ORM" as ORM_PROD
+        artifact "Scheduler (cron)" as CRON
+      }
+    }
+  }
+  node "Zone Données" as ZDATA {
+    database "SGBD (MySQL/PostgreSQL)" as DB_PROD
+    node "Stockage Fichiers" as FILES <<NAS/S3>>
+    node "Système de Logs" as LOGS
+  }
+  node "Services Externes" as EXT {
+    node "SSO/IdP" as SSO
+    node "Email/SMS" as EMAIL
+    node "BI/ETL" as BI
+  }
+}
+
+' =====================
+' LIAISONS / PORTS
+' =====================
+BROWSER --> NGINX : HTTPS :443
+NGINX --> WSGI : HTTP :8000
+WSGI --> FLASK_PROD : WSGI in-proc
+
+FLASK_PROD --> DB_PROD : TCP :3306/:5432
+FLASK_PROD --> FILES : NFS/S3 API
+FLASK_PROD --> LOGS : UDP/TCP :514 (syslog) <<optionnel>>
+
+FLASK_PROD ..> EMAIL : SMTP/HTTPS (API)
+FLASK_PROD ..> SSO : OIDC/SAML <<optionnel>>
+FLASK_PROD ..> BI : HTTPS (push dataset) <<optionnel>>
+
+CRON --> FLASK_PROD : appeler tâches internes (FuelAlert)
+CRON --> DB_PROD : lecture/écriture FuelAlertState
+CRON ..> EMAIL : notifications alertes
+
+' =====================
+' COMPOSANTS LOGIQUES (rappel)
+' =====================
+package "Composants Logiques (dans Flask App)" as LOGIC {
+  [AuthController / Flask-Login]
+  [User/Bus/Doc/Trajet/Carbu/Vidange/Panne/Depannage Controllers]
+  [Reporting/Export/Notification Services]
+  [FuelAlertService (tâches planifiées)]
+}
+FLASK_DEV .. LOGIC
+FLASK_PROD .. LOGIC
+
+' =====================
+' SECURITE / OBSERVABILITE
+' =====================
+rectangle "Sécurité & Observabilité" as SEC {
+  [TLS sur Nginx]
+  [RBAC par rôle (middlewares)]
+  [Logs applicatifs/accès]
+  [Backups DB et fichiers]
+}
+NGINX .. SEC
+FLASK_PROD .. SEC
+DB_PROD .. SEC
+FILES .. SEC
+
+' =====================
+' LEGENDES
+' =====================
+legend right
+Dev Local: Flask dev server + SQLite (instance/transport_udm.db)
+Prod: Nginx (TLS) -> WSGI (Gunicorn/uWSGI) -> Flask App -> DB (MySQL/PG)
+Stockage fichiers: documents véhicules
+Scheduler: vérifs carburant/alertes
+SSO/Email/BI: intégrations optionnelles
+end legend
+
+@enduml

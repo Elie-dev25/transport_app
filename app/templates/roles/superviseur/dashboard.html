@@ -1,0 +1,298 @@
+{% set active_page = 'dashboard' %}
+{% extends "roles/superviseur/_base_superviseur.html" %}
+
+{% block title %}Dashboard Superviseur{% endblock %}
+
+{% block extra_head %}
+<link href="{{ url_for('static', filename='css/cards.css') }}" rel="stylesheet">
+<link href="{{ url_for('static', filename='css/buttons.css') }}" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block superviseur_content %}
+
+
+{% if error %}
+    <div class="alert alert-danger" role="alert">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        {{ error }}
+    </div>
+{% else %}
+
+    <!-- Statistiques principales -->
+    <div class="stats-grid">
+        <div class="stat-card blue">
+            <div class="stat-header">
+                <div>
+                    <div class="stat-value">{{ stats.bus_actifs or 0 }}</div>
+                    <div class="stat-label">Bus Actifs</div>
+                </div>
+                <div class="stat-icon blue">
+                    <i class="fas fa-bus"></i>
+                </div>
+            </div>
+            {% if stats.bus_actifs_change %}
+            <div class="stat-change positive">
+                <i class="fas fa-arrow-up"></i>
+                <span>{{ stats.bus_actifs_change }}</span>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="stat-card success">
+            <div class="stat-header">
+                <div>
+                    <div class="stat-value">{{ stats.trajets_jour_aed or 0 }}</div>
+                    <div class="stat-label">Trajets du Jour Bus UdM</div>
+                </div>
+                <div class="stat-icon green">
+                    <i class="fas fa-route"></i>
+                </div>
+            </div>
+            {% if stats.trajets_jour_change %}
+            <div class="stat-change positive">
+                <i class="fas fa-arrow-up"></i>
+                <span>{{ stats.trajets_jour_change }}</span>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="stat-card info">
+            <div class="stat-header">
+                <div>
+                    <div class="stat-value">{{ stats.trajets_jour_bus_agence or 0 }}</div>
+                    <div class="stat-label">Trajets du Jour Prestataire</div>
+                </div>
+                <div class="stat-icon purple">
+                    <i class="fas fa-bus-alt"></i>
+                </div>
+            </div>
+            <div class="stat-change positive">
+                <i class="fas fa-arrow-up"></i>
+                <span></span>
+            </div>
+        </div>
+
+        <div class="stat-card blue">
+            <div class="stat-header">
+                <div>
+                    <div class="stat-value">{{ stats.etudiants or 0 }}</div>
+                    <div class="stat-label">Étudiants sur Campus</div>
+                </div>
+                <div class="stat-icon blue">
+                    <i class="fas fa-users"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card orange">
+            <div class="stat-header">
+                <div>
+                    <div class="stat-value">{{ stats.bus_maintenance or 0 }}</div>
+                    <div class="stat-label">Bus en Maintenance</div>
+                </div>
+                <div class="stat-icon orange">
+                    <i class="fas fa-wrench"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Trafic Étudiants - Temps Réel -->
+    {% if trafic %}
+    <div class="trafic-section">
+        <h2 class="section-title"><i class="fas fa-chart-line"></i> Trafic Étudiants - Temps Réel</h2>
+        <div class="trafic-grid">
+            <div class="trafic-card arrived">
+                <div class="trafic-number">{{ trafic.arrives or 0 }}</div>
+                <div class="trafic-label">Arrivés au Campus</div>
+            </div>
+            <div class="trafic-card present">
+                <div class="trafic-number">{{ trafic.present or 0 }}</div>
+                <div class="trafic-label">Présents au Campus</div>
+            </div>
+            <div class="trafic-card departed">
+                <div class="trafic-number">{{ trafic.partis or 0 }}</div>
+                <div class="trafic-label">Partis du Campus</div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Bus nécessitant une attention -->
+    {% if buses_maintenance %}
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-wrench me-2"></i>
+                Bus Nécessitant une Attention
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Bus N°</th>
+                            <th>Immatriculation</th>
+                            <th>Statut</th>
+                            <th>Raisons</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for bus in buses_maintenance %}
+                        <tr>
+                            <td>{{ bus.numero }}</td>
+                            <td>{{ bus.immatriculation }}</td>
+                            <td>
+                                <span class="badge bg-warning">{{ bus.statut }}</span>
+                            </td>
+                            <td>
+                                {% for raison in bus.raisons_maintenance %}
+                                    <span class="badge bg-secondary me-1">{{ raison }}</span>
+                                {% endfor %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Pannes critiques -->
+{% if pannes_critiques %}
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-exclamation-triangle me-2 text-danger"></i>
+            Pannes Critiques
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Bus N°</th>
+                        <th>Description</th>
+                        <th>Immobilisation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for panne in pannes_critiques %}
+                    <tr>
+                        <td>{{ panne.date_heure.strftime('%d/%m %H:%M') if panne.date_heure else '' }}</td>
+                        <td>{{ panne.numero_bus_udm }}</td>
+                        <td>{{ panne.description[:50] }}{% if panne.description|length > 50 %}...{% endif %}</td>
+                        <td>
+                            {% if panne.immobilisation %}
+                                <span class="badge bg-danger">Oui</span>
+                            {% else %}
+                                <span class="badge bg-success">Non</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Graphiques de tendances -->
+{% if trends %}
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">Évolution des Trajets</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="trajetsChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">Évolution des Pannes</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="pannesChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Données pour les graphiques
+const trendsData = {{ trends | tojson }};
+
+// Configuration des graphiques
+if (typeof Chart !== 'undefined' && trendsData) {
+    // Graphique des trajets
+    const trajetsCtx = document.getElementById('trajetsChart').getContext('2d');
+    new Chart(trajetsCtx, {
+        type: 'line',
+        data: {
+            labels: trendsData.mois,
+            datasets: [{
+                label: 'Trajets',
+                data: trendsData.trajets,
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Graphique des pannes
+    const pannesCtx = document.getElementById('pannesChart').getContext('2d');
+    new Chart(pannesCtx, {
+        type: 'line',
+        data: {
+            labels: trendsData.mois,
+            datasets: [{
+                label: 'Pannes',
+                data: trendsData.pannes,
+                borderColor: 'rgb(255, 99, 132)',
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+</script>
+{% endif %}
+
+    {% endif %}
+</div>
+
+<script>
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,405 @@
+{% extends "roles/admin/_base_admin.html" %}
+{% from 'shared/macros/tableaux_components.html' import table_container, status_badge, icon_cell, date_cell, number_cell, money_cell %}
+
+{% block title %}Fiche personnel Bus UdM{% endblock %}
+
+{% set active_page = 'bus' %}
+{% set page_title = 'Fiche personnel Bus UdM' %}
+
+{% block dashboard_content %}
+<div class="container-fluid">
+    <!-- En-tête avec informations principales -->
+    <div class="page-header" style="margin-bottom: 30px;">
+        <div class="page-title-section">
+            <h1 class="page-title">
+                <i class="fas fa-bus"></i>
+                Fiche Personnel - Bus {{ bus.numero }}
+            </h1>
+            <p class="page-subtitle">Détails complets et gestion documentaire du véhicule</p>
+        </div>
+        <div class="page-actions">
+            <a href="{{ url_for('admin.bus') }}" class="table-btn secondary">
+                <i class="fas fa-arrow-left"></i>
+                Retour à la liste
+            </a>
+        </div>
+    </div>
+
+    <!-- Informations générales du véhicule -->
+    {% call table_container('Informations Générales', 'info-circle', search=false, subtitle='Caractéristiques techniques et état du véhicule', table_id='vehicleInfo') %}
+        <div class="info-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 20px;">
+            <!-- Carte Identification -->
+            <div class="info-card">
+                <div class="info-card-header">
+                    <i class="fas fa-id-card"></i>
+                    <h4>Identification</h4>
+                </div>
+                <div class="info-card-body">
+                    <div class="info-item">
+                        <span class="info-label">Numéro UdM :</span>
+                        <span class="info-value">{{ number_cell(bus.numero) }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Immatriculation :</span>
+                        <span class="info-value">{{ bus.immatriculation or '-' }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Numéro châssis :</span>
+                        <span class="info-value">{{ bus.numero_chassis or '-' }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Carte Caractéristiques -->
+            <div class="info-card">
+                <div class="info-card-header">
+                    <i class="fas fa-cogs"></i>
+                    <h4>Caractéristiques</h4>
+                </div>
+                <div class="info-card-body">
+                    <div class="info-item">
+                        <span class="info-label">Marque :</span>
+                        <span class="info-value">{{ bus.marque or '-' }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Modèle :</span>
+                        <span class="info-value">{{ bus.modele or '-' }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Type :</span>
+                        <span class="info-value">{{ bus.type_vehicule or '-' }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Capacité :</span>
+                        <span class="info-value">{{ icon_cell('users', bus.nombre_places|string + ' places') }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Carte État et Maintenance -->
+            <div class="info-card">
+                <div class="info-card-header">
+                    <i class="fas fa-wrench"></i>
+                    <h4>État et Maintenance</h4>
+                </div>
+                <div class="info-card-body">
+                    <div class="info-item">
+                        <span class="info-label">État véhicule :</span>
+                        <span class="info-value">
+                            {% if bus.etat_vehicule == 'BON' %}
+                                {{ status_badge('Bon état', 'success') }}
+                            {% elif bus.etat_vehicule == 'DEFAILLANT' %}
+                                {{ status_badge('Défaillant', 'danger') }}
+                            {% else %}
+                                {{ status_badge('Non défini', 'secondary') }}
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Kilométrage :</span>
+                        <span class="info-value">{{ icon_cell('tachometer-alt', "{:,}".format(bus.kilometrage) + ' km' if bus.kilometrage else 'Non défini') }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Type d'huile :</span>
+                        <span class="info-value">{{ icon_cell('oil-can', bus.type_huile or 'Non défini') }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Dernière vidange :</span>
+                        <span class="info-value">{{ date_cell(bus.date_derniere_vidange) if bus.date_derniere_vidange else '-' }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Dernière maintenance :</span>
+                        <span class="info-value">{{ date_cell(bus.derniere_maintenance) if bus.derniere_maintenance else '-' }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endcall %}
+
+    <!-- Documents administratifs -->
+    {% call table_container('Documents Administratifs', 'file-alt', search=false, subtitle='Gestion des documents et validités', table_id='documentsTable') %}
+        {% if documents and documents|length %}
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Type de Document</th>
+                        <th>Date de Production</th>
+                        <th>Date d'Expiration</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in documents %}
+                    <tr>
+                        <td>{{ icon_cell('file-alt', d.type_document.replace('_', ' ').title()) }}</td>
+                        <td>{{ date_cell(d.date_debut) if d.date_debut else '-' }}</td>
+                        <td>{{ date_cell(d.date_expiration) if d.date_expiration else 'Permanent' }}</td>
+                        <td>
+                            {% if d.status == 'ROUGE' %}
+                                {{ status_badge('Expiré', 'danger') }}
+                            {% elif d.status == 'ORANGE' %}
+                                {{ status_badge('Bientôt expiré', 'warning') }}
+                            {% else %}
+                                {{ status_badge('Valide', 'success') }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="table-btn edit"
+                                        data-action="edit-doc"
+                                        data-document-id="{{ d.document_id if d.document_id is defined else '' }}"
+                                        data-date-debut="{{ d.date_debut.isoformat() if d.date_debut else '' }}"
+                                        data-date-expiration="{{ d.date_expiration.isoformat() if d.date_expiration else '' }}"
+                                        title="Mettre à jour">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="table-empty">
+                <i class="fas fa-file-alt"></i>
+                <h5>Aucun document enregistré</h5>
+                <p>Les documents administratifs du véhicule apparaîtront ici.</p>
+            </div>
+        {% endif %}
+
+        <!-- Actions -->
+        <div class="table-footer" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+            <button id="addDocInlineBtn" type="button" class="table-btn action">
+                <i class="fas fa-file-plus"></i>
+                Ajouter un document
+            </button>
+        </div>
+    {% endcall %}
+
+    <!-- Historique des trajets -->
+    {% call table_container('Historique des Trajets', 'road', search=true, subtitle='Tous les trajets effectués par ce véhicule', table_id='trajetsTable') %}
+        {% if trajets %}
+            <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                <table class="table table-striped table-hover sortable">
+                    <thead style="position: sticky; top: 0; z-index: 10;">
+                        <tr>
+                            <th>Date</th>
+                            <th>Heure Départ</th>
+                            <th>Point Départ</th>
+                            <th>Destination</th>
+                            <th>Passagers</th>
+                            <th>Chauffeur</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for trajet in trajets %}
+                        <tr>
+                            <td>{{ date_cell(trajet.date_heure_depart.date() if trajet.date_heure_depart else None) }}</td>
+                            <td>{{ icon_cell('clock', trajet.date_heure_depart.strftime('%H:%M') if trajet.date_heure_depart else 'Non défini') }}</td>
+                            <td>{{ icon_cell('map-marker-alt', trajet.point_depart or 'Non défini') }}</td>
+                            <td>{{ icon_cell('map-marker-alt', trajet.point_arriver or 'Non défini') }}</td>
+                            <td>{{ icon_cell('users', trajet.nombre_places_occupees|string + ' passagers' if trajet.nombre_places_occupees else 'Non défini') }}</td>
+                            <td>{{ icon_cell('user', trajet.nom_chauffeur or (trajet.chauffeur.nom if trajet.chauffeur else 'Non défini')) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="table-empty">
+                <i class="fas fa-road"></i>
+                <h5>Aucun trajet enregistré</h5>
+                <p>L'historique des trajets de ce véhicule apparaîtra ici.</p>
+            </div>
+        {% endif %}
+    {% endcall %}
+
+    <!-- Historique des carburations -->
+    {% call table_container('Historique des Carburations', 'gas-pump', search=true, subtitle='Historique complet des ravitaillements en carburant', table_id='carburationsTable') %}
+        {% if carburations %}
+            <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                <table class="table table-striped table-hover sortable">
+                    <thead style="position: sticky; top: 0; z-index: 10;">
+                        <tr>
+                            <th>Date</th>
+                            <th>Kilométrage</th>
+                            <th>Quantité (L)</th>
+                            <th>Prix Unitaire</th>
+                            <th>Coût Total</th>
+                            <th>Remarques</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for carburation in carburations %}
+                        <tr>
+                            <td>{{ date_cell(carburation.date_carburation) }}</td>
+                            <td>{{ icon_cell('tachometer-alt', carburation.kilometrage|string + ' km' if carburation.kilometrage else 'Non défini') }}</td>
+                            <td>{{ icon_cell('gas-pump', carburation.quantite_litres|string + ' L' if carburation.quantite_litres else 'Non défini') }}</td>
+                            <td>{{ money_cell(carburation.prix_unitaire, 'FCFA/L') if carburation.prix_unitaire else 'Non défini' }}</td>
+                            <td>{{ money_cell(carburation.cout_total, 'FCFA') if carburation.cout_total else 'Non défini' }}</td>
+                            <td>{{ icon_cell('comment', carburation.remarque or 'Aucune') }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="table-empty">
+                <i class="fas fa-gas-pump"></i>
+                <h5>Aucune carburation enregistrée</h5>
+                <p>L'historique des carburations de ce véhicule apparaîtra ici.</p>
+            </div>
+        {% endif %}
+    {% endcall %}
+
+    <!-- Historique des vidanges -->
+    {% call table_container('Historique des Vidanges', 'oil-can', search=true, subtitle='Historique complet des vidanges et maintenances', table_id='vidangesTable') %}
+        {% if vidanges %}
+            <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                <table class="table table-striped table-hover sortable">
+                    <thead style="position: sticky; top: 0; z-index: 10;">
+                        <tr>
+                            <th>Date</th>
+                            <th>Kilométrage</th>
+                            <th>Type Huile</th>
+                            <th>Remarques</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for vidange in vidanges %}
+                        <tr>
+                            <td>{{ date_cell(vidange.date_vidange) }}</td>
+                            <td>{{ icon_cell('tachometer-alt', vidange.kilometrage|string + ' km' if vidange.kilometrage else 'Non défini') }}</td>
+                            <td>{{ icon_cell('oil-can', vidange.type_huile or 'Non défini') }}</td>
+                            <td>{{ icon_cell('comment', vidange.remarque or 'Aucune') }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="table-empty">
+                <i class="fas fa-oil-can"></i>
+                <h5>Aucune vidange enregistrée</h5>
+                <p>L'historique des vidanges de ce véhicule apparaîtra ici.</p>
+            </div>
+        {% endif %}
+    {% endcall %}
+
+    <!-- Historique des pannes -->
+    {% call table_container('Historique des Pannes', 'exclamation-triangle', search=true, subtitle='Historique complet des pannes et réparations', table_id='pannesTable') %}
+        {% if pannes %}
+            <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                <table class="table table-striped table-hover sortable">
+                    <thead style="position: sticky; top: 0; z-index: 10;">
+                        <tr>
+                            <th>Date</th>
+                            <th>Kilométrage</th>
+                            <th>Criticité</th>
+                            <th>Description</th>
+                            <th>Immobilisation</th>
+                            <th>Statut</th>
+                            <th>Enregistré par</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for panne in pannes %}
+                        <tr>
+                            <td>{{ date_cell(panne.date_heure.date() if panne.date_heure else None) }}</td>
+                            <td>{{ icon_cell('tachometer-alt', panne.kilometrage|string + ' km' if panne.kilometrage else 'Non défini') }}</td>
+                            <td>{{ status_badge(panne.criticite or 'FAIBLE') }}</td>
+                            <td>{{ icon_cell('info-circle', panne.description or 'Aucune description') }}</td>
+                            <td>{{ status_badge('OUI' if panne.immobilisation else 'NON') }}</td>
+                            <td>{{ status_badge('RÉSOLUE' if panne.resolue else 'EN_COURS') }}</td>
+                            <td>{{ icon_cell('user', panne.enregistre_par or 'Non défini') }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="table-empty">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h5>Aucune panne enregistrée</h5>
+                <p>L'historique des pannes de ce véhicule apparaîtra ici.</p>
+            </div>
+        {% endif %}
+    {% endcall %}
+
+    {% include 'shared/modals/_document_modal.html' %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  (function(){
+    // Ouvrir la modale partagée en mode ajout/édition et soumettre en AJAX sans redirection
+    var openAdd = document.getElementById('addDocInlineBtn');
+    var modal = document.getElementById('docFormModal');
+    var closeBtn = document.getElementById('closeDocFormModal');
+    var form = document.getElementById('docForm');
+    var selectType = form ? form.querySelector('select[name="type_document"]') : null;
+    var inputDebut = form ? form.querySelector('input[name="date_debut"]') : null;
+    var inputExp = form ? form.querySelector('input[name="date_expiration"]') : null;
+    var currentDocumentId = null; // null => ajout, sinon édition
+
+    function openModal(){ if(modal){ modal.classList.add('show'); } }
+    function closeModal(){ if(modal){ modal.classList.remove('show'); form && form.reset && form.reset(); selectType && (selectType.disabled = false); currentDocumentId = null; } }
+
+    if (openAdd) openAdd.addEventListener('click', function(){
+      currentDocumentId = null;
+      if (selectType) selectType.disabled = false; // ajout: type modifiable
+      openModal();
+    });
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    if (modal) modal.addEventListener('click', function(e){ if(e.target === modal) closeModal(); });
+
+    // Délégation: clic sur un bouton "Mettre à jour la validité" par ligne
+    document.addEventListener('click', function(e){
+      var btn = e.target.closest('button[data-action="edit-doc"]');
+      if (!btn) return;
+      e.preventDefault();
+      currentDocumentId = btn.getAttribute('data-document-id');
+      var dDeb = btn.getAttribute('data-date-debut') || '';
+      var dExp = btn.getAttribute('data-date-expiration') || '';
+      if (selectType) selectType.disabled = true; // édition: type non modifiable ici
+      if (inputDebut) inputDebut.value = dDeb; // format ISO AAAA-MM-JJ
+      if (inputExp) inputExp.value = dExp;
+      openModal();
+    });
+
+    if (form) {
+      form.addEventListener('submit', function(e){
+        e.preventDefault();
+        var fd = new FormData(form);
+        var url;
+        if (currentDocumentId) {
+          // Édition: only dates are used server-side
+          url = '{{ url_for('admin.modifier_document_udm_ajax', document_id=0) }}'.replace('0', String(currentDocumentId));
+        } else {
+          url = '{{ url_for('admin.ajouter_document_udm_ajax', bus_id=bus.id) }}';
+        }
+        fetch(url, { method: 'POST', body: fd })
+          .then(function(r){ return r.json(); })
+          .then(function(resp){
+            if (resp && resp.success) {
+              alert(currentDocumentId ? 'Validité mise à jour avec succès.' : 'Document enregistré avec succès.');
+              closeModal();
+              window.location.reload();
+            } else {
+              alert((resp && resp.message) ? resp.message : 'Erreur lors de l\'enregistrement');
+            }
+          })
+          .catch(function(){ alert('Erreur réseau'); });
+      });
+    }
+  })();
+  </script>
+{% endblock %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
+{% endblock %}
+
+

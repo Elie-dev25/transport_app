@@ -1,0 +1,238 @@
+{% extends "roles/chauffeur/_base_chauffeur.html" %}
+
+{% block title %}Mes Trajets - Transport UdM{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tableaux.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/user_stats.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/trajets_chauffeur.css') }}">
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="page-container">
+    {% if error_message %}
+        <div class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle"></i>
+            {{ error_message }}
+        </div>
+    {% endif %}
+
+    <!-- Titre de la page -->
+    <div class="page-header">
+        <div class="page-title-section">
+            <h1 class="page-title">
+                <i class="fas fa-route"></i>
+                Mes Trajets
+            </h1>
+        </div>
+    </div>
+
+    <!-- Statistiques du mois -->
+    {% if stats_mois %}
+    <div class="stats-section" style="margin-bottom: 30px;">
+        <h3>
+            <i class="fas fa-chart-line"></i>
+            Performances du Mois
+        </h3>
+        
+        <div class="stats-overview">
+            <div class="stat-card-modern">
+                <div class="stat-header">
+                    <div class="stat-icon-modern">
+                        <i class="fas fa-road"></i>
+                    </div>
+                </div>
+                <div class="stat-content-modern">
+                    <h3>{{ stats_mois.total_trajets }}</h3>
+                    <p>Total Trajets</p>
+                </div>
+            </div>
+
+            <div class="stat-card-modern">
+                <div class="stat-header">
+                    <div class="stat-icon-modern" style="background: linear-gradient(135deg, #28a745, #20c997);">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+                <div class="stat-content-modern">
+                    <h3>{{ stats_mois.vers_campus }}</h3>
+                    <p>Vers le Campus</p>
+                </div>
+            </div>
+
+            <div class="stat-card-modern">
+                <div class="stat-header">
+                    <div class="stat-icon-modern" style="background: linear-gradient(135deg, #17a2b8, #138496);">
+                        <i class="fas fa-arrow-left"></i>
+                    </div>
+                </div>
+                <div class="stat-content-modern">
+                    <h3>{{ stats_mois.du_campus }}</h3>
+                    <p>Du Campus</p>
+                </div>
+            </div>
+
+            <div class="stat-card-modern">
+                <div class="stat-header">
+                    <div class="stat-icon-modern" style="background: linear-gradient(135deg, #ffc107, #e0a800);">
+                        <i class="fas fa-star"></i>
+                    </div>
+                </div>
+                <div class="stat-content-modern">
+                    <h3>{{ stats_mois.exceptionnels }}</h3>
+                    <p>Trajets Exceptionnels</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Section Historique des Trajets -->
+    <div class="trajets-section">
+        <div class="table-container">
+            <div class="table-header">
+                <h3 class="table-title"><i class="fas fa-history"></i> Historique des Trajets</h3>
+                <!-- Filtres -->
+                <div class="filters-container">
+                    <div class="filter-buttons">
+                        <a href="{{ url_for('chauffeur.trajets', filtre='aujourd_hui') }}" 
+                           class="filter-btn {{ 'active' if filtre_actuel == 'aujourd_hui' else '' }}">
+                            <i class="fas fa-calendar-day"></i> Aujourd'hui
+                        </a>
+                        <a href="{{ url_for('chauffeur.trajets', filtre='semaine') }}" 
+                           class="filter-btn {{ 'active' if filtre_actuel == 'semaine' else '' }}">
+                            <i class="fas fa-calendar-week"></i> Cette Semaine
+                        </a>
+                        <a href="{{ url_for('chauffeur.trajets', filtre='mois') }}" 
+                           class="filter-btn {{ 'active' if filtre_actuel == 'mois' else '' }}">
+                            <i class="fas fa-calendar-alt"></i> Ce Mois
+                        </a>
+                        <button type="button" class="filter-btn" onclick="toggleDateRange()">
+                            <i class="fas fa-calendar-plus"></i> Plage Personnalisée
+                        </button>
+                    </div>
+                    
+                    <!-- Formulaire de plage de dates -->
+                    <div id="dateRangeForm" class="date-range-form" style="display: none;">
+                        <form method="GET" action="{{ url_for('chauffeur.trajets') }}">
+                            <input type="hidden" name="filtre" value="plage">
+                            <div class="date-inputs">
+                                <div class="date-input-group">
+                                    <label>Du :</label>
+                                    <input type="date" name="date_debut" required>
+                                </div>
+                                <div class="date-input-group">
+                                    <label>Au :</label>
+                                    <input type="date" name="date_fin" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search"></i> Filtrer
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+        <!-- Tableau des trajets -->
+        <div class="table-responsive" style="margin-top: 10px;">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th><i class="fas fa-calendar-day"></i> Date</th>
+                        <th><i class="fas fa-clock"></i> Heure</th>
+                        <th><i class="fas fa-map-marker-alt"></i> Départ</th>
+                        <th><i class="fas fa-map-marker-alt"></i> Arrivée</th>
+                        <th><i class="fas fa-bus"></i> Bus</th>
+                        <th><i class="fas fa-users"></i> Passagers</th>
+                        <th><i class="fas fa-user-tag"></i> Type</th>
+                        <th><i class="fas fa-info-circle"></i> Statut</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if trajets_historique %}
+                        {% for trajet in trajets_historique %}
+                        <tr>
+                            <td>{{ trajet.date_heure_depart.strftime('%d/%m/%Y') if trajet.date_heure_depart else 'Non défini' }}</td>
+                            <td>{{ trajet.date_heure_depart.strftime('%H:%M') if trajet.date_heure_depart else 'Non défini' }}</td>
+                            <td>
+                                <span class="location-badge departure">
+                                    <i class="fas fa-play"></i>
+                                    {{ trajet.point_depart or 'Non spécifié' }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="location-badge arrival">
+                                    <i class="fas fa-stop"></i>
+                                    {{ trajet.point_arrivee or 'Non spécifié' }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if trajet.numero_bus_udm %}
+                                    <span class="badge badge-primary">{{ trajet.numero_bus_udm }}</span>
+                                {% else %}
+                                    <span class="badge badge-secondary">Non assigné</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="passenger-count">
+                                    <i class="fas fa-users"></i>
+                                    {{ trajet.nombre_places_occupees or 0 }}
+                                </span>
+                            </td>
+                            <td>
+                                {% set is_vers_campus = trajet.point_arrivee and ('Banekane' in trajet.point_arrivee or 'banekane' in trajet.point_arrivee) %}
+                                {% set is_du_campus = trajet.point_depart and ('Mfetum' in trajet.point_depart or 'mfetum' in trajet.point_depart or 'Ancienne Mairie' in trajet.point_depart or 'ancienne mairie' in trajet.point_depart) %}
+                                
+                                {% if is_vers_campus %}
+                                    <span class="status-badge success"><i class="fas fa-check-circle"></i> Vers Campus</span>
+                                {% elif is_du_campus %}
+                                    <span class="status-badge info"><i class="fas fa-info-circle"></i> Du Campus</span>
+                                {% else %}
+                                    <span class="status-badge warning"><i class="fas fa-exclamation-triangle"></i> Exceptionnel</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="status-badge success"><i class="fas fa-check"></i> Effectué</span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="8">
+                                <div class="table-empty">
+                                    <i class="fas fa-route"></i>
+                                    <h5>Aucun trajet trouvé</h5>
+                                    <p>Modifiez les filtres de dates pour élargir la recherche.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Informations sur la période -->
+        {% if trajets_historique %}
+        <div class="period-info-block">
+            <small style="color: #64748b;">
+                <i class="fas fa-info-circle"></i>
+                Affichage de {{ trajets_historique|length }} trajet(s) 
+                du {{ date_debut_filtre.strftime('%d/%m/%Y') }} au {{ date_fin_filtre.strftime('%d/%m/%Y') }}
+            </small>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function toggleDateRange() {
+    const form = document.getElementById('dateRangeForm');
+    if (form.style.display === 'none') {
+        form.style.display = 'block';
+    } else {
+        form.style.display = 'none';
+    }
+}
+</script>
+{% endblock %}

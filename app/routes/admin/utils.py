@@ -6,9 +6,10 @@ from app.database import db
 from app.routes.common import role_required
 from . import bp
 
-# Définition du décorateur admin_only
+# Définition du décorateur admin_only (ADMIN et RESPONSABLE avec traçabilité)
 def admin_only(view):
-    return role_required('ADMIN')(view)
+    from app.routes.common import admin_or_responsable
+    return admin_or_responsable(view)
 
 # Route pour les alertes de documents
 @admin_only

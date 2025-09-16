@@ -1,0 +1,61 @@
+{% extends "_base_dashboard.html" %}
+
+{% set sidebar_title = "Superviseur Panel" %}
+{% set sidebar_subtitle = "Transport Universitaire" %}
+
+{# Menu latéral dédié superviseur #}
+{% block nav_menu %}
+<div class="nav-item">
+    <a href="{{ url_for('superviseur.dashboard') }}" class="nav-link {% if active_page == 'dashboard' %}active{% endif %}">
+        <i class="fas fa-tachometer-alt"></i>
+        Dashboard
+    </a>
+</div>
+<div class="nav-item">
+    <a href="{{ url_for('superviseur.carburation') }}" class="nav-link {% if active_page == 'carburation' %}active{% endif %}">
+        <i class="fas fa-gas-pump"></i>
+        Carburation
+    </a>
+</div>
+<div class="nav-item">
+    <a href="{{ url_for('superviseur.bus_udm') }}" class="nav-link {% if active_page == 'bus_udm' %}active{% endif %}">
+        <i class="fas fa-bus"></i>
+        Bus UdM
+    </a>
+</div>
+<div class="nav-item">
+    <a href="{{ url_for('superviseur.vidanges') }}" class="nav-link {% if active_page == 'vidanges' %}active{% endif %}">
+        <i class="fas fa-oil-can"></i>
+        Vidanges
+    </a>
+</div>
+<div class="nav-item">
+    <a href="{{ url_for('superviseur.chauffeurs') }}" class="nav-link {% if active_page == 'chauffeurs' %}active{% endif %}">
+        <i class="fas fa-user-tie"></i>
+        Chauffeurs
+    </a>
+</div>
+<div class="nav-item">
+    <a href="{{ url_for('superviseur.utilisateurs') }}" class="nav-link {% if active_page == 'utilisateurs' %}active{% endif %}">
+        <i class="fas fa-users"></i>
+        Utilisateurs
+    </a>
+</div>
+<div class="nav-item">
+    <a href="{{ url_for('superviseur.maintenance') }}" class="nav-link {% if active_page == 'maintenance' %}active{% endif %}">
+        <i class="fas fa-wrench"></i>
+        Maintenance
+    </a>
+</div>
+<div class="nav-item">
+    <a href="{{ url_for('superviseur.rapports') }}" class="nav-link {% if active_page == 'rapports' %}active{% endif %}">
+        <i class="fas fa-chart-bar"></i>
+        Rapports
+    </a>
+</div>
+{% endblock %}
+
+{# Contenu principal: contenu spécifique sans alerte #}
+{% block dashboard_content %}
+{% block superviseur_content %}{% endblock %}
+{% endblock %}

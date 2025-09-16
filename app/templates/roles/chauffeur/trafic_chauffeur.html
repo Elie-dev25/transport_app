@@ -1,0 +1,14 @@
+{% extends "roles/chauffeur/_base_chauffeur.html" %}
+{% block title %}Trafic Étudiants{% endblock %}
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard_chauffeur.css') }}">
+{% endblock %}
+{% block content %}
+<div class="main-content">
+    <h1>Trafic Étudiants</h1>
+    <div class="trafic-section">
+        <p>Statistiques trafic étudiants en temps réel (exemple minimal).</p>
+        <!-- À personnaliser avec des vraies stats -->
+    </div>
+</div>
+{% endblock %}

@@ -111,3 +111,166 @@
             }
         `;
         document.head.appendChild(style);
+
+        // Gestion des modales de trajets
+        initTrajetModals();
+
+        // Fonction pour initialiser les modales de trajets
+        function initTrajetModals() {
+            // Modal Trajet Interne Bus UdM
+            const openTrajetInterneBtn = document.getElementById('openTrajetInterneBusUdMModal');
+            const trajetInterneModal = document.getElementById('trajetInterneBusUdMModal');
+            const closeTrajetInterneBtn = document.getElementById('closeTrajetInterneBusUdMModal');
+
+            if (openTrajetInterneBtn && trajetInterneModal) {
+                openTrajetInterneBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    trajetInterneModal.classList.add('show');
+                });
+            }
+
+            if (closeTrajetInterneBtn && trajetInterneModal) {
+                closeTrajetInterneBtn.addEventListener('click', function() {
+                    trajetInterneModal.classList.remove('show');
+                });
+            }
+
+            // Modal Trajet Prestataire
+            const openTrajetPrestataireBtn = document.getElementById('openTrajetPrestataireModerniseModal');
+            const trajetPrestataireModal = document.getElementById('trajetPrestataireModerniseModal');
+            const closeTrajetPrestataireBtn = document.getElementById('closeTrajetPrestataireModerniseModal');
+
+            if (openTrajetPrestataireBtn && trajetPrestataireModal) {
+                openTrajetPrestataireBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    trajetPrestataireModal.classList.add('show');
+                });
+            }
+
+            if (closeTrajetPrestataireBtn && trajetPrestataireModal) {
+                closeTrajetPrestataireBtn.addEventListener('click', function() {
+                    trajetPrestataireModal.classList.remove('show');
+                });
+            }
+
+            // Modal Autres Trajets
+            const openAutresTrajetsBtn = document.getElementById('openAutresTrajetsModal');
+            const autresTrajetsModal = document.getElementById('autresTrajetsModal');
+            const closeAutresTrajetsBtn = document.getElementById('closeAutresTrajetsModal');
+
+            if (openAutresTrajetsBtn && autresTrajetsModal) {
+                openAutresTrajetsBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    autresTrajetsModal.classList.add('show');
+                });
+            }
+
+            if (closeAutresTrajetsBtn && autresTrajetsModal) {
+                closeAutresTrajetsBtn.addEventListener('click', function() {
+                    autresTrajetsModal.classList.remove('show');
+                });
+            }
+
+            // Fermer les modales en cliquant à l'extérieur
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('modal')) {
+                    e.target.classList.remove('show');
+                }
+            });
+
+            // Gestion AJAX des formulaires
+            initTrajetFormsAjax();
+        }
+
+        // Fonction pour initialiser les soumissions AJAX des formulaires
+        function initTrajetFormsAjax() {
+            // Formulaire Trajet Interne
+            const trajetInterneForm = document.getElementById('trajetInterneBusUdMForm');
+            if (trajetInterneForm) {
+                trajetInterneForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    submitTrajetForm(this, 'trajetInterneBusUdMModal', 'trajetInterneBusUdMError');
+                });
+            }
+
+            // Formulaire Trajet Prestataire
+            const trajetPrestataireForm = document.getElementById('trajetPrestataireModerniseForm');
+            if (trajetPrestataireForm) {
+                trajetPrestataireForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    submitTrajetForm(this, 'trajetPrestataireModerniseModal', 'trajetPrestataireModerniseError');
+                });
+            }
+
+            // Formulaire Autres Trajets
+            const autresTrajetsForm = document.getElementById('autresTrajetsForm');
+            if (autresTrajetsForm) {
+                autresTrajetsForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    submitTrajetForm(this, 'autresTrajetsModal', 'autresTrajetsError');
+                });
+            }
+        }
+
+        // Fonction générique pour soumettre les formulaires de trajets
+        function submitTrajetForm(form, modalId, errorId) {
+            const formData = new FormData(form);
+            const errorDiv = document.getElementById(errorId);
+
+            // Masquer les erreurs précédentes
+            if (errorDiv) {
+                errorDiv.style.display = 'none';
+            }
+
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Fermer la modale
+                    document.getElementById(modalId).classList.remove('show');
+
+                    // Afficher le message de succès
+                    showSuccessMessage(data.message);
+
+                    // Réinitialiser le formulaire
+                    form.reset();
+                } else {
+                    // Afficher l'erreur
+                    if (errorDiv) {
+                        errorDiv.textContent = data.message;
+                        errorDiv.style.display = 'block';
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                if (errorDiv) {
+                    errorDiv.textContent = 'Une erreur est survenue. Veuillez réessayer.';
+                    errorDiv.style.display = 'block';
+                }
+            });
+        }
+
+        // Fonction pour afficher un message de succès
+        function showSuccessMessage(message) {
+            const successDiv = document.createElement('div');
+            successDiv.className = 'flash-message success';
+            successDiv.textContent = message;
+            document.body.appendChild(successDiv);
+
+            // Supprimer le message après 5 secondes
+            setTimeout(() => {
+                successDiv.style.opacity = '0';
+                setTimeout(() => {
+                    if (successDiv.parentNode) {
+                        successDiv.parentNode.removeChild(successDiv);
+                    }
+                }, 500);
+            }, 5000);
+        }

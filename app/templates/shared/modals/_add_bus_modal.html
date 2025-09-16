@@ -1,0 +1,97 @@
+<!-- Modal for Add Bus Form -->
+<div id="addBusModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3><i class="fas fa-bus"></i> Ajouter un bus UdM</h3>
+      <button type="button" id="closeAddBusModal" class="close-btn">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="addBusForm">
+        <div class="form-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div class="form-group">
+            <label>Numéro du bus :</label>
+            <input type="text" name="numero" placeholder="Ex: AED-01" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
+          </div>
+          <div class="form-group">
+            <label>Immatriculation :</label>
+            <input type="text" name="immatriculation" placeholder="Ex: DK-1234-AB" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
+          </div>
+
+          <!-- Nouveaux champs obligatoires -->
+          <div class="form-group">
+            <label>Numéro de châssis :</label>
+            <input type="text" name="numero_chassis" placeholder="Ex: VF1234567890123456" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
+          </div>
+          <div class="form-group">
+            <label>Modèle :</label>
+            <input type="text" name="modele" placeholder="Ex: Sprinter 515" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
+          </div>
+          <div class="form-group">
+            <label>Type de véhicule :</label>
+            <select name="type_vehicule" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
+              <option value="">-- Choisir --</option>
+              <option value="TOURISME">Tourisme</option>
+              <option value="COASTER">Coaster</option>
+              <option value="MINIBUS">Minibus</option>
+              <option value="AUTOCAR">Autocar</option>
+              <option value="AUTRE">Autre</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Marque :</label>
+            <input type="text" name="marque" placeholder="Ex: Mercedes, Toyota, Hyundai" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
+          </div>
+
+          <div class="form-group">
+            <label>Niveau de kilométrage (km) :</label>
+            <input type="number" name="kilometrage" placeholder="Ex: 15000" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
+          </div>
+          <div class="form-group">
+            <label>Type d'huile :</label>
+            <select name="type_huile" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
+              <option value="">-- Choisir --</option>
+              <option value="Quartz 5000 20W-50">Quartz 5000 20W-50</option>
+              <option value="Quartz 7000 10W-40">Quartz 7000 10W-40</option>
+              <option value="Quartz 9000 5W-40">Quartz 9000 5W-40</option>
+              <option value="Rubia TIR 7400 15W-40">Rubia TIR 7400 15W-40</option>
+              <option value="Rubia TIR 9900 FE 5W-30">Rubia TIR 9900 FE 5W-30</option>
+              <option value="Rubia Fleet HD 400 15W-40">Rubia Fleet HD 400 15W-40</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Capacité du plein de carburant (km) :</label>
+            <input type="number" name="capacite_plein_carburant" placeholder="Ex: 500" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
+          </div>
+          <div class="form-group">
+            <label>Capacité du réservoir (L) :</label>
+            <input type="number" step="0.1" name="capacite_reservoir_litres" placeholder="Ex: 70.0" style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
+          </div>
+          <div class="form-group">
+            <label>Niveau carburant (L) :</label>
+            <input type="number" step="0.1" name="niveau_carburant_litres" placeholder="Ex: 30.5" style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
+          </div>
+          <div class="form-group">
+            <label>Date de la dernière vidange :</label>
+            <input type="date" name="date_derniere_vidange" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
+          </div>
+          <div class="form-group">
+            <label>État actuel du véhicule :</label>
+            <select name="etat_vehicule" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
+              <option value="BON">Bon</option>
+              <option value="DEFAILLANT">Défaillant</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Nombre de places :</label>
+            <input type="number" name="nombre_places" value="30" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
+          </div>
+          <div class="form-group" style="grid-column:1/-1;">
+            <label>Date de la dernière maintenance :</label>
+            <input type="date" name="derniere_maintenance" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
+          </div>
+        </div>
+        <button type="submit" class="submit-btn" style="width:100%;margin-top:16px;padding:12px;background:#2563eb;color:#fff;border:none;border-radius:8px;cursor:pointer;">Ajouter</button>
+      </form>
+    </div> 
+  </div>
+</div>

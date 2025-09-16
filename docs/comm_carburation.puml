@@ -1,0 +1,26 @@
+@startuml Communication_Carburation
+skinparam defaultFontName Arial
+skinparam shadowing false
+skinparam dpi 150
+left to right direction
+
+actor "Mécanicien" as MEC
+rectangle "Web UI" as UI
+rectangle "CarburationController" as CarC
+rectangle "CarburationService" as CarS
+rectangle "BusService" as BusS
+database "DB" as DB
+
+MEC -[#black]-> UI : 1: saisir carburation(bus, litres, prix, km)
+UI -[#black]-> CarC : 2: POST /carburation
+CarC -[#black]-> BusS : 3: get_bus(bus_id)
+BusS -[#black]-> DB : 3.1: select bus
+DB -[#black]-> BusS : 3.2: bus
+CarC -[#black]-> CarS : 4: calculer_cout_total(qte, prix)
+CarS -[#black]-> CarC : 4.1: cout_total
+CarC -[#black]-> DB : 5: insert(carburation)
+DB -[#black]-> CarC : 5.1: id
+CarC -[#black]-> UI : 6: confirmation
+UI -[#black]-> MEC : 7: affiche reçu (cout_total)
+
+@enduml

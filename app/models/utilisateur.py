@@ -14,7 +14,7 @@ class Utilisateur(UserMixin, db.Model):  # Hérite de UserMixin pour Flask-Login
     mot_de_passe = db.Column(db.String(255), nullable=False)  # Mot de passe hashé
     reset_token = db.Column(db.String(255), nullable=True)
     reset_expires = db.Column(db.DateTime, nullable=True)
-    role = db.Column(Enum('ADMIN', 'CHAUFFEUR', 'MECANICIEN', 'CHARGE', name='role_enum'), nullable=True)
+    role = db.Column(Enum('ADMIN', 'CHAUFFEUR', 'MECANICIEN', 'CHARGE', 'SUPERVISEUR', 'RESPONSABLE', name='role_enum'), nullable=True)
     # Email et téléphone désormais obligatoires pour tous les utilisateurs
     email = db.Column(db.String(255), nullable=False)
     telephone = db.Column(db.String(50), nullable=False)

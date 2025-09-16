@@ -1,0 +1,81 @@
+@startuml Activite_Generale_Compacte
+' =============================================
+' Diagramme d’activité (compact) – Transport UdM
+' =============================================
+skinparam defaultFontName Arial
+skinparam shadowing false
+skinparam dpi 140
+skinparam wrapWidth 900
+skinparam activity {
+  FontSize 12
+}
+scale 0.8
+
+start
+:Ouvrir app;
+:Se connecter;
+if (Authentifié ?) then (Oui)
+  :Afficher tableau de bord;
+else (Non)
+  :Erreur auth;
+  stop
+endif
+
+fork
+  :Consulter infos (dashboards/rapports);
+fork again
+  :Effectuer actions selon rôle;
+end fork
+
+' Rôles groupés pour compacité
+partition "Trajets (Charge Transport)" {
+  :Planifier trajet;
+  if (Chauffeur dispo ?) then (Oui)
+    :Réserver chauffeur;
+  else (Non)
+    :Choisir autre chauffeur;
+  endif
+  if (Bus dispo ?) then (Oui)
+    :Réserver bus;
+  else (Non)
+    :Choisir autre bus;
+  endif
+  :Enregistrer départ/arrivée;
+  :Saisir présence campus;
+}
+
+partition "Maintenance (Mécanicien)" {
+  :Enregistrer carburation -> calcul coût;
+  :Enregistrer vidange -> valider huile;
+  :Signaler panne;
+  if (Dépannage requis ?) then (Oui)
+    :Planifier/Enregistrer dépannage;
+    :Clôturer panne;
+  endif
+}
+
+partition "Administration" {
+  :Gérer utilisateurs;
+  :Gérer véhicules;
+  :Gérer documents véhicule;
+}
+
+partition "Reporting (Admin/Resp/Sup)" {
+  :Consulter tableaux de bord;
+  :Générer rapports;
+  :Exporter PDF/CSV;
+}
+
+' Processus planifié (scheduler)
+partition "Scheduler Carburant" {
+  :Analyser niveaux;
+  if (Seuil franchi ?) then (Oui)
+    :MAJ FuelAlertState;
+    :Notifier admin;
+  else (Non)
+    :Aucune alerte;
+  endif
+}
+
+stop
+@enduml

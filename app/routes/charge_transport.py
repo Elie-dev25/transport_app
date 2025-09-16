@@ -1,19 +1,23 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import current_user
-from app.forms.trajet_depart_form import TrajetDepartForm
-from app.forms.trajet_prestataire_form import TrajetPrestataireForm
-from app.models.chauffeur import Chauffeur
-from app.models.bus_udm import BusUdM
-from app.models.prestataire import Prestataire
-from app.models.trajet import Trajet
-from app.database import db
-from app.utils.trafic import daily_student_trafic
 from datetime import date
+
+# Services centralisés (Phase 1 Refactoring)
+from app.services.dashboard_service import DashboardService
+from app.services.form_service import FormService
 from app.services.trajet_service import (
-    enregistrer_depart_aed,
-    enregistrer_depart_prestataire,
-    enregistrer_depart_banekane_retour,
+    enregistrer_trajet_interne_bus_udm,
+    enregistrer_trajet_prestataire_modernise,
+    enregistrer_autres_trajets,
 )
+
+# Formulaires
+from app.forms.trajet_interne_bus_udm_form import TrajetInterneBusUdMForm
+from app.forms.trajet_prestataire_form import TrajetPrestataireForm
+from app.forms.autres_trajets_form import AutresTrajetsForm
+
+# Modèles (imports locaux pour éviter les erreurs)
+from app.models.bus_udm import BusUdM
 
 # Création du blueprint pour le chargé de transport
 bp = Blueprint('charge_transport', __name__, url_prefix='/charge')
@@ -21,88 +25,93 @@ bp = Blueprint('charge_transport', __name__, url_prefix='/charge')
 # Route du tableau de bord chargé de transport
 @bp.route('/dashboard', methods=['GET', 'POST'])
 def dashboard():
-    from app.models.trajet import Trajet
-    today = date.today()
-    # Nombre total de trajets du jour (aligné avec le dashboard admin)
-    trajets_jour_aed = Trajet.query.filter(
-        db.func.date(Trajet.date_heure_depart) == today,
-        Trajet.numero_aed != None
-    ).count()
-    trajets_jour_prestataire = Trajet.query.filter(
-        db.func.date(Trajet.date_heure_depart) == today,
-        Trajet.immat_bus != None
-    ).count()
-    # Statistiques trafic étudiants temps réel
-    trafic = daily_student_trafic()
+    """
+    Dashboard chargé de transport refactorisé - Phase 1
+    Utilise DashboardService pour éliminer la duplication de code
+    """
+    # Utiliser le service centralisé au lieu du code dupliqué
+    stats = DashboardService.get_common_stats()
+    role_stats = DashboardService.get_role_specific_stats('CHARGE')
 
-    # Exemple d'autres stats (à ajuster plus tard)
-    stats = {
-        'bus_actifs': BusUdM.query.filter_by(etat_vehicule='BON').count(),
-        'bus_en_maintenance': BusUdM.query.filter_by(etat_vehicule='DEFAILLANT').count(),
-        'bus_maintenance': BusUdM.query.filter_by(etat_vehicule='DEFAILLANT').count(),
-        'trajets_jour_aed': trajets_jour_aed,
-        'trajets_jour_prestataire': trajets_jour_prestataire,
-        'trajets_jour_change': 0,
-        'chauffeurs_disponibles': 5,
-        'etudiants': trafic['present']
-    }
-    form = TrajetDepartForm()
+    # Fusionner les statistiques
+    stats.update(role_stats)
+
+    # Trafic temps réel (déjà inclus dans stats via DashboardService)
+    trafic = stats.get('trafic', {})
+    # Nouveaux formulaires modernisés (identiques à ceux de l'admin)
+    form_trajet_interne = TrajetInterneBusUdMForm()
     form_bus = TrajetPrestataireForm()
-    # Initialisation du formulaire Banekane retour
-    from app.forms.trajet_banekane_retour_form import TrajetBanekaneRetourForm
-    form_banekane_retour = TrajetBanekaneRetourForm()
-    form.chauffeur_id.choices = [(c.chauffeur_id, f"{c.nom} {c.prenom}") for c in Chauffeur.query.all()]
-    form.numero_aed.choices = [(a.numero, a.numero) for a in BusUdM.query.all()]
-    form_banekane_retour.chauffeur_id.choices = [(c.chauffeur_id, f"{c.nom} {c.prenom}") for c in Chauffeur.query.all()]
-    form_banekane_retour.numero_aed.choices = [(a.numero, a.numero) for a in BusUdM.query.all()]
-    if form.validate_on_submit():
-        ok, msg = enregistrer_depart_aed(form, current_user)
-        flash(msg, 'success' if ok else 'danger')
-        return redirect(url_for('charge_transport.dashboard'))
+    form_autres_trajets = AutresTrajetsForm()
 
-    elif request.method == 'POST':
-        flash('Erreur dans le formulaire. Veuillez vérifier les champs.', 'danger')
-    chauffeurs_list = Chauffeur.query.all()
-    prestataire_list = Prestataire.query.all()
-    return render_template('dashboard_charge.html', stats=stats, trafic=trafic, form=form, form_bus=form_bus, form_banekane_retour=form_banekane_retour)
+    # Utiliser FormService pour peupler tous les formulaires (élimine duplication)
+    FormService.populate_multiple_forms(
+        form_trajet_interne, form_bus, form_autres_trajets,
+        bus_filter='BON_ONLY'  # Chargé transport voit les bus en bon état
+    )
+
+    return render_template(
+        'roles/charge_transport/dashboard_charge.html',
+        stats=stats,
+        trafic=trafic,
+        form_trajet_interne=form_trajet_interne,
+        form_bus=form_bus,
+        form_autres_trajets=form_autres_trajets
+    )
 
 # Route pour la gestion des bus
 @bp.route('/bus')
 def bus():
-    # Placeholder pour la page bus du chargé de transport
-    return render_template('bus.html')
+    # Page Bus pour le chargé de transport avec le bon sidebar
+    buses = BusUdM.query.all()
+    return render_template(
+        'pages/bus_udm.html',
+        bus_list=buses,
+        current_user=current_user,
+        active_page='bus_udm',
+        readonly=False,
+        base_template='roles/charge_transport/_base_charge.html'
+    )
 
 # Route pour la gestion des chauffeurs
 @bp.route('/chauffeurs')
 def chauffeurs():
-    return render_template('chauffeurs.html') if 'chauffeurs.html' in globals() else "Page Chauffeurs (à implémenter)"
+    from app.models.chauffeur import Chauffeur
+    from app.models.chauffeur_statut import ChauffeurStatut
+
+    chauffeur_list = Chauffeur.query.order_by(Chauffeur.nom).all()
+
+    # Ajouter les statuts actuels pour chaque chauffeur
+    for chauffeur in chauffeur_list:
+        chauffeur.statuts_actuels = ChauffeurStatut.get_current_statuts(chauffeur.chauffeur_id)
+
+    return render_template('legacy/chauffeurs.html', chauffeur_list=chauffeur_list, active_page='chauffeurs')
 
 # Route pour la gestion des rapports
 @bp.route('/rapports')
 def rapports():
-    return render_template('rapports.html') if 'rapports.html' in globals() else "Page Rapports (à implémenter)"
+    return render_template('pages/rapports.html') if 'rapports.html' in globals() else "Page Rapports (à implémenter)"
 
 # Route pour les paramètres
 @bp.route('/parametres')
 def parametres():
-    return render_template('parametres.html') if 'parametres.html' in globals() else "Page Paramètres (à implémenter)"
+    return render_template('pages/parametres.html') if 'parametres.html' in globals() else "Page Paramètres (à implémenter)"
 
-# Route pour le départ AED (Ajax)
-@bp.route('/depart-aed', methods=['POST'])
-def depart_aed():
-    """Enregistrement d'un départ AED pour Banekane (AJAX, JSON)"""
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        form = TrajetDepartForm()
-        # Actualiser les choix dépendants de la BD
-        from app.models.chauffeur import Chauffeur
-        form.chauffeur_id.choices = [(c.chauffeur_id, f"{c.nom} {c.prenom}") for c in Chauffeur.query.all()]
-        form.numero_aed.choices = [(a.numero, a.numero) for a in BusUdM.query.all()]
-        if form.validate_on_submit():
-            ok, msg = enregistrer_depart_aed(form, current_user)
-            return jsonify({'success': ok, 'message': msg}), (200 if ok else 500)
-        else:
-            return jsonify({'success': False, 'message': 'Erreur dans le formulaire. Veuillez vérifier les champs.'}), 400
-    return jsonify({'success': False, 'message': 'Requête non autorisée.'}), 400
+# Nouvelles routes AJAX modernisées (identiques à l'admin)
+
+@bp.route('/trajet_interne_bus_udm', methods=['POST'])
+def trajet_interne_bus_udm():
+    """Route pour les trajets internes avec bus UdM (remplace depart_aed)"""
+    form = TrajetInterneBusUdMForm(request.form)
+
+    # Peupler les choix dynamiques avant validation
+    FormService.populate_trajet_form_choices(form)
+
+    if not form.validate():
+        return jsonify({'success': False, 'message': 'Formulaire invalide', 'errors': form.errors}), 400
+
+    ok, msg = enregistrer_trajet_interne_bus_udm(form, current_user)
+    status = 200 if ok else 400
+    return jsonify({'success': ok, 'message': msg}), status
 
 # Route pour le départ AED Banekane
 @bp.route('/depart-aed-banekane')
@@ -110,35 +119,35 @@ def depart_aed_banekane():
     # Placeholder pour la page de départ AED Banekane
     return "Page Départ AED Banekane (à implémenter)"
 
-# Route pour le départ Bus Agence
-@bp.route('/depart-prestataire', methods=['POST'])
-def depart_prestataire():
-    """Enregistrement d'un départ Bus Agence via soumission AJAX."""
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        ok, msg = enregistrer_depart_prestataire(request.form, current_user)
-        return jsonify({'success': ok, 'message': msg}), (200 if ok else 400)
-    # fallback
-    return jsonify({'success': False, 'message': 'Erreur inconnue, veuillez réessayer.'}), 500
+@bp.route('/trajet_prestataire_modernise', methods=['POST'])
+def trajet_prestataire_modernise():
+    """Route pour les trajets prestataires modernisés"""
+    form = TrajetPrestataireForm(request.form)
 
-# Route pour le retour Banekane
-from app.forms.trajet_banekane_retour_form import TrajetBanekaneRetourForm
+    # Peupler les choix dynamiques avant validation
+    FormService.populate_trajet_form_choices(form)
 
-@bp.route('/depart-banekane-retour', methods=['POST'])
-def depart_banekane_retour():
-    """Enregistrement d'un départ de Banekane (retour) via soumission AJAX."""
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        form = TrajetBanekaneRetourForm()
-        # Remplir dynamiquement les choix
-        from app.models.chauffeur import Chauffeur
-        form.chauffeur_id.choices = [(c.chauffeur_id, f"{c.nom} {c.prenom}") for c in Chauffeur.query.all()]
-        form.numero_aed.choices = [(a.numero, a.numero) for a in BusUdM.query.all()]
-        if form.validate_on_submit():
-            ok, msg = enregistrer_depart_banekane_retour(form, current_user)
-            return jsonify({'success': ok, 'message': msg}), (200 if ok else 500)
-        else:
-            return jsonify({'success': False, 'message': 'Erreur dans le formulaire. Veuillez vérifier les champs.'}), 400
-    # fallback
-    return jsonify({'success': False, 'message': 'Erreur inconnue, veuillez réessayer.'}), 500
+    if not form.validate():
+        return jsonify({'success': False, 'message': 'Formulaire invalide', 'errors': form.errors}), 400
+
+    ok, msg = enregistrer_trajet_prestataire_modernise(form, current_user)
+    status = 200 if ok else 400
+    return jsonify({'success': ok, 'message': msg}), status
+
+@bp.route('/autres_trajets', methods=['POST'])
+def autres_trajets():
+    """Route pour les autres trajets (remplace sortie hors ville et banekane retour)"""
+    form = AutresTrajetsForm(request.form)
+
+    # Peupler les choix dynamiques avant validation
+    FormService.populate_trajet_form_choices(form)
+
+    if not form.validate():
+        return jsonify({'success': False, 'message': 'Formulaire invalide', 'errors': form.errors}), 400
+
+    ok, msg = enregistrer_autres_trajets(form, current_user)
+    status = 200 if ok else 400
+    return jsonify({'success': ok, 'message': msg}), status
 
 # Route pour générer un rapport
 @bp.route('/generer-rapport')

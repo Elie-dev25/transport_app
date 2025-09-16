@@ -1,0 +1,229 @@
+{% extends "roles/admin/_base_admin.html" %}
+
+{% block title %}Consultation - Transport UdM{% endblock %}
+
+{% block extra_css %}
+<style>
+    .consultation-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+        border-radius: 10px;
+    }
+    
+    .readonly-badge {
+        background: linear-gradient(45deg, #ffc107, #fd7e14);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: bold;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border-left: 4px solid #667eea;
+        transition: transform 0.2s;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #667eea;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête -->
+    <div class="consultation-header text-center">
+        <h1><i class="fas fa-eye"></i> Mode Consultation</h1>
+        <p class="mb-0">Vue d'ensemble en lecture seule du système de transport</p>
+        <span class="readonly-badge mt-2 d-inline-block">
+            <i class="fas fa-lock"></i> Accès Consultation Uniquement
+        </span>
+    </div>
+
+    <!-- Statistiques principales -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="stat-card text-center">
+                <i class="fas fa-bus fa-2x text-primary mb-2"></i>
+                <div class="stat-number">{{ stats.bus_actifs }}</div>
+                <div class="text-muted">Bus Actifs</div>
+                <small class="text-danger">{{ stats.bus_en_maintenance }} en maintenance</small>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card text-center">
+                <i class="fas fa-route fa-2x text-success mb-2"></i>
+                <div class="stat-number">{{ stats.trajets_jour_aed + stats.trajets_jour_prestataire }}</div>
+                <div class="text-muted">Trajets Aujourd'hui</div>
+                <small class="text-info">{{ stats.trajets_jour_aed }} UdM + {{ stats.trajets_jour_prestataire }} Prestataire</small>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card text-center">
+                <i class="fas fa-users fa-2x text-info mb-2"></i>
+                <div class="stat-number">{{ stats.etudiants }}</div>
+                <div class="text-muted">Étudiants Présents</div>
+                <small class="text-warning">{{ trafic.absent }} absents</small>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card text-center">
+                <i class="fas fa-user-tie fa-2x text-warning mb-2"></i>
+                <div class="stat-number">{{ stats.chauffeurs_disponibles }}</div>
+                <div class="text-muted">Chauffeurs</div>
+                <small class="text-success">Total disponibles</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Derniers trajets -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-history"></i> Derniers Trajets</h5>
+                </div>
+                <div class="card-body">
+                    {% if derniers_trajets %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date/Heure</th>
+                                    <th>Type</th>
+                                    <th>Départ</th>
+                                    <th>Arrivée</th>
+                                    <th>Passagers</th>
+                                    <th>Véhicule</th>
+                                    <th>Chauffeur</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for trajet in derniers_trajets %}
+                                <tr>
+                                    <td>{{ trajet.date_heure_depart.strftime('%d/%m %H:%M') }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if trajet.type_trajet == 'UDM_INTERNE' else 'info' if trajet.type_trajet == 'PRESTATAIRE' else 'warning' }}">
+                                            {{ trajet.type_trajet }}
+                                        </span>
+                                    </td>
+                                    <td>{{ trajet.point_depart }}</td>
+                                    <td>{{ trajet.point_arriver or '-' }}</td>
+                                    <td>
+                                        {% if trajet.nombre_places_occupees %}
+                                        <span class="badge bg-info">{{ trajet.nombre_places_occupees }}</span>
+                                        {% else %}
+                                        -
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if trajet.numero_bus_udm %}
+                                        <span class="text-success">{{ trajet.numero_bus_udm }}</span>
+                                        {% elif trajet.immat_bus %}
+                                        <span class="text-info">{{ trajet.immat_bus }}</span>
+                                        {% else %}
+                                        -
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if trajet.chauffeur %}
+                                        {{ trajet.chauffeur.nom }} {{ trajet.chauffeur.prenom }}
+                                        {% elif trajet.nom_chauffeur %}
+                                        {{ trajet.nom_chauffeur }}
+                                        {% else %}
+                                        -
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-route fa-3x mb-3"></i>
+                        <h4>Aucun trajet récent</h4>
+                        <p>Aucun trajet n'a été enregistré récemment.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions de consultation -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-tachometer-alt"></i> Actions de Consultation</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('admin.bus_udm_list_ajax') }}" class="btn btn-outline-primary btn-lg w-100">
+                                <i class="fas fa-bus fa-2x d-block mb-2"></i>
+                                Voir les Bus
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('admin.rapports') }}" class="btn btn-outline-success btn-lg w-100">
+                                <i class="fas fa-chart-bar fa-2x d-block mb-2"></i>
+                                Rapports
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('admin.chauffeurs') }}" class="btn btn-outline-info btn-lg w-100">
+                                <i class="fas fa-users fa-2x d-block mb-2"></i>
+                                Chauffeurs
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('admin.maintenance') }}" class="btn btn-outline-warning btn-lg w-100">
+                                <i class="fas fa-tools fa-2x d-block mb-2"></i>
+                                Maintenance
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-warning mt-3">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Mode Consultation:</strong> Vous avez accès en lecture seule. 
+                        Aucune modification ne peut être effectuée depuis cette interface.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Animation des cartes statistiques
+        $('.stat-card').each(function(index) {
+            $(this).delay(index * 100).fadeIn(500);
+        });
+        
+        // Auto-refresh toutes les 5 minutes
+        setInterval(function() {
+            location.reload();
+        }, 300000);
+    });
+</script>
+{% endblock %}

@@ -9,7 +9,7 @@ def _ensure_chargetransport_for_user(user_id: int) -> None:
         # flush so PK exists for FK reference without committing early
         db.session.flush()
 
-from datetime import datetime as dt
+from datetime import datetime
 from typing import Tuple, Optional
 
 from app.database import db
@@ -179,7 +179,7 @@ def enregistrer_depart_sortie_hors_ville(form, user) -> Tuple[bool, str]:
             numero_bus_udm=form.numero_aed.data,
             immat_bus=None,
             enregistre_par=user.utilisateur_id,
-            motif=form.motif.data,
+            motif=form.motif_trajet.data,
         )
         db.session.add(trajet)
 
@@ -373,7 +373,7 @@ def enregistrer_depart_banekane_retour(form, user) -> Tuple[bool, str]:
 def enregistrer_trajet_interne_bus_udm(form, user) -> Tuple[bool, str]:
     """
     Enregistrer un trajet interne avec bus UdM (remplace enregistrer_depart_aed).
-    Champs attendus: lieu_depart, lieu_arrivee, type_passagers, nombre_places_occupees,
+    Champs attendus: lieu_depart, point_arriver, type_passagers, nombre_places_occupees,
     chauffeur_id, numero_bus_udm, kilometrage_actuel, date_heure_depart.
     """
     try:
@@ -388,7 +388,7 @@ def enregistrer_trajet_interne_bus_udm(form, user) -> Tuple[bool, str]:
             type_trajet='UDM_INTERNE',
             date_heure_depart=form.date_heure_depart.data,
             point_depart=form.lieu_depart.data,
-            point_arriver=form.lieu_arrivee.data,  # Nom correct selon votre DB
+            point_arriver=form.point_arriver.data,  # Nom correct selon votre DB
             type_passagers=form.type_passagers.data,
             nombre_places_occupees=form.nombre_places_occupees.data,
             chauffeur_id=form.chauffeur_id.data,
@@ -417,7 +417,7 @@ def enregistrer_trajet_interne_bus_udm(form, user) -> Tuple[bool, str]:
                 db.session.add(bus_udm)
 
         db.session.commit()
-        return True, f'Trajet interne Bus UdM enregistré avec succès ({form.lieu_depart.data} → {form.lieu_arrivee.data}).'
+        return True, f'Trajet interne Bus UdM enregistré avec succès ({form.lieu_depart.data} → {form.point_arriver.data}).'
     except Exception as e:
         db.session.rollback()
         return False, f'Erreur lors de l\'enregistrement : {str(e)}'
@@ -426,7 +426,7 @@ def enregistrer_trajet_interne_bus_udm(form, user) -> Tuple[bool, str]:
 def enregistrer_trajet_prestataire_modernise(form, user) -> Tuple[bool, str]:
     """
     Enregistrer un trajet avec bus prestataire (version modernisée).
-    Champs attendus: lieu_depart, lieu_arrivee, nom_prestataire, immat_bus, etc.
+    Champs attendus: lieu_depart, point_arriver, nom_prestataire, immat_bus, etc.
     """
     try:
         _ensure_chargetransport_for_user(user.utilisateur_id)
@@ -437,7 +437,7 @@ def enregistrer_trajet_prestataire_modernise(form, user) -> Tuple[bool, str]:
         print(f"  - nom_chauffeur: {form.nom_chauffeur.data}")
         print(f"  - immat_bus: {form.immat_bus.data}")
         print(f"  - lieu_depart: {form.lieu_depart.data}")
-        print(f"  - lieu_arrivee: {form.lieu_arrivee.data}")
+        print(f"  - point_arriver: {form.point_arriver.data}")
         print(f"  - type_passagers: {form.type_passagers.data}")
         print(f"  - nombre_places_occupees: {form.nombre_places_occupees.data}")
 
@@ -446,7 +446,7 @@ def enregistrer_trajet_prestataire_modernise(form, user) -> Tuple[bool, str]:
             prestataire_id=form.nom_prestataire.data,
             date_heure_depart=form.date_heure_depart.data,
             point_depart=form.lieu_depart.data,
-            point_arriver=form.lieu_arrivee.data,  # Nom correct selon votre DB
+            point_arriver=form.point_arriver.data,  # Nom correct selon votre DB
             type_passagers=form.type_passagers.data,
             nombre_places_occupees=form.nombre_places_occupees.data,
             chauffeur_id=None,
@@ -466,7 +466,7 @@ def enregistrer_trajet_prestataire_modernise(form, user) -> Tuple[bool, str]:
         
         print(f"DEBUG MODERNISE - Trajet enregistré avec ID: {trajet.trajet_id}")
         
-        return True, f'Trajet prestataire enregistré avec succès (ID: {trajet.trajet_id}) - {form.lieu_depart.data} → {form.lieu_arrivee.data}'
+        return True, f'Trajet prestataire enregistré avec succès (ID: {trajet.trajet_id}) - {form.lieu_depart.data} → {form.point_arriver.data}'
     except Exception as e:
         print(f"DEBUG MODERNISE - Erreur: {str(e)}")
         db.session.rollback()
@@ -476,7 +476,7 @@ def enregistrer_trajet_prestataire_modernise(form, user) -> Tuple[bool, str]:
 def enregistrer_autres_trajets(form, user) -> Tuple[bool, str]:
     """
     Enregistrer un autre trajet (remplace sortie hors ville).
-    Champs attendus: lieu_depart, lieu_arrivee, destination, motif, chauffeur_id,
+    Champs attendus: lieu_depart, point_arriver, motif_trajet, chauffeur_id,
     numero_bus_udm, kilometrage_actuel, date_heure_depart.
     """
     try:
@@ -493,14 +493,14 @@ def enregistrer_autres_trajets(form, user) -> Tuple[bool, str]:
             type_trajet='UDM_INTERNE',
             date_heure_depart=form.date_heure_depart.data,
             point_depart=form.lieu_depart.data,
-            point_arriver=form.lieu_arrivee.data,  # Nom correct selon votre DB
+            point_arriver=form.point_arriver.data,  # Nom correct selon votre DB
             type_passagers=None,  # Peut rester NULL si non applicable
             nombre_places_occupees=None,  # Peut rester NULL si non applicable
             chauffeur_id=form.chauffeur_id.data,
             numero_bus_udm=form.numero_bus_udm.data,
             immat_bus=None,
             enregistre_par=user.utilisateur_id,
-            motif=form.motif.data,
+            motif=form.motif_trajet.data,
         )
         db.session.add(trajet)
 
@@ -523,7 +523,7 @@ def enregistrer_autres_trajets(form, user) -> Tuple[bool, str]:
                 db.session.add(bus_udm)
 
         db.session.commit()
-        return True, f'Autre trajet (Bus UdM) enregistré avec succès ({form.lieu_depart.data} → {form.lieu_arrivee.data}).'
+        return True, f'Autre trajet (Bus UdM) enregistré avec succès ({form.lieu_depart.data} → {form.point_arriver.data}).'
     except Exception as e:
         db.session.rollback()
         return False, f'Erreur lors de l\'enregistrement : {str(e)}'

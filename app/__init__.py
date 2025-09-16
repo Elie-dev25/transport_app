@@ -13,11 +13,16 @@ import os
 def create_app():
     app = Flask(__name__)
 
-    env = os.environ.get("FLASK_ENV", "development")
+    # Utiliser la configuration de base pour éviter les problèmes de DB
+    # En production, définir FLASK_ENV=production
+    env = os.environ.get("FLASK_ENV", "default")
     if env == "production":
         from app.config import ProductionConfig as CurrentConfig
-    else:
+    elif env == "development":
         from app.config import DevelopmentConfig as CurrentConfig
+    else:
+        # Configuration par défaut (utilise transport_udm)
+        from app.config import Config as CurrentConfig
 
     app.config.from_object(CurrentConfig)  # Charge la configuration adaptée
 
@@ -45,10 +50,12 @@ def create_app():
     app.register_blueprint(auth.bp)
     from app.routes import admin
     app.register_blueprint(admin.bp)
-    from app.routes import chauffeur, mecanicien, charge_transport
+    from app.routes import chauffeur, mecanicien, charge_transport, superviseur, responsable
     app.register_blueprint(chauffeur.bp)
     app.register_blueprint(mecanicien.bp)
     app.register_blueprint(charge_transport.bp)
+    app.register_blueprint(superviseur.bp)
+    app.register_blueprint(responsable.bp)
 
 
     # Filtre Jinja pour afficher les statuts avec mapping UI (sans changer la BD)

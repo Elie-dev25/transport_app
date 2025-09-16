@@ -1,0 +1,447 @@
+{% extends base_template if base_template is defined else 'roles/chauffeur/_base_chauffeur.html' %}
+{% from 'shared/macros/tableaux_components.html' import table_container, status_badge, level_indicator, voyant_indicator, icon_cell, date_cell, number_cell %}
+
+{% block title %}Bus UdM{% endblock %}
+
+{% set active_page = 'bus_udm' %}
+{% set page_title = 'Liste des Bus UdM' %}
+{% set readonly = readonly or superviseur_mode %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkfHcA21fZyMcJ6r0F/YvC3etwFh0qU6V7qX+6lGJ3j1b8d+6K/Y3GZ3g==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tableaux.css') }}">
+    <script src="{{ url_for('static', filename='js/tableaux.js') }}"></script>
+    <style>
+      /* Styles spécifiques à la page Bus UdM */
+      /* Eviter le scroll horizontal en permettant le retour à la ligne dans les cellules */
+      .dashboard-content table {
+        width: 100%;
+        table-layout: auto;
+      }
+      .dashboard-content table th,
+      .dashboard-content table td {
+        white-space: normal;
+        word-break: break-word;
+      }
+      /* Masquer toute éventuelle barre horizontale dans la zone de contenu */
+      .dashboard-content { overflow-x: hidden; }
+      #docFormModal, #addBusModal {
+        z-index: 10000;
+      }
+
+      /* Styles pour les détails de bus */
+      .details-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      .details-list li {
+        margin: 6px 0;
+      }
+
+      /* Indicateurs colorés */
+      .indicator {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 6px;
+      }
+      .indicator.green { background-color: #10b981; }
+      .indicator.orange { background-color: #f59e0b; }
+      .indicator.red { background-color: #ef4444; }
+
+      /* Styles pour les alertes */
+      .alert-indicator {
+        position: relative;
+        cursor: pointer;
+      }
+      .alert-indicator.has-alerts::after {
+        content: '!';
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background: #ef4444;
+        color: white;
+        border-radius: 50%;
+        width: 16px;
+        height: 16px;
+        font-size: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+    </style>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="container-fluid">
+    <!-- Bouton d'ajout -->
+    {% if not readonly %}
+    <div class="d-flex justify-content-end mb-3">
+        <button id="openAddBusModal" class="btn btn-primary rounded-circle" style="width:50px;height:50px;" title="Ajouter un Bus UdM">
+            <i class="fas fa-plus"></i>
+        </button>
+    </div>
+    {% endif %}
+
+    <!-- Tableau des bus avec le nouveau design -->
+    {% call table_container('Liste des Bus UdM', 'bus', search=true, subtitle='Gestion de la flotte de bus universitaires', table_id='busTable') %}
+        <table class="table table-striped table-hover sortable">
+            <thead>
+                <tr>
+                    <th>Numéro</th>
+                    <th>Immatriculation</th>
+                    <th>Kilométrage</th>
+                    <th>État</th>
+                    <th>Capacité</th>
+                    <th class="no-sort">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for bus in bus_list %}
+                <tr>
+                    <td>{{ number_cell(bus.numero) }}</td>
+                    <td>
+                        {% if bus.immatriculation %}
+                            <strong>{{ bus.immatriculation }}</strong>
+                        {% else %}
+                            <span class="text-muted">Non défini</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if bus.kilometrage %}
+                            {{ icon_cell('tachometer-alt', "{:,}".format(bus.kilometrage) + ' km') }}
+                        {% else %}
+                            <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if bus.etat_vehicule == 'OPERATIONNEL' %}
+                            {{ status_badge('Opérationnel', 'success', 'check-circle') }}
+                        {% elif bus.etat_vehicule == 'DEFAILLANT' %}
+                            {{ status_badge('Défaillant', 'danger', 'exclamation-triangle') }}
+                        {% elif bus.etat_vehicule == 'MAINTENANCE' %}
+                            {{ status_badge('Maintenance', 'warning', 'wrench') }}
+                        {% else %}
+                            {{ status_badge(bus.etat_vehicule or 'Inconnu', 'secondary') }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if bus.nombre_places %}
+                            {{ icon_cell('users', bus.nombre_places|string + ' places') }}
+                        {% else %}
+                            <span class="text-muted">Non défini</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="table-actions">
+                            <button class="table-btn view" onclick="showBusDetails({{ bus.id }})" title="Voir la fiche">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="table-btn action" onclick="openPanneModal({{ bus.numero|tojson }}, {{ (bus.immatriculation|default('', true))|tojson }}, {{ (bus.kilometrage or 0)|tojson }})" title="Déclarer panne">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </button>
+                            <button class="table-btn edit" onclick="openDocModal({{ bus.id }})" title="Ajouter un document">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="table-empty">
+                        <i class="fas fa-bus"></i>
+                        <h5>Aucun bus enregistré</h5>
+                        <p>Cliquez sur le bouton + pour ajouter votre premier bus.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endcall %}
+
+    <!-- Actions rapides (restreintes pour Chauffeur) -->
+    <div class="quick-actions" style="margin-top:30px;">
+        <h2 class="section-title">
+            <i class="fas fa-tools"></i>
+            Opérations
+        </h2>
+        <div class="actions-grid">
+            {% if not readonly %}
+            <a href="{{ url_for('admin.carburation') }}" class="action-btn">
+                <i class="fas fa-gas-pump"></i>
+                <span>Carburation</span>
+            </a>
+            <a href="{{ url_for('admin.vidange') }}" class="action-btn">
+                <i class="fas fa-oil-can"></i>
+                <span>Vidange</span>
+            </a>
+            {% endif %}
+            <a href="#" id="declare-panne-btn" class="action-btn">
+                <i class="fas fa-triangle-exclamation"></i>
+                <span>Déclaration de panne</span>
+            </a>
+            {% if not readonly %}
+            <a href="/admin/depanage" class="action-btn" id="depanage-btn">
+                <i class="fas fa-wrench"></i>
+                <span>Dépannage</span>
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% include 'shared/modals/_document_modal.html' %}
+
+<!-- Modal détails bus -->
+<div id="busDetailsModal" class="modal">
+  <div class="modal-content" style="max-width:500px;">
+    <div class="modal-header">
+      <h3>Fiche personnel Bus UdM</h3>
+      <button type="button" id="closeBusDetailsModal" class="close-btn">&times;</button>
+    </div>
+    <div class="modal-body" id="busDetailsBody">
+      <!-- Contenu injecté via JS -->
+    </div>
+  </div>
+</div>
+
+{% include 'shared/modals/_declaration_panne_modal.html' %}
+
+{% include 'shared/modals/_add_bus_modal.html' %}
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Scripts spécifiques à la page Bus UdM (jQuery déjà chargé dans _base_dashboard.html)
+$(document).ready(function() {
+  // Ouvrir automatiquement la modale Document si on arrive avec ?open=doc&bus_id=...
+  (function(){
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('open') === 'doc') {
+      const bid = params.get('bus_id');
+      if (bid) {
+        window.selectedBusId = bid;
+        $('#docFormModal').addClass('show');
+        // Nettoyer l'URL pour éviter ré-ouverture au refresh
+        if (window.history && window.history.replaceState) {
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      }
+    } else if (params.get('open') === 'panne') {
+      // Ouvrir la modale de déclaration de panne
+      $('#panneModal').removeAttr('hidden').addClass('show').attr('aria-hidden','false');
+      // Nettoyer l'URL pour éviter ré-ouverture au refresh
+      if (window.history && window.history.replaceState) {
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
+  })();
+  // Gestion de la modale d'ajout de Bus UdM
+  $('#openAddBusModal').on('click', function(e) {
+    e.preventDefault();
+    $('#addBusModal').addClass('show');
+  });
+  
+  $('#closeAddBusModal').on('click', function() {
+    $('#addBusModal').removeClass('show');
+    $('#addBusForm')[0].reset();
+  });
+  
+  // Fermer la modale si on clique en dehors du contenu
+  $('#addBusModal').on('click', function(e) {
+    if (e.target === this) {
+      $(this).removeClass('show');
+      $('#addBusForm')[0].reset();
+    }
+  });
+  
+  // Soumission du formulaire d'ajout de Bus UdM
+  $('#addBusForm').on('submit', function(e) {
+    e.preventDefault();
+    $.ajax({
+      url: '/admin/ajouter_bus_ajax',
+      method: 'POST',
+      data: $(this).serialize(),
+      success: function(resp) {
+        $('#addBusModal').removeClass('show');
+        $('#addBusForm')[0].reset();
+        if (resp.success) {
+          Swal.fire('Succès', resp.message, 'success').then(() => {
+            location.reload();
+          });
+        } else {
+          Swal.fire('Erreur', resp.message, 'error');
+        }
+      },
+      error: function() {
+        Swal.fire('Erreur', 'Impossible d\'ajouter le bus UdM', 'error');
+      }
+    });
+  });
+
+  // Bouton Déclaration de panne
+  $(document).on('click', '#declare-panne-btn', function(e){
+    e.preventDefault();
+    // Pré-remplir si un bus est sélectionné, sinon vider
+    if (window.selectedBusData) {
+      $('#numero_bus_udm_panne').val(window.selectedBusData.numero || '');
+      $('#immatriculation_panne').val(window.selectedBusData.immatriculation || '');
+    } else {
+      $('#numero_bus_udm_panne').val('');
+      $('#immatriculation_panne').val('');
+    }
+    // Le kilométrage doit toujours être saisi par l'utilisateur
+    $('#kilometrage_panne').val('');
+    // Ouvrir la modale de déclaration de panne
+    $('#panneModal').removeAttr('hidden').addClass('show').attr('aria-hidden','false');
+  });
+
+  // Fermeture modale panne
+  $('#closePanneModal, #cancelPanneBtn').on('click', function(){
+    $('#panneModal').removeClass('show').attr('aria-hidden','true').attr('hidden','');
+    $('#panneForm')[0].reset();
+  });
+
+  // Variable globale pour stocker les données du bus sélectionné
+  window.selectedBusData = null;
+  // Index des Bus UdM par numéro pour autocomplétion
+  window.busUdMIndexByNumero = {};
+  // Charger la liste des Bus UdM pour alimenter le datalist de la modale panne
+  function loadBusUdMListForDatalist(){
+    $.get('/admin/bus_udm_list_ajax', function(resp){
+      if(resp && resp.success){
+        const list = resp.bus_udm || [];
+        const options = list.map(b=>{
+          // Construire un index pour auto-fill
+          window.busUdMIndexByNumero[b.numero] = b;
+          const label = b.immatriculation ? `${b.numero} — ${b.immatriculation}` : b.numero;
+          return `<option value="${b.numero}" label="${label}"></option>`;
+        }).join('');
+        $('#busUdMNumerosList').html(options);
+      }
+    });
+  }
+
+  loadBusUdMListForDatalist();
+
+  // Auto-remplir l'immatriculation quand on choisit le Numéro Bus UdM (datalist)
+  $('#numero_bus_udm_panne').on('input change', function(){
+    const numero = $(this).val();
+    const b = (window.busUdMIndexByNumero || {})[numero];
+    if (b) {
+      $('#immatriculation_panne').val(b.immatriculation || '');
+    }
+  });
+
+  // Soumission formulaire Déclaration de panne
+  $(document).off('submit', '#panneForm').on('submit', '#panneForm', function(e){
+    e.preventDefault();
+    const $submitBtn = $(this).find('button[type="submit"], .submit-btn');
+    $submitBtn.prop('disabled', true);
+    const formData = {
+      numero_bus_udm: $('#numero_bus_udm_panne').val(),
+      numero_aed: ($('#numero_bus_udm_panne').val() || ''),
+      immatriculation: $('#immatriculation_panne').val(),
+      kilometrage: $('#kilometrage_panne').val(),
+      description: $('#description_panne').val(),
+      criticite: $('#criticite_panne').val(),
+      immobilisation: $('#immobilisation_panne').is(':checked')
+    };
+
+    const numTrim = (formData.numero_bus_udm || '').trim();
+    if (!numTrim) {
+      $submitBtn.prop('disabled', false);
+      Swal.fire('Erreur', 'Veuillez choisir un Numéro Bus UdM.', 'error');
+      return;
+    }
+    const hasKm = formData.kilometrage !== '' && formData.kilometrage != null;
+    const kmVal = hasKm ? Number(formData.kilometrage) : NaN;
+    const minAttr = Number($('#kilometrage_panne').attr('min') || 0);
+    if (hasKm && Number.isNaN(kmVal)) {
+      $submitBtn.prop('disabled', false);
+      Swal.fire('Erreur', 'Kilométrage invalide.', 'error');
+      return;
+    }
+    if (hasKm && kmVal < minAttr) {
+      $submitBtn.prop('disabled', false);
+      Swal.fire('Erreur', `Le kilométrage doit être supérieur ou égal à ${minAttr}.`, 'error');
+      return;
+    }
+    if (!formData.criticite) {
+      $submitBtn.prop('disabled', false);
+      Swal.fire('Erreur', 'Veuillez sélectionner la criticité.', 'error');
+      return;
+    }
+
+    $.ajax({
+      url: '/admin/declarer_panne',
+      method: 'POST',
+      contentType: 'application/json',
+      data: JSON.stringify(formData),
+      success: function(resp){
+        if(resp.success){
+          Swal.fire('Succès', resp.message, 'success');
+          $('#panneModal').removeClass('show').attr('aria-hidden','true').attr('hidden','');
+          $('#panneForm')[0].reset();
+          setTimeout(() => location.reload(), 1200);
+        } else {
+          Swal.fire('Erreur', resp.message, 'error');
+        }
+        $submitBtn.prop('disabled', false);
+      },
+      error: function(xhr){
+        $submitBtn.prop('disabled', false);
+        let msg = 'Impossible d\'enregistrer la panne';
+        try { if (xhr && xhr.responseJSON && xhr.responseJSON.message) msg = xhr.responseJSON.message; } catch(e){}
+        Swal.fire('Erreur', msg, 'error');
+      }
+    });
+  });
+
+  // Fonction pour afficher les détails d'un bus (redirige vers la page serveur)
+  window.showBusDetails = function(busId) {
+    window.location.href = '/admin/bus/details/' + busId;
+  };
+
+  // Fonction pour ouvrir la modale de document
+  window.openDocModal = function(busId) {
+    window.selectedBusId = busId;
+    $('#docFormModal').addClass('show');
+  };
+
+  // Fonction pour ouvrir la modale de panne avec des données pré-remplies
+  window.openPanneModal = function(numero, immatriculation, kilometrage) {
+    $('#numero_bus_udm_panne').val(numero);
+    $('#immatriculation_panne').val(immatriculation || '');
+    $('#kilometrage_panne').val(kilometrage || '');
+    const minKm = (typeof kilometrage !== 'undefined' && kilometrage !== null && kilometrage !== '') ? Number(kilometrage) : 0;
+    $('#kilometrage_panne').attr('min', isNaN(minKm) ? 0 : minKm);
+    $('#panneModal').removeAttr('hidden').addClass('show').attr('aria-hidden','false');
+  };
+
+  // Fermeture des modales
+  $('#closeDocFormModal').on('click', function(){ $('#docFormModal').removeClass('show'); });
+  $('#closeBusDetailsModal').on('click', function(){ $('#busDetailsModal').removeClass('show'); });
+  $('#busDetailsModal').on('click', function(e){ if(e.target === this){ $(this).removeClass('show'); }});
+
+  // Soumission formulaire document
+  $('#docForm').on('submit', function(e){
+    e.preventDefault();
+    const formData = $(this).serialize();
+    $.post('/admin/ajouter_document_udm_ajax/'+window.selectedBusId, formData, function(resp){
+      if(resp.success){
+        Swal.fire('Succès', resp.message, 'success');
+        $('#docFormModal').removeClass('show');
+      }else{
+        Swal.fire('Erreur', resp.message, 'error');
+      }
+    });
+  });
+});
+</script>
+{% endblock %}

@@ -38,7 +38,7 @@ def dashboard():
             'km_restant': km_restant,
             'color': color
         })
-    return render_template('dashboard_mecanicien.html', bus_list=bus_infos)
+    return render_template('roles/mecanicien/dashboard_mecanicien.html', bus_list=bus_infos)
 
 # Route AJAX pour marquer comme défaillant
 @bp.route('/bus_udm/<int:bus_udm_id>/defaillant', methods=['POST'])
@@ -66,7 +66,7 @@ def vidange():
         historique_vidange = get_vidange_history()
 
     return render_template(
-        'vidange.html',
+        'pages/vidange.html',
         active_page='vidange',
         bus_vidange=bus_vidange,
         historique_vidange=historique_vidange,

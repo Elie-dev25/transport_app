@@ -1,0 +1,256 @@
+{#
+Macros communes pour éliminer la duplication dans les templates
+Phase 4 - Centralise les éléments répétés dans 10+ templates
+#}
+
+{# Macro pour afficher les statistiques sous forme de cartes #}
+{% macro render_stats_cards(stats, card_configs) %}
+<div class="row">
+    {% for key, config in card_configs.items() %}
+        {% if key in stats %}
+        <div class="col-md-{{ config.get('col_size', 3) }}">
+            <div class="card {{ config.get('card_class', 'border-primary') }}">
+                <div class="card-body text-center">
+                    <i class="{{ config.get('icon', 'fas fa-info-circle') }} fa-2x {{ config.get('icon_class', 'text-primary') }} mb-3"></i>
+                    <h4 class="card-title">{{ stats[key] }}</h4>
+                    <p class="card-text">{{ config.get('title', key|title) }}</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    {% endfor %}
+</div>
+{% endmacro %}
+
+{# Macro pour afficher un formulaire modal #}
+{% macro render_modal_form(modal_id, title, form, submit_text="Enregistrer", size="lg") %}
+<div class="modal fade" id="{{ modal_id }}" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-{{ size }}" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ title }}</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form method="POST" action="{{ url_for(request.endpoint) }}">
+                <div class="modal-body">
+                    {{ form.hidden_tag() }}
+                    {% for field in form if field.widget.input_type != 'hidden' and field.name != 'submit' %}
+                        <div class="form-group">
+                            {{ field.label(class="form-label") }}
+                            {% if field.widget.input_type == 'select' %}
+                                {{ field(class="form-control") }}
+                            {% elif field.widget.input_type == 'textarea' %}
+                                {{ field(class="form-control", rows="3") }}
+                            {% else %}
+                                {{ field(class="form-control") }}
+                            {% endif %}
+                            {% if field.errors %}
+                                <div class="text-danger">
+                                    {% for error in field.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">{{ submit_text }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+{# Macro pour afficher un tableau de données #}
+{% macro render_data_table(headers, rows, table_id="dataTable", actions=None) %}
+<div class="table-responsive">
+    <table class="table table-striped table-hover" id="{{ table_id }}">
+        <thead class="thead-dark">
+            <tr>
+                {% for header in headers %}
+                <th>{{ header }}</th>
+                {% endfor %}
+                {% if actions %}
+                <th>Actions</th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in rows %}
+            <tr>
+                {% for cell in row %}
+                <td>{{ cell }}</td>
+                {% endfor %}
+                {% if actions %}
+                <td>
+                    {% for action in actions %}
+                    <a href="{{ action.url }}" class="btn btn-sm {{ action.class|default('btn-primary') }}" 
+                       {% if action.confirm %}onclick="return confirm('{{ action.confirm }}')"{% endif %}>
+                        <i class="{{ action.icon }}"></i> {{ action.text }}
+                    </a>
+                    {% endfor %}
+                </td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endmacro %}
+
+{# Macro pour afficher les alertes/notifications #}
+{% macro render_alerts(messages=None, custom_alerts=None) %}
+{% if messages %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="close" data-dismiss="alert">
+                    <span>&times;</span>
+                </button>
+            </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+{% endif %}
+
+{% if custom_alerts %}
+    {% for alert in custom_alerts %}
+    <div class="alert alert-{{ alert.type|default('info') }} alert-dismissible fade show" role="alert">
+        {% if alert.icon %}<i class="{{ alert.icon }}"></i> {% endif %}
+        {{ alert.message }}
+        <button type="button" class="close" data-dismiss="alert">
+            <span>&times;</span>
+        </button>
+    </div>
+    {% endfor %}
+{% endif %}
+{% endmacro %}
+
+{# Macro pour afficher les boutons d'action #}
+{% macro render_action_buttons(buttons) %}
+<div class="btn-group" role="group">
+    {% for button in buttons %}
+    <button type="button" class="btn {{ button.class|default('btn-primary') }}" 
+            {% if button.modal %}data-toggle="modal" data-target="#{{ button.modal }}"{% endif %}
+            {% if button.onclick %}onclick="{{ button.onclick }}"{% endif %}>
+        {% if button.icon %}<i class="{{ button.icon }}"></i> {% endif %}
+        {{ button.text }}
+    </button>
+    {% endfor %}
+</div>
+{% endmacro %}
+
+{# Macro pour afficher les informations de trafic #}
+{% macro render_trafic_info(trafic, show_details=true) %}
+<div class="card border-info">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0"><i class="fas fa-users"></i> Trafic Étudiants</h5>
+    </div>
+    <div class="card-body">
+        <div class="row text-center">
+            <div class="col-md-4">
+                <h4 class="text-success">{{ trafic.arrives|default(0) }}</h4>
+                <p>Arrivées</p>
+            </div>
+            <div class="col-md-4">
+                <h4 class="text-primary">{{ trafic.present|default(0) }}</h4>
+                <p>Présents</p>
+            </div>
+            <div class="col-md-4">
+                <h4 class="text-warning">{{ trafic.partis|default(0) }}</h4>
+                <p>Départs</p>
+            </div>
+        </div>
+        {% if show_details %}
+        <hr>
+        <small class="text-muted">
+            <i class="fas fa-info-circle"></i> 
+            Données en temps réel basées sur les trajets du jour
+        </small>
+        {% endif %}
+    </div>
+</div>
+{% endmacro %}
+
+{# Macro pour afficher un champ de formulaire avec gestion d'erreurs #}
+{% macro render_form_field(field, placeholder=None, help_text=None) %}
+<div class="form-group">
+    {{ field.label(class="form-label") }}
+    {% if field.widget.input_type == 'select' %}
+        {{ field(class="form-control") }}
+    {% elif field.widget.input_type == 'textarea' %}
+        {{ field(class="form-control", rows="3", placeholder=placeholder) }}
+    {% elif field.widget.input_type == 'datetime-local' %}
+        {{ field(class="form-control") }}
+    {% else %}
+        {{ field(class="form-control", placeholder=placeholder) }}
+    {% endif %}
+    
+    {% if help_text %}
+    <small class="form-text text-muted">{{ help_text }}</small>
+    {% endif %}
+    
+    {% if field.errors %}
+        <div class="text-danger">
+            {% for error in field.errors %}
+                <small class="d-block">{{ error }}</small>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{# Macro pour afficher un breadcrumb #}
+{% macro render_breadcrumb(items) %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        {% for item in items %}
+            {% if loop.last %}
+                <li class="breadcrumb-item active" aria-current="page">{{ item.text }}</li>
+            {% else %}
+                <li class="breadcrumb-item">
+                    {% if item.url %}
+                        <a href="{{ item.url }}">{{ item.text }}</a>
+                    {% else %}
+                        {{ item.text }}
+                    {% endif %}
+                </li>
+            {% endif %}
+        {% endfor %}
+    </ol>
+</nav>
+{% endmacro %}
+
+{# Macro pour afficher un spinner de chargement #}
+{% macro render_loading_spinner(text="Chargement...") %}
+<div class="text-center">
+    <div class="spinner-border text-primary" role="status">
+        <span class="sr-only">{{ text }}</span>
+    </div>
+    <p class="mt-2">{{ text }}</p>
+</div>
+{% endmacro %}
+
+{# Macro pour afficher un badge de statut #}
+{% macro render_status_badge(status, status_config=None) %}
+{% if not status_config %}
+    {% set status_config = {
+        'BON': {'class': 'success', 'text': 'Bon'},
+        'DEFAILLANT': {'class': 'danger', 'text': 'Défaillant'},
+        'ACTIF': {'class': 'success', 'text': 'Actif'},
+        'INACTIF': {'class': 'secondary', 'text': 'Inactif'},
+        'EN_COURS': {'class': 'warning', 'text': 'En cours'},
+        'TERMINE': {'class': 'success', 'text': 'Terminé'}
+    } %}
+{% endif %}
+
+{% set config = status_config.get(status, {'class': 'secondary', 'text': status}) %}
+<span class="badge badge-{{ config.class }}">{{ config.text }}</span>
+{% endmacro %}

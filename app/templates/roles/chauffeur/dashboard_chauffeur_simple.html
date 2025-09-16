@@ -1,0 +1,197 @@
+{% extends "roles/chauffeur/_base_chauffeur.html" %}
+{% block title %}Dashboard Chauffeur{% endblock %}
+
+{% set active_page = 'dashboard' %}
+{% set page_title = 'Tableau de Bord Chauffeur' %}
+
+{% block extra_head %}
+<style>
+.error-message {
+    background: #fee;
+    border: 1px solid #fcc;
+    color: #c33;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+.simple-card {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+.user-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.info-icon {
+    width: 40px;
+    height: 40px;
+    background: #007bff;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.welcome-section {
+    text-align: center;
+    padding: 40px 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 10px;
+    margin-bottom: 30px;
+}
+
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-top: 30px;
+}
+
+.feature-card {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+}
+
+.feature-card:hover {
+    transform: translateY(-2px);
+}
+
+.feature-icon {
+    font-size: 2em;
+    color: #007bff;
+    margin-bottom: 10px;
+}
+</style>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="container-fluid">
+    {% if error_message %}
+    <div class="error-message">
+        <i class="fas fa-exclamation-triangle"></i>
+        <strong>Attention:</strong> {{ error_message }}. Le dashboard est en mode simplifié.
+    </div>
+    {% endif %}
+
+    <!-- Section de bienvenue -->
+    <div class="welcome-section">
+        <h1><i class="fas fa-steering-wheel"></i> Bienvenue, {{ current_user.nom }} {{ current_user.prenom }}!</h1>
+        <p>Tableau de bord chauffeur - Transport Universitaire UdM</p>
+        <p><strong>Rôle:</strong> {{ current_user.role }}</p>
+    </div>
+
+    <!-- Informations utilisateur -->
+    <div class="simple-card">
+        <h3><i class="fas fa-user"></i> Vos Informations</h3>
+        <div class="user-info">
+            <div class="info-item">
+                <div class="info-icon">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div>
+                    <strong>Nom complet:</strong><br>
+                    {{ current_user.nom }} {{ current_user.prenom }}
+                </div>
+            </div>
+            <div class="info-item">
+                <div class="info-icon">
+                    <i class="fas fa-at"></i>
+                </div>
+                <div>
+                    <strong>Login:</strong><br>
+                    {{ current_user.login }}
+                </div>
+            </div>
+            <div class="info-item">
+                <div class="info-icon">
+                    <i class="fas fa-envelope"></i>
+                </div>
+                <div>
+                    <strong>Email:</strong><br>
+                    {{ current_user.email }}
+                </div>
+            </div>
+            <div class="info-item">
+                <div class="info-icon">
+                    <i class="fas fa-phone"></i>
+                </div>
+                <div>
+                    <strong>Téléphone:</strong><br>
+                    {{ current_user.telephone }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fonctionnalités disponibles -->
+    <div class="simple-card">
+        <h3><i class="fas fa-tools"></i> Fonctionnalités Disponibles</h3>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <h4>Mon Profil</h4>
+                <p>Consultez et gérez vos informations personnelles</p>
+                <a href="{{ url_for('chauffeur.profil') }}" class="btn btn-primary btn-sm">Accéder</a>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-route"></i>
+                </div>
+                <h4>Mes Trajets</h4>
+                <p>Historique et planning de vos trajets</p>
+                <a href="{{ url_for('chauffeur.trajets') }}" class="btn btn-primary btn-sm">Voir</a>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-calendar-week"></i>
+                </div>
+                <h4>Vue Semaine</h4>
+                <p>Planning hebdomadaire de vos affectations</p>
+                <a href="{{ url_for('chauffeur.semaine') }}" class="btn btn-primary btn-sm">Consulter</a>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h4>Trafic Étudiants</h4>
+                <p>Suivi en temps réel du trafic étudiant</p>
+                <a href="{{ url_for('chauffeur.trafic') }}" class="btn btn-primary btn-sm">Voir</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informations système -->
+    <div class="simple-card">
+        <h3><i class="fas fa-info-circle"></i> Informations</h3>
+        <div class="alert alert-info">
+            <strong>Note:</strong> Ce dashboard est en cours de développement. 
+            Les fonctionnalités complètes seront bientôt disponibles.
+        </div>
+        <div class="alert alert-warning">
+            <strong>Support:</strong> En cas de problème, contactez l'administrateur système.
+        </div>
+    </div>
+</div>
+{% endblock %}

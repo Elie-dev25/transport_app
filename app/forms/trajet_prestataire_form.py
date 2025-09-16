@@ -1,69 +1,42 @@
-from flask_wtf import FlaskForm
-from wtforms import DateTimeField, SelectField, IntegerField, StringField, SubmitField
-from wtforms.validators import DataRequired, NumberRange, Length, ValidationError
-from datetime import datetime
+"""
+Formulaire pour les trajets avec bus prestataire
+Phase 2 - Refactorisé pour utiliser BasePrestataireForm (élimine 60+ lignes dupliquées)
+"""
 
-class TrajetPrestataireForm(FlaskForm):
-    """Formulaire pour les trajets avec bus prestataire (modernisé)"""
+from wtforms import SelectField, SubmitField
+from .base_forms import BasePrestataireForm
+from .constants import FormChoices, FormLabels
+from .validators import CommonValidators
 
-    nom_prestataire = SelectField(
-        'Nom Prestataire',
-        coerce=int,
-        validators=[DataRequired()]
-    )
-    immat_bus = StringField(
-        'Immatriculation Bus',
-        validators=[DataRequired(), Length(max=20)]
-    )
-    nombre_places = IntegerField(
-        'Nombre de places bus',
-        default=70,
-        validators=[DataRequired(), NumberRange(min=10, max=70)]
-    )
-    nom_chauffeur = StringField(
-        'Nom du chauffeur',
-        validators=[DataRequired(), Length(max=100)]
-    )
-    date_heure_depart = DateTimeField(
-        'Date et heure de départ',
-        format='%Y-%m-%dT%H:%M',
-        default=datetime.now,
-        validators=[DataRequired()]
-    )
 
-    # Nouveaux champs lieu de départ et arrivée
+class TrajetPrestataireForm(BasePrestataireForm):
+    """
+    Formulaire pour les trajets avec bus prestataire (modernisé)
+    Hérite de BasePrestataireForm - élimine la duplication de code
+    """
+
+    # Champs spécifiques aux trajets prestataires avec lieux
     lieu_depart = SelectField(
-        'Lieu de départ',
-        choices=[
-            ('Mfetum', 'Mfetum'),
-            ('Ancienne Mairie', 'Ancienne Mairie'),
-            ('Banekane', 'Banekane')
-        ],
-        validators=[DataRequired()]
+        FormLabels.LIEU_DEPART,
+        choices=FormChoices.LIEUX,
+        validators=CommonValidators.LIEU_VALIDE
     )
 
-    lieu_arrivee = SelectField(
-        'Lieu d\'arrivée',
-        choices=[
-            ('Mfetum', 'Mfetum'),
-            ('Ancienne Mairie', 'Ancienne Mairie'),
-            ('Banekane', 'Banekane')
-        ],
-        validators=[DataRequired()]
+    point_arriver = SelectField(
+        FormLabels.LIEU_ARRIVEE,
+        choices=FormChoices.LIEUX,
+        validators=CommonValidators.LIEU_ARRIVEE
     )
-    type_passagers = SelectField(
-        'Type de passagers',
-        choices=[('ETUDIANT', 'Étudiant'), ('PERSONNEL', 'Personnel'), ('MALADE', 'Malade'), ('INVITER', 'Invité'), ('MALADE_PERSONNEL', 'Malade Personnel')],
-        default='ETUDIANT',
-        validators=[DataRequired()]
-    )
-    nombre_places_occupees = IntegerField(
-        'Places occupées',
-        validators=[DataRequired(), NumberRange(min=0)]
-    )
-    submit = SubmitField('Enregistrer le trajet')
 
-    def validate_lieu_arrivee(self, field):
-        """Validation personnalisée : le lieu d'arrivée doit être différent du lieu de départ"""
-        if field.data == self.lieu_depart.data:
-            raise ValidationError('Le lieu d\'arrivée doit être différent du lieu de départ.')
+    # Bouton de soumission spécifique
+    submit = SubmitField(FormLabels.BTN_ENREGISTRER_TRAJET)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Configuration spécifique si nécessaire
+        pass
+
+    def validate_point_arriver(self, field):
+        """Validation héritée: lieu d'arrivée différent du départ"""
+        from .validators import FormValidators
+        FormValidators.validate_lieu_different(self, field)

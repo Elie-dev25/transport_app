@@ -1,0 +1,26 @@
+@startuml Communication_Vidange
+skinparam defaultFontName Arial
+skinparam shadowing false
+skinparam dpi 150
+left to right direction
+
+actor "Mécanicien" as MEC
+rectangle "Web UI" as UI
+rectangle "VidangeController" as VidC
+rectangle "VidangeService" as VidS
+rectangle "BusService" as BusS
+database "DB" as DB
+
+MEC -[#black]-> UI : 1: saisir vidange(bus, date, type_huile, km)
+UI -[#black]-> VidC : 2: POST /vidange
+VidC -[#black]-> VidS : 3: valider_type_huile(type)
+VidS -[#black]-> VidC : 3.1: OK
+VidC -[#black]-> DB : 4: insert(vidange)
+DB -[#black]-> VidC : 4.1: id
+VidC -[#black]-> BusS : 5: maj_date_derniere_vidange(bus)
+BusS -[#black]-> DB : 5.1: update(bus)
+DB -[#black]-> BusS : 5.2: OK
+VidC -[#black]-> UI : 6: confirmation
+UI -[#black]-> MEC : 7: affiche reçu
+
+@enduml

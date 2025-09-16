@@ -13,9 +13,10 @@ from app.services.gestion_vidange import OIL_CAPACITY_KM
 from app.routes.common import role_required
 from . import bp
 
-# Définition du décorateur admin_only
+# Définition du décorateur admin_only (ADMIN et RESPONSABLE avec traçabilité)
 def admin_only(view):
-    return role_required('ADMIN')(view)
+    from app.routes.common import admin_or_responsable
+    return admin_or_responsable(view)
 
 @admin_only
 @bp.route('/ajouter_document_udm_ajax/<int:bus_id>', methods=['POST'])
@@ -121,7 +122,7 @@ def bus():
             # Si pas de panne ouverte et état NULL, afficher 'BON'
             b.etat_vehicule = 'BON'
 
-    return render_template('bus_udm.html', bus_list=bus_list)
+    return render_template('roles/admin/bus_udm.html', bus_list=bus_list)
 
 @admin_only
 @bp.route('/bus/ajouter', methods=['GET', 'POST'])
@@ -212,8 +213,22 @@ def supprimer_bus(bus_id):
 def details_bus(bus_id):
     bus = BusUdM.query.get_or_404(bus_id)
 
-    # Récupérer les trajets récents (si disponible), sinon liste vide
-    trajets_recents = []
+    # Récupérer l'historique complet du bus
+    from app.models.trajet import Trajet
+    from app.models.carburation import Carburation
+    from app.models.vidange import Vidange
+
+    # Historique des trajets
+    trajets = Trajet.query.filter_by(numero_bus_udm=bus.numero).order_by(Trajet.date_heure_depart.desc()).all()
+
+    # Historique des carburations
+    carburations = Carburation.query.filter_by(bus_udm_id=bus.id).order_by(Carburation.date_carburation.desc()).all()
+
+    # Historique des vidanges
+    vidanges = Vidange.query.filter_by(bus_udm_id=bus.id).order_by(Vidange.date_vidange.desc()).all()
+
+    # Historique des pannes
+    pannes = PanneBusUdM.query.filter_by(bus_udm_id=bus.id).order_by(PanneBusUdM.date_heure.desc()).all()
 
     # Récupérer les documents liés à ce bus via le numéro (FK: DocumentBusUdM.numero_bus_udm -> BusUdM.numero)
     documents = DocumentBusUdM.query.filter_by(numero_bus_udm=bus.numero).all()
@@ -254,11 +269,45 @@ def details_bus(bus_id):
         })
 
     return render_template(
-        'details_bus.html',
+        'pages/details_bus.html',
         bus=bus,
-        trajets_recents=trajets_recents,
+        trajets=trajets,
+        carburations=carburations,
+        vidanges=vidanges,
+        pannes=pannes,
         documents=documents_vm,
     )
+
+@admin_only
+@bp.route('/bus/<int:bus_id>/details')
+def bus_details_ajax(bus_id):
+    """Route AJAX pour récupérer les détails d'un bus"""
+    try:
+        bus = BusUdM.query.get_or_404(bus_id)
+
+        bus_data = {
+            'id': bus.id,
+            'numero': bus.numero,
+            'immatriculation': bus.immatriculation,
+            'marque': bus.marque,
+            'modele': bus.modele,
+            'capacite': bus.nombre_places,
+            'kilometrage': bus.kilometrage,
+            'etat_vehicule': bus.etat_vehicule,
+            'numero_chassis': bus.numero_chassis,
+            'type_vehicule': bus.type_vehicule
+        }
+
+        return jsonify({
+            'success': True,
+            'bus': bus_data
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'Erreur lors du chargement des détails: {str(e)}'
+        })
 
 @admin_only
 @bp.route('/bus/mettre_a_jour_kilometrage', methods=['POST'])

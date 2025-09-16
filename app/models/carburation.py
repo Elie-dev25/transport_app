@@ -1,4 +1,4 @@
-from app.extensions import db
+from app.database import db
 
 class Carburation(db.Model):
     __tablename__ = 'carburation'

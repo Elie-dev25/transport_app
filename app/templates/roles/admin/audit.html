@@ -1,0 +1,188 @@
+{% set active_page = 'audit' %}
+{% extends "roles/admin/_base_admin.html" %}
+
+{% block title %}Audit des Actions - Admin{% endblock %}
+
+{% block extra_head %}
+<style>
+.audit-log {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    background: #f8f9fa;
+    border-left: 3px solid #007bff;
+    padding: 8px 12px;
+    margin-bottom: 5px;
+    border-radius: 3px;
+}
+
+.audit-log.admin {
+    border-left-color: #28a745;
+}
+
+.audit-log.responsable {
+    border-left-color: #007bff;
+}
+
+.audit-log.superviseur {
+    border-left-color: #17a2b8;
+}
+
+.stats-card {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+.role-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: bold;
+    margin-right: 8px;
+}
+
+.role-badge.admin { background: #d4edda; color: #155724; }
+.role-badge.responsable { background: #cce5ff; color: #004085; }
+.role-badge.superviseur { background: #d1ecf1; color: #0c5460; }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="fas fa-shield-alt me-2"></i>Audit des Actions</h2>
+            <p class="text-muted">Traçabilité complète des actions ADMIN vs RESPONSABLE</p>
+        </div>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="row mb-4">
+        {% for role, data in stats.items() %}
+        {% if data.total > 0 %}
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h5>
+                    <span class="role-badge {{ role.lower() }}">{{ role }}</span>
+                </h5>
+                <h3 class="mb-1">{{ data.total }}</h3>
+                <small class="text-muted">actions totales</small>
+                
+                {% if data.actions %}
+                <div class="mt-2">
+                    <small class="text-muted">Actions principales:</small>
+                    {% for action, count in data.actions.items()[:3] %}
+                    <div style="font-size: 11px;">
+                        {{ action }}: {{ count }}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+
+    <!-- Filtres -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Filtrer par rôle</label>
+                            <select name="role" class="form-select">
+                                <option value="">Tous les rôles</option>
+                                <option value="ADMIN" {% if role_filter == 'ADMIN' %}selected{% endif %}>ADMIN</option>
+                                <option value="RESPONSABLE" {% if role_filter == 'RESPONSABLE' %}selected{% endif %}>RESPONSABLE</option>
+                                <option value="SUPERVISEUR" {% if role_filter == 'SUPERVISEUR' %}selected{% endif %}>SUPERVISEUR</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Filtrer par action</label>
+                            <select name="action" class="form-select">
+                                <option value="">Toutes les actions</option>
+                                <option value="CONSULTATION" {% if action_filter == 'CONSULTATION' %}selected{% endif %}>CONSULTATION</option>
+                                <option value="ACTION_ADMIN" {% if action_filter == 'ACTION_ADMIN' %}selected{% endif %}>ACTION_ADMIN</option>
+                                <option value="ACTION_METIER" {% if action_filter == 'ACTION_METIER' %}selected{% endif %}>ACTION_METIER</option>
+                                <option value="CREATION" {% if action_filter == 'CREATION' %}selected{% endif %}>CREATION</option>
+                                <option value="MODIFICATION" {% if action_filter == 'MODIFICATION' %}selected{% endif %}>MODIFICATION</option>
+                                <option value="SUPPRESSION" {% if action_filter == 'SUPPRESSION' %}selected{% endif %}>SUPPRESSION</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Limite</label>
+                            <select name="limit" class="form-select">
+                                <option value="50" {% if limit == 50 %}selected{% endif %}>50</option>
+                                <option value="100" {% if limit == 100 %}selected{% endif %}>100</option>
+                                <option value="200" {% if limit == 200 %}selected{% endif %}>200</option>
+                                <option value="500" {% if limit == 500 %}selected{% endif %}>500</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <button type="submit" class="btn btn-primary d-block">Filtrer</button>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <a href="{{ url_for('admin.audit_logs') }}" class="btn btn-outline-secondary d-block">Reset</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logs d'audit -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>Logs d'Audit 
+                        <span class="badge bg-secondary">{{ logs|length }} entrées</span>
+                    </h5>
+                </div>
+                <div class="card-body" style="max-height: 600px; overflow-y: auto;">
+                    {% if logs %}
+                        {% for log in logs %}
+                        <div class="audit-log 
+                            {% if 'ROLE:ADMIN' in log %}admin
+                            {% elif 'ROLE:RESPONSABLE' in log %}responsable
+                            {% elif 'ROLE:SUPERVISEUR' in log %}superviseur
+                            {% endif %}">
+                            {{ log }}
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-info-circle fa-2x mb-2"></i>
+                            <p>Aucun log d'audit trouvé avec les filtres actuels.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Légende -->
+    <div class="row mt-3">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h6>Légende des couleurs:</h6>
+                    <div class="d-flex gap-3">
+                        <div><span class="role-badge admin">ADMIN</span> Actions administrateur</div>
+                        <div><span class="role-badge responsable">RESPONSABLE</span> Actions responsable</div>
+                        <div><span class="role-badge superviseur">SUPERVISEUR</span> Consultations superviseur</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

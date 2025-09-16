@@ -1,0 +1,48 @@
+{# Macros pour les modales de trajets partagées #}
+{# Utilisables par tous les rôles (admin, responsable, chargé transport) #}
+
+{# Macro pour inclure toutes les modales de trajets #}
+{% macro include_all_trajet_modals(
+    form_trajet_interne, 
+    form_bus, 
+    form_autres_trajets,
+    trajet_interne_url=None,
+    trajet_prestataire_url=None,
+    autres_trajets_url=None
+) %}
+    {# Modal Trajet Interne #}
+    {% with trajet_interne_url=trajet_interne_url %}
+        {% include 'shared/modals/trajet_interne_modal.html' %}
+    {% endwith %}
+    
+    {# Modal Trajet Prestataire #}
+    {% with trajet_prestataire_url=trajet_prestataire_url %}
+        {% include 'shared/modals/trajet_prestataire_modal.html' %}
+    {% endwith %}
+    
+    {# Modal Autres Trajets #}
+    {% with autres_trajets_url=autres_trajets_url %}
+        {% include 'shared/modals/autres_trajets_modal.html' %}
+    {% endwith %}
+{% endmacro %}
+
+{# Macro pour inclure seulement la modale trajet interne #}
+{% macro include_trajet_interne_modal(form_trajet_interne, trajet_interne_url=None) %}
+    {% with trajet_interne_url=trajet_interne_url %}
+        {% include 'shared/modals/trajet_interne_modal.html' %}
+    {% endwith %}
+{% endmacro %}
+
+{# Macro pour inclure seulement la modale trajet prestataire #}
+{% macro include_trajet_prestataire_modal(form_bus, trajet_prestataire_url=None) %}
+    {% with trajet_prestataire_url=trajet_prestataire_url %}
+        {% include 'shared/modals/trajet_prestataire_modal.html' %}
+    {% endwith %}
+{% endmacro %}
+
+{# Macro pour inclure seulement la modale autres trajets #}
+{% macro include_autres_trajets_modal(form_autres_trajets, autres_trajets_url=None) %}
+    {% with autres_trajets_url=autres_trajets_url %}
+        {% include 'shared/modals/autres_trajets_modal.html' %}
+    {% endwith %}
+{% endmacro %}

@@ -14,10 +14,10 @@
 @import url('./modals.css');
 @import url('./forms.css');
 @import url('./buttons.css');
-@import url('./tables.css');
 
-/* 4. Responsive en dernier */
+/* 4. Responsive et optimisations */
 @import url('./responsive.css');
+@import url('./large-screens.css');
 
 /* 
 ARCHITECTURE MODULAIRE COMPLÈTE :

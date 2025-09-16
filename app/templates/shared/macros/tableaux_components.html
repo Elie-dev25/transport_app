@@ -1,0 +1,273 @@
+{# ================== MACROS POUR TABLEAUX UNIFIÉS ================== #}
+{# Composants réutilisables pour tous les tableaux de l'application #}
+
+{# === CONTENEUR DE TABLEAU PRINCIPAL === #}
+{% macro table_container(title, icon, search=True, subtitle=None, table_id=None) %}
+<div class="table-container" {% if table_id %}id="{{ table_id }}"{% endif %}>
+    <div class="table-header">
+        <div>
+            <h3 class="table-title">
+                <i class="fas fa-{{ icon }}"></i>
+                {{ title }}
+            </h3>
+            {% if subtitle %}
+            <p class="table-subtitle">{{ subtitle }}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if search %}
+    <div class="table-search">
+        <div class="search-container">
+            <input type="text" class="search-input" placeholder="Rechercher..." id="tableSearch{{ table_id or '' }}">
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="table-responsive">
+        {{ caller() }}
+    </div>
+</div>
+{% endmacro %}
+
+{# === TABLEAU STANDARD === #}
+{% macro data_table(headers, rows, actions=None, sortable=True, table_class="") %}
+<table class="table table-striped table-hover {% if sortable %}sortable{% endif %} {{ table_class }}">
+    <thead>
+        <tr>
+            {% for header in headers %}
+            <th>{{ header }}</th>
+            {% endfor %}
+            {% if actions %}<th class="no-sort">Actions</th>{% endif %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in rows %}
+        <tr>
+            {% for cell in row %}
+            <td>{{ cell|safe }}</td>
+            {% endfor %}
+            {% if actions %}
+            <td>
+                <div class="table-actions">
+                    {{ table_actions(actions, loop.index0) }}
+                </div>
+            </td>
+            {% endif %}
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="{{ headers|length + (1 if actions else 0) }}" class="table-empty">
+                <i class="fas fa-inbox"></i>
+                <h5>Aucune donnée disponible</h5>
+                <p>Les données apparaîtront ici une fois ajoutées.</p>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endmacro %}
+
+{# === BADGE DE STATUT === #}
+{% macro status_badge(text, type="primary", icon=None) %}
+<span class="status-badge bg-{{ type }}">
+    {% if icon %}<i class="fas fa-{{ icon }}"></i>{% endif %}
+    {{ text }}
+</span>
+{% endmacro %}
+
+{# === BOUTONS D'ACTION === #}
+{% macro table_actions(actions, row_index=0) %}
+{% for action in actions %}
+    {% if action.type == 'edit' %}
+        <button class="table-btn edit" title="Modifier" onclick="{{ action.onclick or '' }}" 
+                {% if action.data %}{% for key, value in action.data.items() %}data-{{ key }}="{{ value }}"{% endfor %}{% endif %}>
+            <i class="fas fa-edit"></i>
+        </button>
+    {% elif action.type == 'delete' %}
+        <button class="table-btn delete delete-btn" title="Supprimer" onclick="{{ action.onclick or '' }}"
+                {% if action.data %}{% for key, value in action.data.items() %}data-{{ key }}="{{ value }}"{% endfor %}{% endif %}>
+            <i class="fas fa-trash"></i>
+        </button>
+    {% elif action.type == 'view' %}
+        <button class="table-btn view" title="Voir" onclick="{{ action.onclick or '' }}"
+                {% if action.data %}{% for key, value in action.data.items() %}data-{{ key }}="{{ value }}"{% endfor %}{% endif %}>
+            <i class="fas fa-eye"></i>
+        </button>
+    {% elif action.type == 'custom' %}
+        <button class="table-btn action" title="{{ action.title or 'Action' }}" onclick="{{ action.onclick or '' }}"
+                {% if action.data %}{% for key, value in action.data.items() %}data-{{ key }}="{{ value }}"{% endfor %}{% endif %}>
+            <i class="fas fa-{{ action.icon or 'cog' }}"></i>
+            {% if action.text %}{{ action.text }}{% endif %}
+        </button>
+    {% elif action.type == 'link' %}
+        <a href="{{ action.url }}" class="table-btn {{ action.class or 'action' }}" title="{{ action.title or 'Lien' }}">
+            <i class="fas fa-{{ action.icon or 'external-link-alt' }}"></i>
+            {% if action.text %}{{ action.text }}{% endif %}
+        </a>
+    {% endif %}
+{% endfor %}
+{% endmacro %}
+
+{# === INDICATEUR DE NIVEAU (pour carburant, etc.) === #}
+{% macro level_indicator(value, max_value=100, type="fuel") %}
+{% set percentage = (value / max_value * 100) if max_value > 0 else 0 %}
+{% set color_class = "success" if percentage > 50 else ("warning" if percentage > 25 else "danger") %}
+<div class="d-flex align-items-center">
+    <div class="progress me-2" style="width: 60px; height: 8px;">
+        <div class="progress-bar bg-{{ color_class }}" style="width: {{ percentage }}%"></div>
+    </div>
+    <small class="text-muted">{{ value }}{% if type == "fuel" %}%{% elif type == "km" %}km{% endif %}</small>
+</div>
+{% endmacro %}
+
+{# === VOYANT COLORÉ === #}
+{% macro voyant_indicator(status, text=None) %}
+<div class="d-flex align-items-center">
+    <span class="voyant-indicator voyant-{{ status }}"></span>
+    {% if text %}
+    <span class="ms-2">{{ text }}</span>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{# === CELLULE AVEC ICÔNE === #}
+{% macro icon_cell(icon, text, color=None) %}
+<div class="d-flex align-items-center">
+    <i class="fas fa-{{ icon }} me-2 {% if color %}text-{{ color }}{% endif %}"></i>
+    <span>{{ text }}</span>
+</div>
+{% endmacro %}
+
+{# === CELLULE DE DATE === #}
+{% macro date_cell(date, format="%d/%m/%Y") %}
+{% if date %}
+    {{ date.strftime(format) if date.strftime else date }}
+{% else %}
+    <span class="text-muted">Non défini</span>
+{% endif %}
+{% endmacro %}
+
+{# === CELLULE DE MONTANT === #}
+{% macro money_cell(amount, currency="FCFA") %}
+{% if amount %}
+    <strong class="text-success">{{ "{:,}".format(amount) }} {{ currency }}</strong>
+{% else %}
+    <span class="text-muted">-</span>
+{% endif %}
+{% endmacro %}
+
+{# === CELLULE DE NUMÉRO === #}
+{% macro number_cell(number, prefix="", suffix="") %}
+{% if number %}
+    <span class="badge bg-primary">{{ prefix }}{{ number }}{{ suffix }}</span>
+{% else %}
+    <span class="text-muted">N/A</span>
+{% endif %}
+{% endmacro %}
+
+{# === TABLEAU AVEC PAGINATION === #}
+{% macro paginated_table(headers, rows, pagination, actions=None) %}
+{{ data_table(headers, rows, actions) }}
+
+{% if pagination and pagination.pages > 1 %}
+<div class="table-pagination mt-3">
+    <nav aria-label="Navigation du tableau">
+        <ul class="pagination justify-content-center">
+            {% if pagination.has_prev %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for(request.endpoint, page=pagination.prev_num, **request.args) }}">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            </li>
+            {% endif %}
+
+            {% for page_num in pagination.iter_pages() %}
+                {% if page_num %}
+                    {% if page_num != pagination.page %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for(request.endpoint, page=page_num, **request.args) }}">
+                            {{ page_num }}
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ page_num }}</span>
+                    </li>
+                    {% endif %}
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">…</span>
+                </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if pagination.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for(request.endpoint, page=pagination.next_num, **request.args) }}">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    
+    <div class="text-center text-muted mt-2">
+        <small>
+            Affichage de {{ pagination.per_page * (pagination.page - 1) + 1 }} à 
+            {{ pagination.per_page * pagination.page if pagination.page < pagination.pages else pagination.total }} 
+            sur {{ pagination.total }} éléments
+        </small>
+    </div>
+</div>
+{% endif %}
+{% endmacro %}
+
+{# === FILTRES DE TABLEAU === #}
+{% macro table_filters(filters) %}
+<div class="table-filters mb-3">
+    <div class="row">
+        {% for filter in filters %}
+        <div class="col-md-{{ 12 // filters|length if filters|length <= 4 else 3 }}">
+            {% if filter.type == 'select' %}
+            <select class="form-select" name="{{ filter.name }}" onchange="{{ filter.onchange or '' }}">
+                <option value="">{{ filter.placeholder or 'Tous' }}</option>
+                {% for option in filter.options %}
+                <option value="{{ option.value }}" {% if option.selected %}selected{% endif %}>
+                    {{ option.text }}
+                </option>
+                {% endfor %}
+            </select>
+            {% elif filter.type == 'date' %}
+            <input type="date" class="form-control" name="{{ filter.name }}" 
+                   placeholder="{{ filter.placeholder }}" onchange="{{ filter.onchange or '' }}">
+            {% elif filter.type == 'text' %}
+            <input type="text" class="form-control" name="{{ filter.name }}" 
+                   placeholder="{{ filter.placeholder }}" onchange="{{ filter.onchange or '' }}">
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endmacro %}
+
+{# === STATISTIQUES DE TABLEAU === #}
+{% macro table_stats(stats) %}
+<div class="table-stats mb-3">
+    <div class="row">
+        {% for stat in stats %}
+        <div class="col-md-{{ 12 // stats|length if stats|length <= 4 else 3 }}">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-{{ stat.icon }}"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value">{{ stat.value }}</div>
+                    <div class="stat-label">{{ stat.label }}</div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endmacro %}

@@ -18,9 +18,10 @@ from app.services.trajet_service import (
 from app.routes.common import role_required
 from . import bp
 
-# Définition du décorateur admin_only
+# Définition du décorateur admin_only (ADMIN et RESPONSABLE avec traçabilité)
 def admin_only(view):
-    return role_required('ADMIN')(view)
+    from app.routes.common import admin_or_responsable
+    return admin_or_responsable(view)
 
 # --- Endpoints Admin pour enregistrements de trajets ---
 @admin_only
@@ -30,10 +31,10 @@ def depart_aed():
     # Peupler les choix dynamiques avant validation
     try:
         form.chauffeur_id.choices = [(c.chauffeur_id, f"{c.nom} {c.prenom}") for c in Chauffeur.query.all()]
-        form.numero_aed.choices = [(a.numero, a.numero) for a in BusUdM.query.all()]
+        form.numero_bus_udm.choices = [(a.numero, a.numero) for a in BusUdM.query.all()]
     except Exception:
         form.chauffeur_id.choices = []
-        form.numero_aed.choices = []
+        form.numero_bus_udm.choices = []
     
     if not form.validate():
         return jsonify({'success': False, 'message': 'Formulaire invalide', 'errors': form.errors}), 400
@@ -56,10 +57,10 @@ def depart_banekane_retour():
     # Peupler les choix dynamiques avant validation
     try:
         form.chauffeur_id.choices = [(c.chauffeur_id, f"{c.nom} {c.prenom}") for c in Chauffeur.query.all()]
-        form.numero_aed.choices = [(a.numero, a.numero) for a in BusUdM.query.all()]
+        form.numero_bus_udm.choices = [(a.numero, a.numero) for a in BusUdM.query.all()]
     except Exception:
         form.chauffeur_id.choices = []
-        form.numero_aed.choices = []
+        form.numero_bus_udm.choices = []
     
     if not form.validate():
         return jsonify({'success': False, 'message': 'Formulaire invalide', 'errors': form.errors}), 400
@@ -75,10 +76,10 @@ def depart_sortie_hors_ville():
     # Peupler les choix dynamiques avant validation
     try:
         form.chauffeur_id.choices = [(c.chauffeur_id, f"{c.nom} {c.prenom}") for c in Chauffeur.query.all()]
-        form.numero_aed.choices = [(a.numero, a.numero) for a in BusUdM.query.all()]
+        form.numero_bus_udm.choices = [(a.numero, a.numero) for a in BusUdM.query.all()]
     except Exception:
         form.chauffeur_id.choices = []
-        form.numero_aed.choices = []
+        form.numero_bus_udm.choices = []
     
     # Debug: afficher les données reçues et erreurs de validation
     print(f"DEBUG - Form data: {dict(request.form)}")

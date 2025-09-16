@@ -1,0 +1,263 @@
+{#
+Menus de navigation pour chaque rôle
+Phase 4 - Centralise les menus de navigation répétés
+#}
+
+{# Menu Admin #}
+{% macro admin_nav_menu(active_page='') %}
+<ul class="nav flex-column">
+    <li class="nav-item">
+        <a class="nav-link {{ 'active' if active_page == 'dashboard' else '' }}" 
+           href="{{ url_for('admin.dashboard') }}">
+            <i class="fas fa-tachometer-alt"></i> Dashboard
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ 'active' if active_page == 'gestion_trajets' else '' }}" 
+           href="{{ url_for('admin.gestion_trajets') }}">
+            <i class="fas fa-route"></i> Gestion Trajets
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ 'active' if active_page == 'bus_udm' else '' }}" 
+           href="{{ url_for('admin.bus') }}">
+            <i class="fas fa-bus"></i> Bus UdM
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ 'active' if active_page == 'chauffeurs' else '' }}" 
+           href="{{ url_for('admin.chauffeurs') }}">
+            <i class="fas fa-user-tie"></i> Chauffeurs
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ 'active' if active_page == 'utilisateurs' else '' }}" 
+           href="{{ url_for('admin.utilisateurs') }}">
+            <i class="fas fa-users"></i> Utilisateurs
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ 'active' if active_page == 'rapports' else '' }}" 
+           href="{{ url_for('admin.rapports') }}">
+            <i class="fas fa-chart-bar"></i> Rapports
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ 'active' if active_page == 'parametres' else '' }}" 
+           href="{{ url_for('admin.parametres') }}">
+            <i class="fas fa-cog"></i> Paramètres
+        </a>
+    </li>
+</ul>
+{% endmacro %}
+
+{# Menu Chargé de Transport #}
+{% macro charge_transport_nav_menu(active_page='') %}
+<ul class="nav flex-column">
+    <li class="nav-item">
+        <a class="nav-link {{ 'active' if active_page == 'dashboard' else '' }}" 
+           href="{{ url_for('charge_transport.dashboard') }}">
+            <i class="fas fa-tachometer-alt"></i> Dashboard
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ 'active' if active_page == 'trajets' else '' }}" 
+           href="{{ url_for('charge_transport.trajets') }}">
+            <i class="fas fa-route"></i> Mes Trajets
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ 'active' if active_page == 'bus_udm' else '' }}" 
+           href="{{ url_for('charge_transport.bus') }}">
+            <i class="fas fa-bus"></i> Bus UdM
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ 'active' if active_page == 'chauffeurs' else '' }}" 
+           href="{{ url_for('charge_transport.chauffeurs') }}">
+            <i class="fas fa-user-tie"></i> Chauffeurs
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ 'active' if active_page == 'rapports' else '' }}" 
+           href="{{ url_for('charge_transport.rapports') }}">
+            <i class="fas fa-chart-line"></i> Rapports
+        </a>
+    </li>
+</ul>
+{% endmacro %}
+
+{# Menu Chauffeur #}
+{% macro chauffeur_nav_menu(active_page='') %}
+<ul class="nav flex-column">
+    <li class="nav-item">
+        <a class="nav-link {{ 'active' if active_page == 'dashboard' else '' }}" 
+           href="{{ url_for('chauffeur.dashboard') }}">
+            <i class="fas fa-tachometer-alt"></i> Mon Dashboard
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ 'active' if active_page == 'mes_trajets' else '' }}" 
+           href="{{ url_for('chauffeur.mes_trajets') }}">
+            <i class="fas fa-route"></i> Mes Trajets
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ 'active' if active_page == 'carburation' else '' }}" 
+           href="{{ url_for('chauffeur.carburation') }}">
+            <i class="fas fa-gas-pump"></i> Carburation
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ 'active' if active_page == 'mon_statut' else '' }}" 
+           href="{{ url_for('chauffeur.mon_statut') }}">
+            <i class="fas fa-user-clock"></i> Mon Statut
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ 'active' if active_page == 'notifications' else '' }}" 
+           href="{{ url_for('chauffeur.notifications') }}">
+            <i class="fas fa-bell"></i> Notifications
+        </a>
+    </li>
+</ul>
+{% endmacro %}
+
+{# Menu Superviseur #}
+{% macro superviseur_nav_menu(active_page='') %}
+<ul class="nav flex-column">
+    <li class="nav-item">
+        <a class="nav-link {{ 'active' if active_page == 'dashboard' else '' }}" 
+           href="{{ url_for('superviseur.dashboard') }}">
+            <i class="fas fa-tachometer-alt"></i> Dashboard
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ 'active' if active_page == 'supervision' else '' }}" 
+           href="{{ url_for('superviseur.supervision') }}">
+            <i class="fas fa-eye"></i> Supervision
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ 'active' if active_page == 'trajets' else '' }}" 
+           href="{{ url_for('superviseur.trajets') }}">
+            <i class="fas fa-route"></i> Trajets
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ 'active' if active_page == 'rapports' else '' }}" 
+           href="{{ url_for('superviseur.rapports') }}">
+            <i class="fas fa-chart-bar"></i> Rapports
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ 'active' if active_page == 'consultation' else '' }}" 
+           href="{{ url_for('admin.consultation') }}">
+            <i class="fas fa-search"></i> Consultation
+        </a>
+    </li>
+</ul>
+{% endmacro %}
+
+{# Menu Mécanicien #}
+{% macro mecanicien_nav_menu(active_page='') %}
+<ul class="nav flex-column">
+    <li class="nav-item">
+        <a class="nav-link {{ 'active' if active_page == 'dashboard' else '' }}" 
+           href="{{ url_for('mecanicien.dashboard') }}">
+            <i class="fas fa-tachometer-alt"></i> Dashboard
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ 'active' if active_page == 'maintenance' else '' }}" 
+           href="{{ url_for('mecanicien.maintenance') }}">
+            <i class="fas fa-wrench"></i> Maintenance
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ 'active' if active_page == 'pannes' else '' }}" 
+           href="{{ url_for('mecanicien.pannes') }}">
+            <i class="fas fa-exclamation-triangle"></i> Pannes
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ 'active' if active_page == 'vidanges' else '' }}" 
+           href="{{ url_for('mecanicien.vidanges') }}">
+            <i class="fas fa-oil-can"></i> Vidanges
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ 'active' if active_page == 'pieces' else '' }}" 
+           href="{{ url_for('mecanicien.pieces') }}">
+            <i class="fas fa-cogs"></i> Pièces
+        </a>
+    </li>
+</ul>
+{% endmacro %}
+
+{# Menu dynamique basé sur le rôle #}
+{% macro render_role_navigation(user_role, active_page='') %}
+    {% if user_role == 'ADMIN' %}
+        {{ admin_nav_menu(active_page) }}
+    {% elif user_role == 'CHARGE' %}
+        {{ charge_transport_nav_menu(active_page) }}
+    {% elif user_role == 'CHAUFFEUR' %}
+        {{ chauffeur_nav_menu(active_page) }}
+    {% elif user_role == 'SUPERVISEUR' %}
+        {{ superviseur_nav_menu(active_page) }}
+    {% elif user_role == 'MECANICIEN' %}
+        {{ mecanicien_nav_menu(active_page) }}
+    {% else %}
+        {# Menu par défaut #}
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="fas fa-home"></i> Accueil
+                </a>
+            </li>
+        </ul>
+    {% endif %}
+{% endmacro %}
+
+{# Breadcrumb dynamique #}
+{% macro render_role_breadcrumb(user_role, active_page='', custom_items=None) %}
+    {% set breadcrumb_items = [] %}
+    
+    {# Élément racine basé sur le rôle #}
+    {% if user_role == 'ADMIN' %}
+        {% set _ = breadcrumb_items.append({'text': 'Administration', 'url': url_for('admin.dashboard')}) %}
+    {% elif user_role == 'CHARGE' %}
+        {% set _ = breadcrumb_items.append({'text': 'Chargé Transport', 'url': url_for('charge_transport.dashboard')}) %}
+    {% elif user_role == 'CHAUFFEUR' %}
+        {% set _ = breadcrumb_items.append({'text': 'Chauffeur', 'url': url_for('chauffeur.dashboard')}) %}
+    {% elif user_role == 'SUPERVISEUR' %}
+        {% set _ = breadcrumb_items.append({'text': 'Superviseur', 'url': url_for('superviseur.dashboard')}) %}
+    {% elif user_role == 'MECANICIEN' %}
+        {% set _ = breadcrumb_items.append({'text': 'Mécanicien', 'url': url_for('mecanicien.dashboard')}) %}
+    {% endif %}
+    
+    {# Ajouter les éléments personnalisés #}
+    {% if custom_items %}
+        {% for item in custom_items %}
+            {% set _ = breadcrumb_items.append(item) %}
+        {% endfor %}
+    {% else %}
+        {# Élément de page actuelle #}
+        {% set page_names = {
+            'dashboard': 'Dashboard',
+            'trajets': 'Trajets',
+            'bus_udm': 'Bus UdM',
+            'chauffeurs': 'Chauffeurs',
+            'rapports': 'Rapports',
+            'maintenance': 'Maintenance',
+            'carburation': 'Carburation'
+        } %}
+        
+        {% if active_page in page_names %}
+            {% set _ = breadcrumb_items.append({'text': page_names[active_page]}) %}
+        {% endif %}
+    {% endif %}
+    
+    {% from 'shared/macros/common_macros.html' import render_breadcrumb %}
+    {{ render_breadcrumb(breadcrumb_items) }}
+{% endmacro %}

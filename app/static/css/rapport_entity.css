@@ -1,0 +1,426 @@
+/* ===== STYLES SPÉCIFIQUES RAPPORT ENTITY ===== */
+
+/* Animation d'apparition de la page */
+.rapport-entity-container {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+/* Suppression des scrolls dans les sections */
+.rapport-entity-container .table-container,
+.rapport-entity-container .info-grid,
+.rapport-entity-container .info-card,
+.rapport-entity-container .info-card-body {
+    overflow: visible !important;
+    max-height: none !important;
+    height: auto !important;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+@keyframes glow {
+    0%, 100% {
+        box-shadow: 0 4px 15px rgba(40, 167, 69, 0.2);
+    }
+    50% {
+        box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4), 0 0 20px rgba(40, 167, 69, 0.3);
+    }
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-5px);
+    }
+}
+
+@keyframes gradientShift {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* Animations échelonnées des sections */
+.rapport-entity-container .table-container:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.rapport-entity-container .table-container:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.rapport-entity-container .table-container:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+.rapport-entity-container .table-container:nth-child(4) {
+    animation-delay: 0.4s;
+}
+
+.rapport-entity-container .table-container:nth-child(5) {
+    animation-delay: 0.5s;
+}
+
+/* ===== AMÉLIORATIONS CARTES D'INFORMATION ===== */
+
+/* Cartes avec effets visuels ultra-modernisés */
+.rapport-entity-container .info-card {
+    border-radius: 20px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(145deg, #ffffff, #f8fafc);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+/* Barre de couleur animée au survol */
+.rapport-entity-container .info-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #10b981, #059669, #34d399);
+    transition: left 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.rapport-entity-container .info-card:hover::before {
+    left: 0;
+}
+
+/* Effet de brillance au survol */
+.rapport-entity-container .info-card::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transform: rotate(45deg);
+    transition: all 0.6s ease;
+    opacity: 0;
+}
+
+.rapport-entity-container .info-card:hover::after {
+    animation: shimmer 0.8s ease-in-out;
+    opacity: 1;
+}
+
+@keyframes shimmer {
+    0% {
+        transform: translateX(-100%) translateY(-100%) rotate(45deg);
+    }
+    100% {
+        transform: translateX(100%) translateY(100%) rotate(45deg);
+    }
+}
+
+/* Effet hover ultra-amélioré */
+.rapport-entity-container .info-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15), 0 0 20px rgba(16, 185, 129, 0.2);
+    animation: glow 2s ease-in-out infinite;
+}
+
+/* En-têtes de cartes redesignés */
+.rapport-entity-container .info-card-header {
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+    padding: 18px 24px;
+    border-bottom: 1px solid #e2e8f0;
+    position: relative;
+}
+
+/* Ligne décorative sous l'en-tête */
+.rapport-entity-container .info-card-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 24px;
+    right: 24px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #10b981, transparent);
+    opacity: 0.3;
+}
+
+/* Icônes avec arrière-plan ultra-modernisé */
+.rapport-entity-container .info-card-header i {
+    color: #10b981;
+    font-size: 1.3rem;
+    padding: 12px;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(52, 211, 153, 0.1));
+    border-radius: 12px;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.1);
+}
+
+.rapport-entity-container .info-card:hover .info-card-header i {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(52, 211, 153, 0.2));
+    transform: scale(1.1) rotate(5deg);
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
+    animation: float 2s ease-in-out infinite;
+}
+
+/* Titres des cartes */
+.rapport-entity-container .info-card-header h4 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1f2937;
+    letter-spacing: -0.025em;
+}
+
+/* Corps des cartes avec dégradé */
+.rapport-entity-container .info-card-body {
+    padding: 24px;
+    background: linear-gradient(180deg, #ffffff, #fafbfc);
+}
+
+/* Éléments d'information ultra-interactifs */
+.rapport-entity-container .info-item {
+    padding: 16px 0;
+    border-bottom: 1px solid #f1f5f9;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    position: relative;
+}
+
+.rapport-entity-container .info-item:hover {
+    padding-left: 12px;
+    background: linear-gradient(90deg, rgba(16, 185, 129, 0.03), transparent);
+}
+
+/* Points verts animés au survol */
+.rapport-entity-container .info-item:hover::before {
+    content: '●';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #10b981;
+    font-size: 0.8rem;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+    background: rgba(16, 185, 129, 0.02);
+    border-radius: 8px;
+    margin: 0 -8px;
+}
+
+/* Labels avec points verts */
+.rapport-entity-container .info-label {
+    position: relative;
+}
+
+.rapport-entity-container .info-label::before {
+    content: '';
+    position: absolute;
+    left: -12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 4px;
+    background: #10b981;
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.rapport-entity-container .info-item:hover .info-label::before {
+    opacity: 1;
+}
+
+/* Valeurs avec changement de couleur */
+.rapport-entity-container .info-value {
+    font-weight: 600;
+    color: #1f2937;
+    transition: all 0.2s ease;
+}
+
+.rapport-entity-container .info-item:hover .info-value {
+    color: #059669;
+}
+
+/* ===== SECTION ACTIONS ULTRA-SPÉCIALISÉE ===== */
+
+/* Cartes d'actions avec effets spectaculaires */
+#actionsSection .info-card {
+    background: linear-gradient(145deg, #ffffff, #f8fafc);
+    border: 2px solid #e5e7eb;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    position: relative;
+    overflow: hidden;
+}
+
+#actionsSection .info-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.05), transparent);
+    transition: left 0.6s ease;
+}
+
+#actionsSection .info-card:hover::before {
+    left: 100%;
+}
+
+#actionsSection .info-card:hover {
+    border-color: #10b981;
+    background: linear-gradient(145deg, #f0fdf4, #ecfdf5);
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 15px 35px rgba(16, 185, 129, 0.15);
+}
+
+#actionsSection .info-card-header {
+    background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+    position: relative;
+}
+
+#actionsSection .info-card-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #10b981, #34d399);
+    transform: scaleX(0);
+    transition: transform 0.4s ease;
+}
+
+#actionsSection .info-card:hover .info-card-header::after {
+    transform: scaleX(1);
+}
+
+#actionsSection .info-card-header i {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(52, 211, 153, 0.15));
+    color: #059669;
+    animation: float 3s ease-in-out infinite;
+}
+
+/* Boutons avec effets lumineux */
+#actionsSection .table-btn {
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+#actionsSection .table-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+#actionsSection .table-btn:hover::before {
+    left: 100%;
+}
+
+#actionsSection .table-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+}
+
+/* ===== SECTION STATISTIQUES ULTRA-SPÉCIALISÉE ===== */
+
+/* Statistiques avec bordure dégradée animée */
+#statsSection .info-card {
+    position: relative;
+    overflow: visible;
+    background: linear-gradient(145deg, #ffffff, #f8fafc);
+}
+
+#statsSection .info-card::after {
+    content: '';
+    position: absolute;
+    top: -3px;
+    left: -3px;
+    right: -3px;
+    bottom: -3px;
+    background: linear-gradient(45deg, #10b981, #059669, #047857, #065f46, #10b981);
+    background-size: 400% 400%;
+    animation: gradientShift 4s ease infinite;
+    border-radius: 18px;
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+#statsSection .info-card:hover::after {
+    opacity: 0.1;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+
+@media (max-width: 768px) {
+    .rapport-entity-container .table-container {
+        margin-bottom: 16px;
+    }
+    
+    #actionsSection .info-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    
+    .rapport-entity-container .info-card-header {
+        padding: 16px 20px;
+    }
+    
+    .rapport-entity-container .info-card-body {
+        padding: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .rapport-entity-container .info-card-header h4 {
+        font-size: 1rem;
+    }
+    
+    .rapport-entity-container .info-card-header i {
+        font-size: 1.1rem;
+        padding: 6px;
+    }
+}

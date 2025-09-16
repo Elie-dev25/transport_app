@@ -10,7 +10,7 @@ class TrajetSortieHorsVilleForm(FlaskForm):
     numero_aed = SelectField('Numéro AED', validators=[DataRequired()])
 
     # Champs spécifiques sortie
-    destination = StringField('Destination (hors ville)', [DataRequired(), Length(max=100)])
+    point_arriver = StringField('Destination (hors ville)', [DataRequired(), Length(max=100)])
     motif = StringField('Motif de la sortie', [DataRequired(), Length(max=255)])
     kilometrage_actuel = IntegerField('Kilométrage actuel (km)', validators=[DataRequired(), NumberRange(min=0, max=999999)])
 

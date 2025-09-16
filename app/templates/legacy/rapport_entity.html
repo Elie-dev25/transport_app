@@ -1,0 +1,435 @@
+{% set active_page = 'rapports' %}
+{% if superviseur_mode %}
+{% set sidebar_title = 'Superviseur Panel' %}
+{% set sidebar_subtitle = 'Transport Universitaire' %}
+{% endif %}
+{% extends 'roles/superviseur/_base_superviseur.html' if superviseur_mode else "roles/admin/_base_admin.html" %}
+{% from 'shared/macros/tableaux_components.html' import table_container, status_badge, icon_cell, date_cell %}
+
+{% block title %}Rapport {{ entity_name }} - Gestion Transport{% endblock %}
+
+{% set page_title = 'Rapport de trajet - ' + entity_name %}
+{% set current_periode = request.args.get('periode', 'mois') %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tableaux.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/rapport_entity.css') }}">
+<style>
+/* Styles pour les boutons d'impression */
+.btn-outline-primary {
+    border: 2px solid #3b82f6;
+    color: #3b82f6;
+    background: transparent;
+    padding: 12px 24px;
+    font-weight: 600;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+}
+.btn-outline-primary:hover {
+    background: #3b82f6;
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+/* Styles spécifiques pour l'impression */
+@media print {
+    .table-filters, .navbar, .sidebar, .table-actions {
+        display: none !important;
+    }
+
+    .table-container {
+        box-shadow: none;
+        border: 1px solid #000;
+    }
+
+    .table-title {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}
+</style>
+{% endblock %}
+
+{# Wrap the main body so we can include it in both base blocks #}
+{% macro rapport_entity_body() %}
+<div class="rapport-entity-container">
+    <!-- En-tête de l'entité modernisé -->
+    {% call table_container('Rapport ' + entity_name, 'route', search=false, subtitle='Analyse détaillée des trajets pour la période sélectionnée', table_id='entityHeader') %}
+        <div class="info-grid" style="margin-bottom: 0;">
+            <!-- Carte Type d'Entité -->
+            <div class="info-card">
+                <div class="info-card-header">
+                    <i class="fas fa-{% if entity_name == 'Noblesse' %}bus{% elif entity_name == 'Charter' %}bus{% else %}university{% endif %}"></i>
+                    <h4>Type d'Entité</h4>
+                </div>
+                <div class="info-card-body">
+                    <div class="info-item">
+                        <span class="info-label">Catégorie :</span>
+                        <span class="info-value">
+                            {% if entity_type == 'prestataire' %}
+                                {{ status_badge('Prestataire', 'info', 'truck') }}
+                            {% else %}
+                                {{ status_badge('Bus UdM', 'success', 'university') }}
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Entité :</span>
+                        <span class="info-value">
+                            {% if entity_name == 'Noblesse' %}
+                                {{ status_badge('Noblesse', 'primary', 'bus') }}
+                            {% elif entity_name == 'Charter' %}
+                                {{ status_badge('Charter', 'warning', 'bus') }}
+                            {% else %}
+                                {{ status_badge('Bus UdM', 'success', 'university') }}
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Carte Période -->
+            <div class="info-card">
+                <div class="info-card-header">
+                    <i class="fas fa-calendar-alt"></i>
+                    <h4>Période d'Analyse</h4>
+                </div>
+                <div class="info-card-body">
+                    {% set d1 = request.args.get('date_debut') %}
+                    {% set d2 = request.args.get('date_fin') %}
+                    <div class="info-item">
+                        <span class="info-label">Type :</span>
+                        <span class="info-value">
+                            {% if d1 and d2 %}
+                                {{ status_badge('Personnalisée', 'secondary', 'calendar-plus') }}
+                            {% else %}
+                                {% if current_periode == 'jour' %}
+                                    {{ status_badge('Aujourd\'hui', 'success', 'calendar-day') }}
+                                {% elif current_periode == 'semaine' %}
+                                    {{ status_badge('Cette semaine', 'info', 'calendar-week') }}
+                                {% else %}
+                                    {{ status_badge(periode_formatee if periode_formatee is defined else 'Décembre 2024', 'primary', 'calendar-alt') }}
+                                {% endif %}
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Dates :</span>
+                        <span class="info-value">
+                            {% if d1 and d2 %}
+                                {{ icon_cell('calendar', 'Du ' + d1 + ' au ' + d2) }}
+                            {% else %}
+                                {% if current_periode == 'jour' %}
+                                    {{ icon_cell('calendar-day', 'Aujourd\'hui') }}
+                                {% elif current_periode == 'semaine' %}
+                                    {{ icon_cell('calendar-week', 'Cette semaine') }}
+                                {% else %}
+                                    {{ icon_cell('calendar-alt', periode_formatee if periode_formatee is defined else 'Décembre 2024') }}
+                                {% endif %}
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endcall %}
+
+    <!-- Filtres par période modernisés -->
+    {% call table_container('Filtres de Période', 'filter', search=false, subtitle='Sélectionnez la période d\'analyse des trajets', table_id='filtersSection') %}
+
+        <!-- Filtres rapides -->
+        <div class="table-filters" style="margin-bottom: 25px;">
+            <div class="filter-group">
+                <label class="filter-label">
+                    <i class="fas fa-calendar-alt"></i>
+                    Périodes prédéfinies
+                </label>
+                <div class="filter-buttons">
+                    {# Choisir dynamiquement le blueprint: 'superviseur' ou 'admin' #}
+                    {% set base_bp = 'superviseur' if superviseur_mode else 'admin' %}
+                    {% if entity_name == 'Noblesse' %}
+                        {% set route_name = base_bp ~ '.rapport_noblesse' %}
+                    {% elif entity_name == 'Charter' %}
+                        {% set route_name = base_bp ~ '.rapport_charter' %}
+                    {% else %}
+                        {% set route_name = base_bp ~ '.rapport_bus_udm' %}
+                    {% endif %}
+                    {% set current_periode = request.args.get('periode', 'mois') %}
+
+                    <a href="{{ url_for(route_name, periode='jour') }}"
+                       class="filter-btn {% if current_periode == 'jour' %}active{% endif %}">
+                        <i class="fas fa-calendar-day"></i>
+                        Aujourd'hui
+                    </a>
+                    <a href="{{ url_for(route_name, periode='semaine') }}"
+                       class="filter-btn {% if current_periode == 'semaine' %}active{% endif %}">
+                        <i class="fas fa-calendar-week"></i>
+                        Cette semaine
+                    </a>
+                    <a href="{{ url_for(route_name, periode='mois') }}"
+                       class="filter-btn {% if current_periode == 'mois' %}active{% endif %}">
+                        <i class="fas fa-calendar-alt"></i>
+                        Ce mois
+                    </a>
+                </div>
+            </div>
+
+            <!-- Filtre personnalisé -->
+            <div class="filter-group">
+                <label class="filter-label">
+                    <i class="fas fa-calendar-plus"></i>
+                    Période personnalisée
+                </label>
+                <form method="GET" class="date-range-inputs">
+                    <div class="date-input-group">
+                        <label for="date_debut">Du :</label>
+                        <input type="date" id="date_debut" name="date_debut"
+                               value="{{ request.args.get('date_debut', '') }}"
+                               class="date-input">
+                    </div>
+                    <div class="date-input-group">
+                        <label for="date_fin">Au :</label>
+                        <input type="date" id="date_fin" name="date_fin"
+                               value="{{ request.args.get('date_fin', '') }}"
+                               class="date-input">
+                    </div>
+                    <button type="submit" class="table-btn action">
+                        <i class="fas fa-search"></i>
+                        Filtrer
+                    </button>
+                </form>
+            </div>
+        </div>
+    {% endcall %}
+
+    <!-- Résumé statistiques modernisé -->
+    {% call table_container('Statistiques de Performance', 'chart-bar', search=false, subtitle='Résumé des performances pour la période sélectionnée', table_id='statsSection') %}
+        <div class="info-grid">
+            <!-- Carte Trajets Effectués -->
+            <div class="info-card">
+                <div class="info-card-header">
+                    <i class="fas fa-route"></i>
+                    <h4>Trajets Effectués</h4>
+                </div>
+                <div class="info-card-body">
+                    <div class="info-item">
+                        <span class="info-label">Total :</span>
+                        <span class="info-value">{{ status_badge(total_trajets|string + ' trajets', 'primary', 'route') }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Statut :</span>
+                        <span class="info-value">
+                            {% if total_trajets > 0 %}
+                                {{ status_badge('Actif', 'success', 'check-circle') }}
+                            {% else %}
+                                {{ status_badge('Aucun trajet', 'warning', 'exclamation-triangle') }}
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Carte Passagers Transportés -->
+            <div class="info-card">
+                <div class="info-card-header">
+                    <i class="fas fa-users"></i>
+                    <h4>{% if entity_name == 'Bus UdM' %}Passagers Transportés{% else %}Étudiants Transportés{% endif %}</h4>
+                </div>
+                <div class="info-card-body">
+                    <div class="info-item">
+                        <span class="info-label">Total :</span>
+                        <span class="info-value">{{ status_badge(total_passagers|string + ' personnes', 'info', 'users') }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Capacité :</span>
+                        <span class="info-value">
+                            {% if total_passagers > 0 %}
+                                {{ status_badge('Utilisée', 'success', 'check') }}
+                            {% else %}
+                                {{ status_badge('Non utilisée', 'secondary', 'minus') }}
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Carte Moyenne par Trajet -->
+            <div class="info-card">
+                <div class="info-card-header">
+                    <i class="fas fa-calculator"></i>
+                    <h4>Moyenne par Trajet</h4>
+                </div>
+                <div class="info-card-body">
+                    <div class="info-item">
+                        <span class="info-label">Passagers/trajet :</span>
+                        <span class="info-value">
+                            {% if total_trajets > 0 %}
+                                {{ status_badge("%.1f"|format(total_passagers / total_trajets) + ' pers.', 'warning', 'calculator') }}
+                            {% else %}
+                                {{ status_badge('0 pers.', 'secondary', 'calculator') }}
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Efficacité :</span>
+                        <span class="info-value">
+                            {% if total_trajets > 0 and total_passagers > 0 %}
+                                {% set moyenne = total_passagers / total_trajets %}
+                                {% if moyenne >= 20 %}
+                                    {{ status_badge('Excellente', 'success', 'star') }}
+                                {% elif moyenne >= 10 %}
+                                    {{ status_badge('Bonne', 'info', 'thumbs-up') }}
+                                {% else %}
+                                    {{ status_badge('Faible', 'warning', 'exclamation') }}
+                                {% endif %}
+                            {% else %}
+                                {{ status_badge('N/A', 'secondary', 'question') }}
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endcall %}
+
+    <!-- Tableau des trajets avec nouveau design -->
+    {% call table_container('Trajets ' + entity_name, 'route', search=true, subtitle='Liste détaillée des trajets pour la période sélectionnée', table_id='trajetsTable') %}
+        <table class="table table-striped table-hover sortable">
+            <thead>
+                <tr>
+                    <th>Date et heure</th>
+                    <th>Départ</th>
+                    <th>Arrivée</th>
+                    {% if entity_name != 'Bus UdM' %}
+                    <th>Immatriculation</th>
+                    {% else %}
+                    <th>Bus N°</th>
+                    {% endif %}
+                    <th>Passagers</th>
+                    <th>Chauffeur</th>
+                    {% if entity_name == 'Bus UdM' %}
+                    <th>Type</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for trajet in trajets %}
+                <tr>
+                    <td>{{ date_cell(trajet.date_heure_depart, format='%d/%m/%Y %H:%M') }}</td>
+                    <td>{{ icon_cell('map-marker-alt', trajet.point_depart) }}</td>
+                    <td>{{ icon_cell('map-marker-alt', trajet.point_arriver or 'Non spécifié') }}</td>
+                    <td>
+                        {% if entity_name != 'Bus UdM' %}
+                            {% if trajet.immat_bus %}
+                                {{ icon_cell('id-card', trajet.immat_bus) }}
+                            {% else %}
+                                <span class="text-muted">N/A</span>
+                            {% endif %}
+                        {% else %}
+                            {% if trajet.numero_bus_udm %}
+                                {{ icon_cell('bus', 'UDM-' + trajet.numero_bus_udm|string) }}
+                            {% else %}
+                                <span class="text-muted">N/A</span>
+                            {% endif %}
+                        {% endif %}
+                    </td>
+                    <td>
+                        {{ status_badge((trajet.nombre_places_occupees or 0)|string + ' passagers', 'primary', 'users') }}
+                    </td>
+                    <td>
+                        {% if entity_name == 'Bus UdM' %}
+                            {% if trajet.chauffeur %}
+                                {{ icon_cell('user-tie', trajet.chauffeur.nom + ' ' + trajet.chauffeur.prenom) }}
+                            {% else %}
+                                <span class="text-muted">N/A</span>
+                            {% endif %}
+                        {% else %}
+                            {% if trajet.nom_chauffeur %}
+                                {{ icon_cell('user', trajet.nom_chauffeur) }}
+                            {% else %}
+                                <span class="text-muted">N/A</span>
+                            {% endif %}
+                        {% endif %}
+                    </td>
+                    {% if entity_name == 'Bus UdM' %}
+                    <td>
+                        {% if trajet.type_passagers == 'ETUDIANT' %}
+                            {{ status_badge('Étudiant', 'success', 'graduation-cap') }}
+                        {% elif trajet.type_passagers == 'PERSONNEL' %}
+                            {{ status_badge('Personnel', 'info', 'briefcase') }}
+                        {% else %}
+                            {{ status_badge(trajet.type_passagers or 'N/A', 'warning') }}
+                        {% endif %}
+                    </td>
+                    {% endif %}
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="{% if entity_name == 'Bus UdM' %}7{% else %}6{% endif %}" class="table-empty">
+                        <i class="fas fa-route"></i>
+                        <h5>Aucun trajet trouvé</h5>
+                        <p>Aucun trajet trouvé pour cette période. Essayez de modifier les filtres de date.</p>
+                    </td>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endcall %}
+
+    <!-- Boutons d'action simplifiés -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-center align-items-center" style="width: 100%; text-align: center;">
+                <div class="d-flex gap-3">
+                    <button onclick="window.print()" class="btn btn-outline-primary d-flex align-items-center gap-2">
+                        <i class="fas fa-print"></i>
+                        <span>Imprimer le rapport</span>
+                    </button>
+                    {% if superviseur_mode %}
+                    <a href="{{ url_for('superviseur.rapports') }}" class="btn btn-outline-primary d-flex align-items-center gap-2">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>Retour aux rapports</span>
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('admin.rapports') }}" class="btn btn-outline-primary d-flex align-items-center gap-2">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>Retour aux rapports</span>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+{# Preserve base_superviseur wrapper by delegating to super() in superviseur mode #}
+{% block dashboard_content %}
+  {% if superviseur_mode %}
+    {{ super() }}
+  {% else %}
+    {{ rapport_entity_body() }}
+  {% endif %}
+{% endblock %}
+
+{% block superviseur_content %}
+  {{ rapport_entity_body() }}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Ajouter la classe pour le style d'impression
+document.addEventListener('DOMContentLoaded', function() {
+    // Améliorer l'affichage des badges
+    const badges = document.querySelectorAll('.badge');
+    badges.forEach(badge => {
+        if (badge.textContent.trim() === 'ETUDIANT') {
+            badge.classList.add('badge-success');
+        } else if (badge.textContent.trim() === 'PERSONNEL') {
+            badge.classList.add('badge-warning');
+        } else if (badge.textContent.trim() === 'MALADE') {
+            badge.classList.add('badge-danger');
+        }
+    });
+});
+</script>
+{% endblock %}

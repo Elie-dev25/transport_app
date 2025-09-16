@@ -21,9 +21,10 @@ from app.services.gestion_carburation import (
 from app.routes.common import role_required
 from . import bp
 
-# Définition du décorateur admin_only
+# Définition du décorateur admin_only (ADMIN et RESPONSABLE avec traçabilité)
 def admin_only(view):
-    return role_required('ADMIN')(view)
+    from app.routes.common import admin_or_responsable
+    return admin_or_responsable(view)
 
 # Route pour la page de Dépannage
 @admin_only
@@ -53,7 +54,7 @@ def depanage():
     )
     
     # Passer les pannes et dépannages au template
-    return render_template('depanage.html', pannes=pannes, depannages=depannages, unresolved_counts=unresolved_counts)
+    return render_template('pages/depanage.html', pannes=pannes, depannages=depannages, unresolved_counts=unresolved_counts)
 
 # Route pour enregistrer une déclaration de panne
 @admin_only
@@ -260,7 +261,7 @@ def vidange():
         historique_vidange = get_vidange_history()
 
     return render_template(
-        'vidange.html',
+        'pages/vidange.html',
         active_page='vidange',
         bus_vidange=bus_vidange,
         historique_vidange=historique_vidange,
@@ -325,7 +326,7 @@ def carburation():
         historique_carburation = get_carburation_history()
 
     return render_template(
-        'carburation.html',
+        'pages/carburation.html',
         active_page='carburation',
         bus_carburation=bus_carburation,
         historique_carburation=historique_carburation,
@@ -362,4 +363,4 @@ def enregistrer_carburation():
 @bp.route('/dashboard_mecanicien')
 def dashboard_mecanicien():
     bus_list = BusUdM.query.order_by(BusUdM.numero).all()
-    return render_template('dashboard_mecanicien.html', bus_list=bus_list)
+    return render_template('roles/mecanicien/dashboard_mecanicien.html', bus_list=bus_list)

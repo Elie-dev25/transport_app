@@ -1,0 +1,395 @@
+{% extends "roles/admin/_base_admin.html" %}
+{% from 'shared/macros/tableaux_components.html' import table_container, status_badge, level_indicator, voyant_indicator, icon_cell, date_cell, money_cell, number_cell %}
+
+{% block title %}Liste des Bus UdM{% endblock %}
+
+{% set active_page = 'bus_udm' %}
+{% set page_title = 'Liste des Bus UdM' %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkfHcA21fZyMcJ6r0F/YvC3etwFh0qU6V7qX+6lGJ3j1b8d+6K/Y3GZ3g==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tableaux.css') }}">
+    <script src="{{ url_for('static', filename='js/tableaux.js') }}"></script>
+    <style>
+      /* Styles spécifiques à la page Bus UdM Admin */
+      #docFormModal, #addBusModal {
+        z-index: 10000;
+      }
+
+      /* Styles pour les détails de bus */
+      .details-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .details-list li {
+        padding: 8px 0;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .details-list li:last-child {
+        border-bottom: none;
+      }
+
+      .details-label {
+        font-weight: 600;
+        color: #374151;
+        min-width: 120px;
+      }
+
+      .details-value {
+        color: #6b7280;
+        text-align: right;
+      }
+
+      .modal-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-top: 20px;
+      }
+
+      .btn-print {
+        background: #10b981;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .btn-print:hover {
+        background: #059669;
+      }
+
+      .close-btn {
+        background: #6b7280;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+
+      .close-btn:hover {
+        background: #4b5563;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: #6b7280;
+      }
+
+      .empty-state i {
+        font-size: 48px;
+        margin-bottom: 16px;
+        opacity: 0.5;
+      }
+
+      .empty-state h5 {
+        margin: 0 0 8px 0;
+        font-size: 18px;
+        font-weight: 600;
+      }
+
+      .empty-state p {
+        margin: 0;
+        font-size: 14px;
+      }
+
+      .loading-state {
+        text-align: center;
+        padding: 20px;
+        color: #6b7280;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+    </style>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="container-fluid">
+    <!-- Bouton d'ajout (toujours visible côté admin) -->
+    <div class="d-flex justify-content-end mb-3">
+        <button id="openAddBusModal" class="btn btn-primary rounded-circle" style="width:50px;height:50px;" title="Ajouter un Bus UdM">
+            <i class="fas fa-plus"></i>
+        </button>
+    </div>
+
+    <!-- Tableau des bus avec le nouveau design -->
+    {% call table_container('Liste des Bus UdM', 'bus', search=true, subtitle='Gestion de la flotte de bus universitaires', table_id='busTable') %}
+        <table class="table table-striped table-hover sortable">
+            <thead>
+                <tr>
+                    <th>Numéro</th>
+                    <th>Immatriculation</th>
+                    <th>Kilométrage</th>
+                    <th>État</th>
+                    <th>Capacité</th>
+                    <th class="no-sort">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for bus in bus_list %}
+                <tr>
+                    <td>{{ number_cell(bus.numero) }}</td>
+                    <td>
+                        {% if bus.immatriculation %}
+                            <strong>{{ bus.immatriculation }}</strong>
+                        {% else %}
+                            <span class="text-muted">Non défini</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if bus.kilometrage %}
+                            {{ icon_cell('tachometer-alt', "{:,}".format(bus.kilometrage) + ' km') }}
+                        {% else %}
+                            <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if bus.etat_vehicule == 'OPERATIONNEL' %}
+                            {{ status_badge('Opérationnel', 'success', 'check-circle') }}
+                        {% elif bus.etat_vehicule == 'DEFAILLANT' %}
+                            {{ status_badge('Défaillant', 'danger', 'exclamation-triangle') }}
+                        {% elif bus.etat_vehicule == 'MAINTENANCE' %}
+                            {{ status_badge('Maintenance', 'warning', 'wrench') }}
+                        {% else %}
+                            {{ status_badge(bus.etat_vehicule or 'Inconnu', 'secondary') }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if bus.nombre_places %}
+                            {{ icon_cell('users', bus.nombre_places|string + ' places') }}
+                        {% else %}
+                            <span class="text-muted">Non défini</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="table-actions">
+                            <button class="table-btn view" onclick="showBusDetails({{ bus.id }})" title="Voir la fiche">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="table-btn action" onclick="openPanneModal({{ bus.numero|tojson }}, {{ (bus.immatriculation|default('', true))|tojson }}, {{ (bus.kilometrage or 0)|tojson }})" title="Déclarer panne">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </button>
+                            <button class="table-btn edit" onclick="openDocModal({{ bus.id }})" title="Ajouter un document">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="table-empty">
+                        <i class="fas fa-bus"></i>
+                        <h5>Aucun bus enregistré</h5>
+                        <p>Cliquez sur le bouton + pour ajouter votre premier bus.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endcall %}
+
+    <!-- Actions rapides (toutes visibles côté admin) -->
+    <div class="quick-actions" style="margin-top:30px;">
+        <h2 class="section-title">
+            <i class="fas fa-tools"></i>
+            Opérations
+        </h2>
+        <div class="actions-grid">
+            <a href="{{ url_for('admin.carburation') }}" class="action-btn">
+                <i class="fas fa-gas-pump"></i>
+                <span>Carburation</span>
+            </a>
+            <a href="{{ url_for('admin.vidange') }}" class="action-btn">
+                <i class="fas fa-oil-can"></i>
+                <span>Vidange</span>
+            </a>
+            <a href="#" id="declare-panne-btn" class="action-btn">
+                <i class="fas fa-triangle-exclamation"></i>
+                <span>Déclaration de panne</span>
+            </a>
+            <a href="/admin/depanage" class="action-btn" id="depanage-btn">
+                <i class="fas fa-wrench"></i>
+                <span>Dépannage</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+{% include 'shared/modals/_document_modal.html' %}
+
+
+
+<!-- Modal panne -->
+<div id="panneModal" class="modal" hidden aria-hidden="true">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3><i class="fas fa-exclamation-triangle"></i> Déclaration de Panne</h3>
+      <button type="button" class="close-btn" onclick="closePanneModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="panne-form">
+        <div style="margin-bottom:15px;">
+          <label for="panne_numero">Numéro du Bus :</label>
+          <input type="text" id="panne_numero" readonly style="width:100%;padding:8px;border-radius:6px;border:1px solid #e5e7eb;background:#f9fafb;">
+        </div>
+        <div style="margin-bottom:15px;">
+          <label for="panne_immatriculation">Immatriculation :</label>
+          <input type="text" id="panne_immatriculation" readonly style="width:100%;padding:8px;border-radius:6px;border:1px solid #e5e7eb;background:#f9fafb;">
+        </div>
+        <div style="margin-bottom:15px;">
+          <label for="panne_kilometrage">Kilométrage actuel :</label>
+          <input type="number" id="panne_kilometrage" required style="width:100%;padding:8px;border-radius:6px;border:1px solid #e5e7eb;">
+        </div>
+        <div style="margin-bottom:15px;">
+          <label for="panne_description">Description de la panne :</label>
+          <textarea id="panne_description" rows="4" required style="width:100%;padding:8px;border-radius:6px;border:1px solid #e5e7eb;"></textarea>
+        </div>
+        <div style="margin-bottom:15px;">
+          <label for="panne_gravite">Gravité :</label>
+          <select id="panne_gravite" required style="width:100%;padding:8px;border-radius:6px;border:1px solid #e5e7eb;">
+            <option value="">-- Sélectionner --</option>
+            <option value="FAIBLE">Faible</option>
+            <option value="MOYENNE">Moyenne</option>
+            <option value="GRAVE">Grave</option>
+            <option value="CRITIQUE">Critique</option>
+          </select>
+        </div>
+        <button type="submit" class="action-btn" style="width:100%;margin-top:10px;">
+          <i class="fas fa-save"></i> Déclarer la panne
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% include 'shared/modals/_add_bus_modal.html' %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  // Ouvrir automatiquement la modale Document si on arrive avec ?open=doc&bus_id=...
+  (function(){
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('open') === 'doc') {
+      const bid = params.get('bus_id');
+      if (bid) {
+        window.selectedBusId = bid;
+        $('#docFormModal').addClass('show');
+        // Nettoyer l'URL pour éviter ré-ouverture au refresh
+        if (window.history && window.history.replaceState) {
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      }
+    } else if (params.get('open') === 'panne') {
+      // Ouvrir la modale de déclaration de panne
+      $('#panneModal').removeAttr('hidden').addClass('show').attr('aria-hidden','false');
+      // Nettoyer l'URL pour éviter ré-ouverture au refresh
+      if (window.history && window.history.replaceState) {
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
+  })();
+  // Gestion de la modale d'ajout de Bus UdM
+  $('#openAddBusModal').on('click', function(e) {
+    e.preventDefault();
+    $('#addBusModal').addClass('show');
+  });
+  
+  $('#closeAddBusModal').on('click', function() {
+    $('#addBusModal').removeClass('show');
+  });
+
+  // Fermer les modales en cliquant à l'extérieur
+  $(document).on('click', function(e) {
+    if ($(e.target).hasClass('modal')) {
+      $(e.target).removeClass('show');
+    }
+  });
+});
+
+// Fonctions pour la modale de détails
+function showBusDetails(busId) {
+  // Rediriger vers la page de détails complète
+  window.location.href = '/admin/bus/details/' + busId;
+}
+
+
+
+// Fonctions pour la modale de panne
+function openPanneModal(numero, immatriculation, kilometrage) {
+  document.getElementById('panne_numero').value = numero;
+  document.getElementById('panne_immatriculation').value = immatriculation || '';
+  document.getElementById('panne_kilometrage').value = kilometrage || '';
+  document.getElementById('panneModal').removeAttribute('hidden');
+  document.getElementById('panneModal').classList.add('show');
+  document.getElementById('panneModal').setAttribute('aria-hidden', 'false');
+}
+
+function closePanneModal() {
+  document.getElementById('panneModal').setAttribute('hidden', '');
+  document.getElementById('panneModal').classList.remove('show');
+  document.getElementById('panneModal').setAttribute('aria-hidden', 'true');
+  // Reset form
+  document.getElementById('panne-form').reset();
+}
+
+// Gestion du formulaire de panne
+document.getElementById('panne-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  
+  const formData = {
+    numero: document.getElementById('panne_numero').value,
+    immatriculation: document.getElementById('panne_immatriculation').value,
+    kilometrage: document.getElementById('panne_kilometrage').value,
+    description: document.getElementById('panne_description').value,
+    gravite: document.getElementById('panne_gravite').value
+  };
+  
+  fetch('/admin/bus/declarer_panne', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(formData)
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      alert('Panne déclarée avec succès');
+      closePanneModal();
+      // Recharger la page pour mettre à jour l'état du bus
+      location.reload();
+    } else {
+      alert('Erreur: ' + (data.message || 'Erreur inconnue'));
+    }
+  })
+  .catch(error => {
+    console.error('Erreur:', error);
+    alert('Erreur lors de la déclaration de panne');
+  });
+});
+
+// Gestion du bouton "Déclarer panne" dans les actions rapides
+document.getElementById('declare-panne-btn').addEventListener('click', function(e) {
+  e.preventDefault();
+  // Ouvrir la modale sans pré-remplir (l'utilisateur devra sélectionner un bus)
+  openPanneModal('', '', '');
+});
+</script>
+{% endblock %}

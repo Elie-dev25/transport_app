@@ -8,7 +8,7 @@ class BusUdMForm(FlaskForm):
     numero = StringField(
         'Numéro du bus',
         validators=[DataRequired(), Length(min=3, max=50)],
-        render_kw={'placeholder': 'Ex: UDM-001'}
+        render_kw={'placeholder': 'Ex: AED-01'}
     )
 
     immatriculation = StringField(

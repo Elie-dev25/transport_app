@@ -1,0 +1,229 @@
+{% extends "_base_dashboard.html" %}
+
+{% set sidebar_title = "Chauffeur AED Panel" %}
+{% set sidebar_subtitle = "Transport Universitaire" %}
+
+{% block topbar %}
+<div class="top-bar">
+    <h1 class="page-title">{{ page_title | default('Tableau de Bord Chauffeur') }}</h1>
+    <div class="top-bar-actions">
+        <!-- Statut du chauffeur -->
+        <div class="chauffeur-status">
+            {% if statut_actuel == 'CONGE' %}
+                <div class="status-container conge">
+                    <div class="status-icon">
+                        <i class="fas fa-calendar-times"></i>
+                    </div>
+                    <div class="status-text">
+                        <span class="status-label">Statut</span>
+                        <span class="status-value">En Congé</span>
+                    </div>
+                </div>
+            {% elif statut_actuel == 'PERMANENCE' %}
+                <div class="status-container permanence">
+                    <div class="status-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="status-text">
+                        <span class="status-label">Statut</span>
+                        <span class="status-value">Permanence</span>
+                    </div>
+                </div>
+            {% elif statut_actuel == 'SERVICE_WEEKEND' %}
+                <div class="status-container weekend">
+                    <div class="status-icon">
+                        <i class="fas fa-calendar-week"></i>
+                    </div>
+                    <div class="status-text">
+                        <span class="status-label">Statut</span>
+                        <span class="status-value">Service Week-end</span>
+                    </div>
+                </div>
+            {% elif statut_actuel == 'SERVICE_SEMAINE' %}
+                <div class="status-container semaine">
+                    <div class="status-icon">
+                        <i class="fas fa-calendar-day"></i>
+                    </div>
+                    <div class="status-text">
+                        <span class="status-label">Statut</span>
+                        <span class="status-value">Service Semaine</span>
+                    </div>
+                </div>
+            {% else %}
+                <div class="status-container non-specifie">
+                    <div class="status-icon">
+                        <i class="fas fa-question-circle"></i>
+                    </div>
+                    <div class="status-text">
+                        <span class="status-label">Statut</span>
+                        <span class="status-value">Non spécifié</span>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="user-menu">
+            <div class="user-avatar">{{ current_user.initials | default('U') }}</div>
+            <div>
+                <div style="font-weight:600;font-size:14px;">
+                    {{ ((current_user.nom ~ ' ' ~ current_user.prenom)|trim) or current_user.login | default('Utilisateur') }}
+                </div>
+                <div style="font-size:12px;color:#64748b;">
+                    {{ current_user.login | default('user') }}
+                    {% if current_user.role == 'CHAUFFEUR' %}
+                        <span class="badge bg-warning ms-1" style="font-size:10px;">CHAUFFEUR</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.chauffeur-status {
+    margin-right: 30px;
+}
+
+.status-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    border-radius: 12px;
+    background: #ffffff;
+}
+
+.status-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: white;
+}
+
+.status-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.status-label {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    opacity: 0.8;
+}
+
+.status-value {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+}
+
+/* Styles spécifiques par statut - Fond blanc, seul le nom change de couleur */
+.status-container.conge {
+    background: #ffffff;
+    color: #000000;
+}
+
+.status-container.conge .status-value {
+    color: #1976d2; /* Bleu pour En Congé */
+}
+
+.status-container.conge .status-icon {
+    background: #1976d2;
+}
+
+.status-container.permanence {
+    background: #ffffff;
+    color: #000000;
+}
+
+.status-container.permanence .status-value {
+    color: #1976d2; /* Bleu pour Permanence */
+}
+
+.status-container.permanence .status-icon {
+    background: #1976d2;
+}
+
+.status-container.weekend {
+    background: #ffffff;
+    color: #000000;
+}
+
+.status-container.weekend .status-value {
+    color: #388e3c; /* Vert pour Service Week-end */
+}
+
+.status-container.weekend .status-icon {
+    background: #388e3c;
+}
+
+.status-container.semaine {
+    background: #ffffff;
+    color: #000000;
+}
+
+.status-container.semaine .status-value {
+    color: #388e3c; /* Vert pour Service Semaine (en service) */
+}
+
+.status-container.semaine .status-icon {
+    background: #388e3c;
+}
+
+.status-container.non-specifie {
+    background: #ffffff;
+    color: #000000;
+}
+
+.status-container.non-specifie .status-value {
+    color: #000000; /* Noir pour Non spécifié */
+}
+
+.status-container.non-specifie .status-icon {
+    background: #6c757d;
+}
+
+</style>
+{% endblock %}
+
+{% block nav_menu %}
+<div class="nav-item">
+    <a href="{{ url_for('chauffeur.dashboard') }}" class="nav-link{% if active_page == 'dashboard' %} active{% endif %}">
+        <i class="fas fa-tachometer-alt"></i> <span>Tableau de Bord</span>
+    </a>
+</div>
+<div class="nav-item">
+    <a class="nav-link {{ 'active' if active_page == 'profil' else '' }}" href="{{ url_for('chauffeur.profil') }}">
+        <i class="fas fa-user"></i>
+        <span>Mon Profil</span>
+    </a>
+</div>
+<div class="nav-item">
+    <a class="nav-link {{ 'active' if active_page == 'trajets' else '' }}" href="{{ url_for('chauffeur.trajets') }}">
+        <i class="fas fa-route"></i>
+        <span>Mes Trajets</span>
+    </a>
+</div>
+<div class="nav-item">
+    <a href="{{ url_for('chauffeur.bus_udm') }}" class="nav-link{% if active_page == 'bus_udm' %} active{% endif %}">
+        <i class="fas fa-bus"></i> <span>Bus</span>
+    </a>
+</div>
+<div class="nav-item">
+    <a href="{{ url_for('chauffeur.carburation') }}" class="nav-link{% if active_page == 'carburation' %} active{% endif %}">
+        <i class="fas fa-gas-pump"></i> <span>Carburation</span>
+    </a>
+    </div>
+<div class="nav-item">
+    <a href="{{ url_for('chauffeur.bus_udm') }}?open=panne" class="nav-link">
+        <i class="fas fa-triangle-exclamation"></i> <span>Déclarer panne</span>
+    </a>
+</div>
+{% endblock %}

@@ -1,0 +1,285 @@
+{% extends "roles/chauffeur/_base_chauffeur.html" %}
+{% block title %}Mon Profil{% endblock %}
+
+{% set active_page = 'profil' %}
+{% set page_title = 'Mon Profil' %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profil.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/user_stats.css') }}">
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="profil-container">
+    {% if error_message %}
+        <div class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle"></i>
+            {{ error_message }}
+        </div>
+    {% endif %}
+
+    <!-- En-tête Profil -->
+    <div class="profil-card-modern">
+        <div class="profil-background-pattern"></div>
+        <div class="profil-content">
+            <div class="profil-left">
+                <div class="profil-avatar-modern">
+                    <div class="avatar-inner">
+                        {{ (current_user.nom[0] if current_user.nom else 'U') + (current_user.prenom[0] if current_user.prenom else '') }}
+                    </div>
+                    <div class="avatar-ring"></div>
+                </div>
+                <div class="profil-status-modern">
+                    <div class="status-dot"></div>
+                    <span class="status-text">
+                        {% if statut_actuel == 'CONGE' %}
+                            En Congé
+                        {% elif statut_actuel == 'PERMANENCE' %}
+                            En Permanence
+                        {% elif statut_actuel == 'DISPONIBLE' %}
+                            Disponible
+                        {% else %}
+                            {{ statut_actuel }}
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+            <div class="profil-right">
+                <div class="profil-name">
+                    <h1>{{ current_user.nom }} {{ current_user.prenom }}</h1>
+                    <div class="role-badge-modern">
+                        <i class="fas fa-steering-wheel"></i>
+                        <span>{{ current_user.role }}</span>
+                    </div>
+                </div>
+                <div class="profil-quick-stats">
+                    {% if stats_profil %}
+                    <div class="quick-stat">
+                        <div class="stat-number">{{ stats_profil.total_trajets }}</div>
+                        <div class="stat-label">Trajets</div>
+                    </div>
+                    <div class="quick-stat">
+                        <div class="stat-number">{{ stats_profil.trajets_mois }}</div>
+                        <div class="stat-label">Ce mois</div>
+                    </div>
+                    <div class="quick-stat">
+                        <div class="stat-number">{{ stats_profil.total_passagers }}</div>
+                        <div class="stat-label">Passagers</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informations Détaillées -->
+    {% if chauffeur_db %}
+    <div class="profil-details">
+        <div class="detail-item">
+            <div class="label">Login</div>
+            <div class="value">
+                <i class="icon fas fa-user-circle"></i>
+                {{ current_user.login }}
+            </div>
+        </div>
+        <div class="detail-item">
+            <div class="label">Numéro de Permis</div>
+            <div class="value">
+                <i class="icon fas fa-id-badge"></i>
+                {{ chauffeur_db.numero_permis }}
+            </div>
+        </div>
+        <div class="detail-item">
+            <div class="label">Téléphone</div>
+            <div class="value">
+                <i class="icon fas fa-phone"></i>
+                {{ chauffeur_db.telephone }}
+            </div>
+        </div>
+        <div class="detail-item">
+            <div class="label">Permis Délivré</div>
+            <div class="value">
+                <i class="icon fas fa-calendar-alt"></i>
+                {{ chauffeur_db.date_delivrance_permis.strftime('%d/%m/%Y') if chauffeur_db.date_delivrance_permis else 'Non renseigné' }}
+            </div>
+        </div>
+        <div class="detail-item">
+            <div class="label">Permis Expire</div>
+            <div class="value">
+                <i class="icon fas fa-calendar-times"></i>
+                {{ chauffeur_db.date_expiration_permis.strftime('%d/%m/%Y') if chauffeur_db.date_expiration_permis else 'Non renseigné' }}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Section Statuts du Mois -->
+    <div class="affectations-section" style="margin-top: 30px;">
+        <h3 style="margin-bottom: 20px; color: #1e293b; font-size: 20px; font-weight: 600;">
+            <i class="fas fa-user-clock" style="color: #007bff; margin-right: 10px;"></i>
+            Mes Statuts du Mois
+        </h3>
+        
+        <div class="table-responsive">
+            <table class="table-modern">
+                <thead>
+                    <tr>
+                        <th><i class="fas fa-calendar-day"></i> Date Début</th>
+                        <th><i class="fas fa-calendar-day"></i> Date Fin</th>
+                        <th><i class="fas fa-user-tag"></i> Statut</th>
+                        <th><i class="fas fa-clock"></i> Durée</th>
+                        <th><i class="fas fa-info-circle"></i> État</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if affectations_mois %}
+                        {% for statut in affectations_mois %}
+                        <tr>
+                            <td>{{ statut.date_debut.strftime('%d/%m/%Y') if statut.date_debut else 'Non défini' }}</td>
+                            <td>{{ statut.date_fin.strftime('%d/%m/%Y') if statut.date_fin else 'Non défini' }}</td>
+                            <td>
+                                {% if statut.statut_original == 'CONGE' %}
+                                    <span class="badge badge-warning">{{ statut.statut }}</span>
+                                {% elif statut.statut_original == 'PERMANENCE' %}
+                                    <span class="badge badge-info">{{ statut.statut }}</span>
+                                {% elif statut.statut_original in ['SERVICE_WEEKEND', 'SERVICE_SEMAINE'] %}
+                                    <span class="badge badge-success">{{ statut.statut }}</span>
+                                {% else %}
+                                    <span class="badge badge-secondary">{{ statut.statut }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ statut.duree }}</td>
+                            <td><span class="badge badge-{{ statut.etat_class }}">{{ statut.etat }}</span></td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="5" style="text-align: center; color: #64748b; padding: 40px;">
+                                <i class="fas fa-user-clock" style="font-size: 48px; margin-bottom: 15px; opacity: 0.3;"></i><br>
+                                Aucun statut trouvé pour ce mois
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Section Statistiques -->
+    {% if stats_profil %}
+    <div class="stats-section" style="margin-top: 30px;">
+        <h3 style="margin-bottom: 20px; color: #1e293b; font-size: 20px; font-weight: 600;">
+            <i class="fas fa-chart-bar" style="color: #007bff; margin-right: 10px;"></i>
+            Mes Statistiques
+        </h3>
+        
+        <div class="stats-overview">
+        <div class="stat-card-modern">
+            <div class="stat-header">
+                <div class="stat-icon-modern">
+                    <i class="fas fa-route"></i>
+                </div>
+            </div>
+            <div class="stat-content-modern">
+                <h3>{{ stats_profil.total_trajets }}</h3>
+                <p>Total Trajets Effectués</p>
+            </div>
+        </div>
+
+        <div class="stat-card-modern">
+            <div class="stat-header">
+                <div class="stat-icon-modern">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+            </div>
+            <div class="stat-content-modern">
+                <h3>{{ stats_profil.trajets_mois }}</h3>
+                <p>Trajets ce Mois</p>
+            </div>
+        </div>
+
+        <div class="stat-card-modern">
+            <div class="stat-header">
+                <div class="stat-icon-modern">
+                    <i class="fas fa-users"></i>
+                </div>
+            </div>
+            <div class="stat-content-modern">
+                <h3>{{ stats_profil.total_passagers }}</h3>
+                <p>Passagers Transportés</p>
+            </div>
+        </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Historique des Trajets -->
+    <div class="historique-section">
+        <div class="section-header">
+            <div class="icon">
+                <i class="fas fa-history"></i>
+            </div>
+            <h2>Historique des Trajets</h2>
+        </div>
+        
+        {% if trajets_historique %}
+        <div class="table-responsive">
+            <table class="table-modern">
+                <thead>
+                    <tr>
+                        <th><i class="fas fa-calendar"></i> Date</th>
+                        <th><i class="fas fa-clock"></i> Heure</th>
+                        <th><i class="fas fa-map-marker-alt"></i> Départ</th>
+                        <th><i class="fas fa-map-marker-alt"></i> Arrivée</th>
+                        <th><i class="fas fa-users"></i> Passagers</th>
+                        <th><i class="fas fa-user-friends"></i> Type</th>
+                        <th><i class="fas fa-bus"></i> Bus</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for trajet in trajets_historique %}
+                    <tr>
+                        <td>{{ trajet.date_heure_depart.strftime('%d/%m/%Y') }}</td>
+                        <td>{{ trajet.date_heure_depart.strftime('%H:%M') }}</td>
+                        <td>{{ trajet.point_depart }}</td>
+                        <td>{{ trajet.point_arriver or 'Non spécifié' }}</td>
+                        <td>
+                            <span class="badge badge-primary">{{ trajet.nombre_places_occupees or 0 }}</span>
+                        </td>
+                        <td>
+                            {% if trajet.type_passagers == 'ETUDIANT' %}
+                                <span class="badge badge-info">Étudiants</span>
+                            {% elif trajet.type_passagers == 'PERSONNEL' %}
+                                <span class="badge badge-success">Personnel</span>
+                            {% elif trajet.type_passagers == 'MALADE' %}
+                                <span class="badge badge-warning">Malade</span>
+                            {% else %}
+                                <span class="badge badge-secondary">{{ trajet.type_passagers or 'Non spécifié' }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if trajet.numero_bus_udm %}
+                                <span class="badge badge-primary">{{ trajet.numero_bus_udm }}</span>
+                            {% elif trajet.immat_bus %}
+                                <span class="badge badge-secondary">{{ trajet.immat_bus }}</span>
+                            {% else %}
+                                <span style="color: #64748b;">Non spécifié</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="icon">
+                <i class="fas fa-route"></i>
+            </div>
+            <h3>Aucun trajet récent</h3>
+            <p>Vous n'avez effectué aucun trajet dans les 30 derniers jours.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

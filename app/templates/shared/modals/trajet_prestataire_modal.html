@@ -1,0 +1,60 @@
+<!-- Modal Trajet Prestataire - Version Partagée -->
+<!-- Utilisable par tous les rôles (admin, responsable, chargé transport) -->
+<div id="trajetPrestataireModerniseModal" class="modal">
+  <div class="modal-content">
+    <button type="button" id="closeTrajetPrestataireModerniseModal" class="close-btn"><i class="fas fa-times"></i></button>
+    <div class="modal-header">
+      <h3><i class="fas fa-bus-alt"></i> Trajet bus prestataire</h3>
+    </div>
+    <div class="modal-body">
+      <div class="alert alert-danger" style="display:none;" id="trajetPrestataireModerniseError"></div>
+      <form method="POST" id="trajetPrestataireModerniseForm" class="modal-form" action="{{ trajet_prestataire_url or url_for('admin.trajet_prestataire_modernise') }}">
+        {{ form_bus.hidden_tag() }}
+        <div class="form-grid">
+          <div class="form-group">
+            {{ form_bus.date_heure_depart.label }}
+            {{ form_bus.date_heure_depart(type='datetime-local') }}
+          </div>
+          
+          <!-- Nouveaux champs lieu de départ et arrivée -->
+          <div class="form-group">
+            {{ form_bus.lieu_depart.label }}
+            {{ form_bus.lieu_depart() }}
+          </div>
+          <div class="form-group">
+            {{ form_bus.point_arriver.label }}
+            {{ form_bus.point_arriver() }}
+          </div>
+          
+          <div class="form-group">
+            {{ form_bus.nom_prestataire.label }}
+            {{ form_bus.nom_prestataire() }}
+          </div>
+          <div class="form-group">
+            {{ form_bus.immat_bus.label }}
+            {{ form_bus.immat_bus() }}
+          </div>
+          <div class="form-group">
+            {{ form_bus.nombre_places_bus.label }}
+            {{ form_bus.nombre_places_bus() }}
+          </div>
+          <div class="form-group">
+            {{ form_bus.nom_chauffeur_prestataire.label }}
+            {{ form_bus.nom_chauffeur_prestataire() }}
+          </div>
+          <div class="form-group">
+            {{ form_bus.nombre_places_occupees.label }}
+            {{ form_bus.nombre_places_occupees() }}
+          </div>
+          <div class="form-group">
+            {{ form_bus.type_passagers.label }}
+            {{ form_bus.type_passagers() }}
+          </div>
+        </div>
+        <button type="submit" class="submit-btn modal-submit">{{ form_bus.submit.label }}</button>
+      </form>
+      <div id="trajetPrestataireModerniseFeedback"></div>
+    </div>
+  </div>
+</div>
+<!-- End Modal Trajet Prestataire -->

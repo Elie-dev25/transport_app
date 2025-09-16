@@ -1,0 +1,55 @@
+<!-- Modal pour le formulaire Trajet Prestataire -->
+<div id="trajetPrestataireModal" class="modal">
+  <div class="modal-content">
+    <button type="button" id="closeTrajetPrestataireModal" class="close-btn"><i class="fas fa-times"></i></button>
+    <div class="modal-header">
+      <h3><i class="fas fa-shuttle-van"></i> Trajet bus prestataire</h3>
+    </div>
+    <div class="modal-body">
+      <div class="alert alert-danger" style="display:none;" id="trajetPrestataireError"></div>
+      <form method="POST" id="trajetPrestataireForm" class="modal-form" action="{{ url_for('charge_transport.dashboard') }}">
+        {{ form_bus.hidden_tag() }}
+        <div class="form-grid">
+            <div class="form-group">
+                {{ form_bus.date_heure_depart.label }}
+                {{ form_bus.date_heure_depart(type='datetime-local') }}
+            </div>
+            <div class="form-group">
+                {{ form_bus.point_depart.label }}
+                {{ form_bus.point_depart() }}
+            </div>
+            <div class="form-group">
+                {{ form_bus.type_passagers.label }}
+                {{ form_bus.type_passagers() }}
+            </div>
+            <div class="form-group">
+                {{ form_bus.nombre_places_occupees.label }}
+                {{ form_bus.nombre_places_occupees() }}
+            </div>
+            <div class="form-group">
+                {{ form_bus.prestataire_id.label }}
+                {{ form_bus.prestataire_id() }}
+            </div>
+            <div class="form-group">
+                {{ form_bus.immat_bus.label }}
+                {{ form_bus.immat_bus() }}
+            </div>
+            <div class="form-group">
+                {{ form_bus.nom_chauffeur.label }}
+                {{ form_bus.nom_chauffeur() }}
+            </div>
+            <div class="form-group full-width">
+                {{ form_bus.point_arriver.label }}
+                {{ form_bus.point_arriver() }}
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" id="cancelTrajetPrestataire" class="btn btn-secondary">Annuler</button>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Enregistrer le trajet
+            </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,1105 @@
+{% if base_template is defined %}
+    {% extends base_template %}
+{% elif superviseur_mode %}
+    {% extends "roles/superviseur/_base_superviseur.html" %}
+{% elif current_user.role == 'ADMIN' or current_user.role == 'RESPONSABLE' %}
+    {% extends "roles/admin/_base_admin.html" %}
+{% elif current_user.role == 'CHARGE' %}
+    {% extends "roles/charge_transport/_base_charge.html" %}
+{% elif current_user.role == 'SUPERVISEUR' %}
+    {% extends "roles/superviseur/_base_superviseur.html" %}
+{% else %}
+    {% extends "roles/admin/_base_admin.html" %}
+{% endif %}
+{% from 'shared/macros/tableaux_components.html' import table_container, status_badge, icon_cell, date_cell, number_cell %}
+
+{% block title %}Chauffeurs{% endblock %}
+
+{% set active_page = 'chauffeurs' %}
+{% set page_title = 'Liste des Chauffeurs' %}
+{% set readonly = readonly or superviseur_mode %}
+
+{% block extra_head %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tableaux.css') }}">
+    <script src="{{ url_for('static', filename='js/tableaux.js') }}"></script>
+    <style>
+        /* Styles spécifiques pour les modales chauffeurs */
+        .info-box {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3b82f6;
+        }
+        .info-box h4 {
+            margin: 0 0 5px 0;
+            color: #1e40af;
+            font-size: 16px;
+        }
+        .info-box p {
+            margin: 0;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        /* Raccourcis de dates */
+        .date-shortcuts {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f1f5f9;
+            border-radius: 8px;
+        }
+        .date-shortcuts h5 {
+            margin: 0 0 10px 0;
+            color: #475569;
+            font-size: 14px;
+        }
+        .shortcuts-grid {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .shortcut-btn {
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        /* Détails statut */
+        .detail-item {
+            margin-bottom: 15px;
+        }
+        .detail-item strong {
+            color: #374151;
+        }
+        .status-badge {
+            margin-left: 10px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .period-info {
+            margin-top: 8px;
+            padding: 12px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border-left: 4px solid #3b82f6;
+        }
+        .period-date {
+            margin-bottom: 5px;
+        }
+        .period-date:last-child {
+            margin-bottom: 0;
+        }
+        .text-success {
+            color: #10b981;
+            margin-right: 8px;
+        }
+        .text-danger {
+            color: #ef4444;
+            margin-right: 8px;
+        }
+        .other-statuts {
+            margin-top: 8px;
+            color: #374151;
+        }
+        .loading-text {
+            color: #6b7280;
+        }
+
+        /* Boutons */
+        .btn-secondary {
+            background: #e2e8f0;
+            border: 1px solid #cbd5e1;
+            color: #475569;
+        }
+        .btn-secondary:hover {
+            background: #cbd5e1;
+        }
+        .statut-badge {
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .statut-conge {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fbbf24;
+        }
+        .statut-permanence {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #3b82f6;
+        }
+        .statut-service_weekend {
+            background-color: #f3e8ff;
+            color: #7c3aed;
+            border: 1px solid #8b5cf6;
+        }
+        .statut-service_semaine {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+
+        /* Styles pour les statuts cliquables */
+        .statut-clickable {
+            transition: all 0.2s ease;
+        }
+        .statut-clickable:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .statut-clickable .status-badge {
+            transition: all 0.2s ease;
+        }
+        .statut-clickable:hover .status-badge {
+            opacity: 0.9;
+        }
+
+        /* Styles pour la modale des détails */
+        .statut-item {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0 !important;
+        }
+        .text-small {
+            font-size: 0.875rem;
+        }
+
+        /* Amélioration du bouton d'ajout */
+        .page-title {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease;
+            color: white;
+        }
+        .btn-success:hover {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+            color: white;
+        }
+
+        /* Styles pour les boutons d'impression */
+        .btn-outline-primary {
+            border: 2px solid #3b82f6;
+            color: #3b82f6;
+            background: transparent;
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease;
+        }
+        .btn-outline-primary:hover {
+            background: #3b82f6;
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+        .btn-outline-success {
+            border: 2px solid #10b981;
+            color: #10b981;
+            background: transparent;
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease;
+        }
+        .btn-outline-success:hover {
+            background: #10b981;
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        /* Masquer complètement les zones d'impression */
+        #printListeArea,
+        #printPlanningArea {
+            display: none !important;
+            visibility: hidden !important;
+            position: absolute !important;
+            left: -9999px !important;
+            top: -9999px !important;
+        }
+
+        /* Styles d'impression */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            .print-area, .print-area * {
+                visibility: visible;
+            }
+            .print-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+            .print-header {
+                text-align: center;
+                margin-bottom: 30px;
+                border-bottom: 2px solid #333;
+                padding-bottom: 20px;
+            }
+            .print-header h1 {
+                font-size: 24px;
+                font-weight: bold;
+                color: #333;
+                margin: 0;
+            }
+            .print-header p {
+                font-size: 14px;
+                color: #666;
+                margin: 10px 0 0 0;
+            }
+            .print-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 20px;
+            }
+            .print-table th,
+            .print-table td {
+                border: 1px solid #333;
+                padding: 8px 12px;
+                text-align: left;
+                font-size: 12px;
+            }
+            .print-table th {
+                background-color: #f5f5f5;
+                font-weight: bold;
+            }
+            .print-table tr:nth-child(even) {
+                background-color: #f9f9f9;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="container-fluid">
+    <!-- En-tête du tableau avec bouton d'ajout -->
+    <div class="table-container" id="chauffeursTable">
+        <div class="table-header">
+            <div class="d-flex justify-content-between align-items-center w-100">
+                <div>
+                    <h3 class="table-title">
+                        <i class="fas fa-user-tie"></i>
+                        Liste des Chauffeurs
+                    </h3>
+                    <p class="table-subtitle">Gestion du personnel de conduite</p>
+                </div>
+                {% if not readonly %}
+                <button id="openAddChauffeurModal" class="btn btn-success d-flex align-items-center gap-2" title="Ajouter un chauffeur">
+                    <i class="fas fa-plus"></i>
+                    <span>Ajouter un chauffeur</span>
+                </button>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="table-search">
+            <div class="search-container">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" class="form-control search-input" placeholder="Rechercher un chauffeur..." id="searchInput">
+            </div>
+        </div>
+        <table class="table table-striped table-hover sortable">
+            <thead>
+                <tr>
+                    <th>Nom</th>
+                    <th>Prénom</th>
+                    <th>Permis</th>
+                    <th>Contact</th>
+                    <th>Statut</th>
+                    {% if not readonly %}
+                    <th class="no-sort">Actions</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for chauffeur in chauffeur_list %}
+                <tr>
+                    <td><strong>{{ chauffeur.nom }}</strong></td>
+                    <td>{{ chauffeur.prenom }}</td>
+                    <td>
+                        {% if chauffeur.numero_permis %}
+                            {{ icon_cell('id-card', chauffeur.numero_permis) }}
+                        {% else %}
+                            <span class="text-muted">Non défini</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if chauffeur.telephone %}
+                            {{ icon_cell('phone', chauffeur.telephone) }}
+                        {% else %}
+                            <span class="text-muted">Non défini</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if chauffeur.statuts_actuels %}
+                            {% for statut in chauffeur.statuts_actuels %}
+                                <span class="statut-clickable"
+                                      data-chauffeur-id="{{ chauffeur.chauffeur_id }}"
+                                      data-chauffeur-nom="{{ chauffeur.nom }}"
+                                      data-chauffeur-prenom="{{ chauffeur.prenom }}"
+                                      data-statut-id="{{ statut.id }}"
+                                      data-statut="{{ statut.statut }}"
+                                      data-date-debut="{{ statut.date_debut.strftime('%Y-%m-%d') if statut.date_debut else '' }}"
+                                      data-date-fin="{{ statut.date_fin.strftime('%Y-%m-%d') if statut.date_fin else '' }}"
+                                      style="cursor: pointer;"
+                                      title="Cliquez pour voir les détails">
+                                    {% if statut.statut == 'CONGE' %}
+                                        {{ status_badge('Congé', 'warning', 'calendar-times') }}
+                                    {% elif statut.statut == 'PERMANENCE' %}
+                                        {{ status_badge('Permanence', 'info', 'clock') }}
+                                    {% elif statut.statut == 'SERVICE_WEEKEND' %}
+                                        {{ status_badge('Week-end', 'secondary', 'calendar-week') }}
+                                    {% elif statut.statut == 'SERVICE_SEMAINE' %}
+                                        {{ status_badge('Semaine', 'primary', 'calendar-day') }}
+                                    {% else %}
+                                        {{ status_badge(statut.statut, 'secondary') }}
+                                    {% endif %}
+                                </span>
+                            {% endfor %}
+                        {% else %}
+                            <span class="statut-clickable"
+                                  data-chauffeur-id="{{ chauffeur.chauffeur_id }}"
+                                  data-chauffeur-nom="{{ chauffeur.nom }}"
+                                  data-chauffeur-prenom="{{ chauffeur.prenom }}"
+                                  style="cursor: pointer;"
+                                  title="Cliquez pour voir les détails">
+                                {{ status_badge('Disponible', 'success', 'check-circle') }}
+                            </span>
+                        {% endif %}
+                    </td>
+                    {% if not readonly %}
+                    <td>
+                        <div class="table-actions">
+                            <button class="table-btn edit edit-statut-btn"
+                                    data-id="{{ chauffeur.chauffeur_id }}"
+                                    data-nom="{{ chauffeur.nom }}"
+                                    data-prenom="{{ chauffeur.prenom }}"
+                                    title="Modifier le statut">
+                                <i class="fas fa-calendar-alt"></i>
+                            </button>
+                            <button class="table-btn delete delete-chauffeur-btn"
+                                    data-id="{{ chauffeur.chauffeur_id }}"
+                                    title="Supprimer">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="{% if readonly %}5{% else %}6{% endif %}" class="table-empty">
+                        <i class="fas fa-user-tie"></i>
+                        <h5>Aucun chauffeur enregistré</h5>
+                        {% if not readonly %}
+                        <p>Cliquez sur le bouton + pour ajouter votre premier chauffeur.</p>
+                        {% else %}
+                        <p>Aucun chauffeur n'est actuellement enregistré dans le système.</p>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Boutons d'impression parfaitement centrés -->
+    <div class="row mt-4 mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-center align-items-center" style="width: 100%; text-align: center;">
+                <div class="d-flex gap-3">
+                    <button id="printChauffeursList" class="btn btn-outline-primary d-flex align-items-center gap-2">
+                        <i class="fas fa-print"></i>
+                        <span>Imprimer la liste des chauffeurs</span>
+                    </button>
+                    <button id="printChauffeursPlanning" class="btn btn-outline-success d-flex align-items-center gap-2">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>Imprimer la planification des chauffeurs</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Zone d'impression cachée pour la liste des chauffeurs -->
+<div id="printListeArea" class="d-none">
+    <div class="print-header">
+        <h1>Liste des Chauffeurs</h1>
+        <p>Transport UdM - Imprimé le <span id="printDate"></span></p>
+    </div>
+    <table class="print-table">
+        <thead>
+            <tr>
+                <th>Nom</th>
+                <th>Prénom</th>
+                <th>Numéro de Permis</th>
+                <th>Contact</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for chauffeur in chauffeur_list %}
+            <tr>
+                <td>{{ chauffeur.nom or 'Non défini' }}</td>
+                <td>{{ chauffeur.prenom or 'Non défini' }}</td>
+                <td>{{ chauffeur.numero_permis or 'Non défini' }}</td>
+                <td>{{ chauffeur.telephone or 'Non défini' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Zone d'impression cachée pour la planification -->
+<div id="printPlanningArea" class="d-none">
+    <div class="print-header">
+        <h1>Planification des Chauffeurs</h1>
+        <p>Transport UdM - Imprimé le <span id="printPlanningDate"></span></p>
+    </div>
+    <table class="print-table">
+        <thead>
+            <tr>
+                <th>Chauffeur</th>
+                <th>Statut</th>
+                <th>Date de début</th>
+                <th>Date de fin</th>
+                <th>Durée</th>
+            </tr>
+        </thead>
+        <tbody id="planningTableBody">
+            <!-- Contenu généré dynamiquement -->
+        </tbody>
+    </table>
+</div>
+
+<!-- Inclure la modale de modification de statut -->
+{% include 'shared/modals/_edit_statut_chauffeur_modal.html' %}
+
+<!-- Inclure la modale des détails de statut -->
+{% include 'shared/modals/_statut_details_modal.html' %}
+
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Fonction pour afficher les détails du statut
+function showStatutDetails(button) {
+  const statut = button.getAttribute('data-statut');
+  const dateDebut = button.getAttribute('data-date-debut');
+  const dateFin = button.getAttribute('data-date-fin');
+  const chauffeurNom = button.getAttribute('data-chauffeur-nom');
+  const chauffeurId = button.getAttribute('data-chauffeur-id');
+
+  // Remplir les informations dans la modale
+  document.getElementById('detailChauffeurNom').textContent = chauffeurNom;
+  document.getElementById('detailDateDebut').textContent = dateDebut;
+  document.getElementById('detailDateFin').textContent = dateFin;
+
+  // Définir le texte et le style du statut
+  const detailStatutElement = document.getElementById('detailStatut');
+  let statutText = '';
+  let statutClass = '';
+
+  switch(statut) {
+    case 'CONGE':
+      statutText = 'Congé';
+      statutClass = 'statut-conge';
+      break;
+    case 'PERMANENCE':
+      statutText = 'Permanence';
+      statutClass = 'statut-permanence';
+      break;
+    case 'SERVICE_WEEKEND':
+      statutText = 'Service Week-end';
+      statutClass = 'statut-service_weekend';
+      break;
+    case 'SERVICE_SEMAINE':
+      statutText = 'Service Semaine';
+      statutClass = 'statut-service_semaine';
+      break;
+  }
+
+  detailStatutElement.textContent = statutText;
+  detailStatutElement.className = statutClass;
+
+  // Afficher la modale
+  document.getElementById('statutDetailsModal').classList.add('show');
+
+  // Charger autres statuts via AJAX
+  const listEl = document.getElementById('autresStatutsList');
+  if (listEl) {
+    listEl.innerHTML = '<span style="color:#6b7280;">Chargement...</span>';
+    fetch(`/admin/get_statuts_chauffeur_ajax/${chauffeurId}`)
+      .then(r => r.json())
+      .then(data => {
+        if (!data || !data.success) {
+          listEl.innerHTML = '<span style="color:#ef4444;">Impossible de charger les statuts.</span>';
+          return;
+        }
+        const statuts = data.statuts || [];
+        if (statuts.length === 0) {
+          listEl.innerHTML = '<span style="color:#6b7280;">Aucun autre statut enregistré.</span>';
+          return;
+        }
+        const container = document.createElement('div');
+        container.style.display = 'flex';
+        container.style.flexDirection = 'column';
+        container.style.gap = '8px';
+        statuts.forEach(s => {
+          const item = document.createElement('div');
+          item.style.padding = '8px 10px';
+          item.style.border = '1px solid #e5e7eb';
+          item.style.borderRadius = '8px';
+          item.style.background = '#ffffff';
+          const start = s.date_debut_formatted || s.date_debut;
+          const end = s.date_fin_formatted || s.date_fin;
+          let label = s.statut;
+          if (label === 'CONGE') label = 'Congé';
+          else if (label === 'PERMANENCE') label = 'Permanence';
+          else if (label === 'SERVICE_WEEKEND') label = 'Service Week-end';
+          else if (label === 'SERVICE_SEMAINE') label = 'Service Semaine';
+          item.textContent = `${label} — du ${start} au ${end}`;
+          container.appendChild(item);
+        });
+        listEl.innerHTML = '';
+        listEl.appendChild(container);
+      })
+      .catch(() => {
+        listEl.innerHTML = '<span style="color:#ef4444;">Erreur lors du chargement.</span>';
+      });
+  }
+}
+
+$(function() {
+  // Gestion des clics sur les statuts pour afficher les détails
+  $('.statut-clickable').on('click', function(e) {
+    e.preventDefault();
+
+    const chauffeurId = $(this).data('chauffeur-id');
+    const chauffeurNom = $(this).data('chauffeur-nom');
+    const chauffeurPrenom = $(this).data('chauffeur-prenom');
+    const statutId = $(this).data('statut-id');
+    const statut = $(this).data('statut');
+    const dateDebut = $(this).data('date-debut');
+    const dateFin = $(this).data('date-fin');
+
+    // Remplir les informations dans la modale
+    $('#detailChauffeurNom').text(chauffeurNom + ' ' + chauffeurPrenom);
+
+    // Afficher le statut avec le bon style
+    const statutBadge = $('#detailStatut');
+    statutBadge.removeClass().addClass('status-badge');
+
+    if (statut === 'CONGE') {
+      statutBadge.addClass('status-warning').html('<i class="fas fa-calendar-times"></i> Congé');
+    } else if (statut === 'PERMANENCE') {
+      statutBadge.addClass('status-info').html('<i class="fas fa-clock"></i> Permanence');
+    } else if (statut === 'SERVICE_WEEKEND') {
+      statutBadge.addClass('status-secondary').html('<i class="fas fa-calendar-week"></i> Week-end');
+    } else if (statut === 'SERVICE_SEMAINE') {
+      statutBadge.addClass('status-primary').html('<i class="fas fa-calendar-day"></i> Semaine');
+    } else if (!statut || statut === 'Disponible') {
+      statutBadge.addClass('status-success').html('<i class="fas fa-check-circle"></i> Disponible');
+    } else {
+      statutBadge.addClass('status-secondary').text(statut);
+    }
+
+    // Afficher les dates si disponibles
+    if (dateDebut) {
+      $('#detailDateDebut').text(new Date(dateDebut).toLocaleDateString('fr-FR'));
+    } else {
+      $('#detailDateDebut').text('Non définie');
+    }
+
+    if (dateFin) {
+      $('#detailDateFin').text(new Date(dateFin).toLocaleDateString('fr-FR'));
+    } else {
+      $('#detailDateFin').text('Non définie');
+    }
+
+    // Charger les autres statuts du chauffeur
+    loadAutresStatuts(chauffeurId);
+
+    // Afficher la modale
+    $('#statutDetailsModal').addClass('show');
+  });
+
+  // Fermeture de la modale des détails du statut
+  $('#closeStatutDetailsModal').on('click', function() {
+    $('#statutDetailsModal').removeClass('show');
+  });
+
+  // Fermeture par clic sur l'overlay
+  $('#statutDetailsModal').on('click', function(e) {
+    if (e.target === this) {
+      $(this).removeClass('show');
+    }
+  });
+
+  // Gestion du bouton de modification de statut
+  $('.edit-statut-btn').on('click', function(e) {
+    e.preventDefault();
+    const chauffeurId = $(this).data('id');
+    const nom = $(this).data('nom');
+    const prenom = $(this).data('prenom');
+
+    // Remplir les informations du chauffeur dans la modale
+    $('#chauffeurId').val(chauffeurId);
+    $('#chauffeurNomPrenom').text(nom + ' ' + prenom);
+
+    // Afficher la modale
+    $('#editStatutChauffeurModal').addClass('show');
+  });
+
+  // Fermeture de la modale
+  $('#closeEditStatutModal, #cancelEditStatut').on('click', function() {
+    $('#editStatutChauffeurModal').removeClass('show');
+    $('#editStatutChauffeurForm')[0].reset();
+  });
+
+  // Fermeture par clic sur l'overlay
+  $('#editStatutChauffeurModal').on('click', function(e) {
+    if (e.target === this) {
+      $(this).removeClass('show');
+      $('#editStatutChauffeurForm')[0].reset();
+    }
+  });
+
+  // Raccourcis de dates
+  $('.shortcut-btn').on('click', function() {
+    const shortcut = $(this).data('shortcut');
+    const now = new Date();
+    let startDate, endDate;
+
+    switch(shortcut) {
+      case 'today':
+        startDate = new Date(now);
+        endDate = new Date(now);
+        endDate.setHours(23, 59, 59);
+        break;
+      case 'tomorrow':
+        startDate = new Date(now);
+        startDate.setDate(now.getDate() + 1);
+        startDate.setHours(0, 0, 0);
+        endDate = new Date(startDate);
+        endDate.setHours(23, 59, 59);
+        break;
+      case 'this-weekend':
+        // Samedi de cette semaine
+        startDate = new Date(now);
+        const daysToSaturday = 6 - now.getDay();
+        startDate.setDate(now.getDate() + daysToSaturday);
+        startDate.setHours(0, 0, 0);
+        // Dimanche
+        endDate = new Date(startDate);
+        endDate.setDate(startDate.getDate() + 1);
+        endDate.setHours(23, 59, 59);
+        break;
+      case 'next-week':
+        // Lundi de la semaine prochaine
+        startDate = new Date(now);
+        const daysToNextMonday = (8 - now.getDay()) % 7;
+        startDate.setDate(now.getDate() + daysToNextMonday);
+        startDate.setHours(0, 0, 0);
+        // Vendredi de la semaine prochaine
+        endDate = new Date(startDate);
+        endDate.setDate(startDate.getDate() + 4);
+        endDate.setHours(23, 59, 59);
+        break;
+    }
+
+    // Formater les dates pour les inputs datetime-local
+    const formatDateTime = (date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      return `${year}-${month}-${day}T${hours}:${minutes}`;
+    };
+
+    $('input[name="date_debut"]').val(formatDateTime(startDate));
+    $('input[name="date_fin"]').val(formatDateTime(endDate));
+  });
+
+  // Soumission du formulaire de modification de statut
+  $('#editStatutChauffeurForm').on('submit', function(e) {
+    e.preventDefault();
+
+    const formData = new FormData(this);
+
+    $.ajax({
+      url: '/admin/modifier_statut_chauffeur_ajax',
+      method: 'POST',
+      data: formData,
+      processData: false,
+      contentType: false,
+      success: function(resp) {
+        if (resp.success) {
+          $('#editStatutChauffeurModal').removeClass('show');
+          $('#editStatutChauffeurForm')[0].reset();
+          // Utiliser SweetAlert2 si disponible
+          if (typeof Swal !== 'undefined') {
+            Swal.fire('Succès', 'Statut modifié avec succès !', 'success').then(() => {
+              location.reload();
+            });
+          } else {
+            alert('Statut modifié avec succès !');
+            location.reload();
+          }
+        } else {
+          if (typeof Swal !== 'undefined') {
+            Swal.fire('Erreur', resp.message || 'Erreur lors de la modification du statut', 'error');
+          } else {
+            alert(resp.message || 'Erreur lors de la modification du statut');
+          }
+        }
+      },
+      error: function(xhr) {
+        try {
+          const json = xhr.responseJSON || JSON.parse(xhr.responseText || '{}');
+          const msg = (json && (json.message || json.error)) || 'Erreur lors de la modification du statut';
+          if (typeof Swal !== 'undefined') {
+            Swal.fire('Erreur', msg, 'error');
+          } else {
+            alert(msg);
+          }
+        } catch (e) {
+          if (typeof Swal !== 'undefined') {
+            Swal.fire('Erreur', 'Erreur lors de la modification du statut', 'error');
+          } else {
+            alert('Erreur lors de la modification du statut');
+          }
+        }
+      }
+    });
+  });
+
+  // Gestion du bouton de suppression
+  $('.delete-chauffeur-btn').on('click', function(e) {
+    e.preventDefault();
+    const chauffeurId = $(this).data('id');
+
+    // Utiliser SweetAlert2 si disponible
+    if (typeof Swal !== 'undefined') {
+      Swal.fire({
+        title: 'Êtes-vous sûr ?',
+        text: "Cette action est irréversible !",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Oui, supprimer',
+        cancelButtonText: 'Annuler'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          $.ajax({
+            url: '/admin/supprimer_chauffeur_ajax/' + chauffeurId,
+            method: 'POST',
+            success: function(resp) {
+              if (resp.success) {
+                Swal.fire('Supprimé !', 'Le chauffeur a été supprimé.', 'success').then(() => {
+                  // Supprimer la ligne du tableau
+                  $('tr[data-chauffeur-id="' + chauffeurId + '"]').fadeOut(300, function() {
+                    $(this).remove();
+                  });
+                });
+              } else {
+                Swal.fire('Erreur', resp.message || 'Erreur lors de la suppression', 'error');
+              }
+            },
+            error: function() {
+              Swal.fire('Erreur', 'Erreur lors de la suppression', 'error');
+            }
+          });
+        }
+      });
+    } else {
+      if (confirm('Voulez-vous vraiment supprimer ce chauffeur ?')) {
+        $.ajax({
+          url: '/admin/supprimer_chauffeur_ajax/' + chauffeurId,
+          method: 'POST',
+          success: function(resp) {
+            if (resp.success) {
+              alert('Chauffeur supprimé avec succès !');
+              // Supprimer la ligne du tableau
+              $('tr[data-chauffeur-id="' + chauffeurId + '"]').fadeOut(300, function() {
+                $(this).remove();
+              });
+            } else {
+              alert(resp.message || 'Erreur lors de la suppression');
+            }
+          },
+          error: function() {
+            alert('Erreur lors de la suppression');
+          }
+        });
+      }
+    }
+  });
+
+  // Gestion de l'impression de la liste des chauffeurs
+  $('#printChauffeursList').on('click', function() {
+    printChauffeursList();
+  });
+
+  // Gestion de l'impression de la planification
+  $('#printChauffeursPlanning').on('click', function() {
+    printChauffeursPlanning();
+  });
+});
+
+// Fonction pour imprimer la liste des chauffeurs
+function printChauffeursList() {
+  const printArea = document.getElementById('printListeArea');
+  const originalContent = document.body.innerHTML;
+
+  // Créer une copie de la zone d'impression avec la classe print-area
+  const printContent = printArea.cloneNode(true);
+  printContent.classList.remove('d-none');
+  printContent.classList.add('print-area');
+
+  // Définir la date d'impression
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('fr-FR') + ' à ' + now.toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'});
+  printContent.querySelector('#printDate').textContent = dateStr;
+
+  // Remplacer le contenu de la page
+  document.body.innerHTML = printContent.outerHTML;
+
+  // Imprimer
+  window.print();
+
+  // Restaurer le contenu original
+  document.body.innerHTML = originalContent;
+
+  // Réattacher les événements (nécessaire après innerHTML)
+  location.reload();
+}
+
+// Fonction pour imprimer la planification des chauffeurs
+function printChauffeursPlanning() {
+  // Récupérer les données de planification via AJAX
+  $.ajax({
+    url: '/admin/get_chauffeurs_planning_ajax',
+    method: 'GET',
+    success: function(response) {
+      if (response.success && response.planning) {
+        generatePlanningTableFromAjax(response.planning);
+        printPlanningTable();
+      } else {
+        // Si pas d'endpoint AJAX, générer à partir des données de la page
+        generatePlanningFromPage();
+        printPlanningTable();
+      }
+    },
+    error: function() {
+      // Fallback: générer à partir des données de la page
+      generatePlanningFromPage();
+      printPlanningTable();
+    }
+  });
+}
+
+// Générer le tableau de planification à partir des données AJAX
+function generatePlanningTableFromAjax(planningData) {
+  const tbody = document.getElementById('planningTableBody');
+  tbody.innerHTML = '';
+
+  planningData.forEach(function(item) {
+    const newRow = tbody.insertRow();
+    newRow.innerHTML = `
+      <td>${item.chauffeur}</td>
+      <td>${item.statut}</td>
+      <td>${item.date_debut}</td>
+      <td>${item.date_fin}</td>
+      <td>${item.duree}</td>
+    `;
+  });
+}
+
+// Générer le tableau de planification à partir des données de la page
+function generatePlanningFromPage() {
+  const tbody = document.getElementById('planningTableBody');
+  tbody.innerHTML = '';
+
+  // Parcourir tous les chauffeurs visibles dans le tableau
+  const chauffeurRows = document.querySelectorAll('tbody tr');
+
+  chauffeurRows.forEach(function(row) {
+    const cells = row.querySelectorAll('td');
+    if (cells.length >= 4) {
+      const nom = cells[0].textContent.trim();
+      const prenom = cells[1].textContent.trim();
+      const statutCell = cells[3];
+
+      // Récupérer les statuts cliquables
+      const statutsClickables = statutCell.querySelectorAll('.statut-clickable');
+
+      if (statutsClickables.length > 0) {
+        statutsClickables.forEach(function(statutSpan) {
+          const statut = statutSpan.dataset.statut || 'Disponible';
+          const dateDebut = statutSpan.dataset.dateDebut || 'Non définie';
+          const dateFin = statutSpan.dataset.dateFin || 'Non définie';
+
+          // Calculer la durée
+          let duree = 'Non définie';
+          if (dateDebut !== 'Non définie' && dateFin !== 'Non définie') {
+            const debut = new Date(dateDebut);
+            const fin = new Date(dateFin);
+            const diffTime = Math.abs(fin - debut);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+            duree = `${diffDays} jour${diffDays > 1 ? 's' : ''}`;
+          }
+
+          // Formater les dates
+          const dateDebutFormatted = dateDebut !== 'Non définie' ?
+            new Date(dateDebut).toLocaleDateString('fr-FR') : 'Non définie';
+          const dateFinFormatted = dateFin !== 'Non définie' ?
+            new Date(dateFin).toLocaleDateString('fr-FR') : 'Non définie';
+
+          // Mapper les statuts pour un affichage plus lisible
+          const statutDisplay = {
+            'CONGE': 'Congé',
+            'PERMANENCE': 'Permanence',
+            'SERVICE_WEEKEND': 'Service Week-end',
+            'SERVICE_SEMAINE': 'Service Semaine'
+          }[statut] || statut;
+
+          // Ajouter la ligne au tableau
+          const newRow = tbody.insertRow();
+          newRow.innerHTML = `
+            <td>${nom} ${prenom}</td>
+            <td>${statutDisplay}</td>
+            <td>${dateDebutFormatted}</td>
+            <td>${dateFinFormatted}</td>
+            <td>${duree}</td>
+          `;
+        });
+      } else {
+        // Chauffeur sans statut spécifique
+        const newRow = tbody.insertRow();
+        newRow.innerHTML = `
+          <td>${nom} ${prenom}</td>
+          <td>Disponible</td>
+          <td>-</td>
+          <td>-</td>
+          <td>-</td>
+        `;
+      }
+    }
+  });
+}
+
+// Imprimer le tableau de planification
+function printPlanningTable() {
+  const printArea = document.getElementById('printPlanningArea');
+  const originalContent = document.body.innerHTML;
+
+  // Créer une copie de la zone d'impression avec la classe print-area
+  const printContent = printArea.cloneNode(true);
+  printContent.classList.remove('d-none');
+  printContent.classList.add('print-area');
+
+  // Définir la date d'impression
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('fr-FR') + ' à ' + now.toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'});
+  printContent.querySelector('#printPlanningDate').textContent = dateStr;
+
+  // Remplacer le contenu de la page
+  document.body.innerHTML = printContent.outerHTML;
+
+  // Imprimer
+  window.print();
+
+  // Restaurer le contenu original
+  document.body.innerHTML = originalContent;
+
+  // Réattacher les événements (nécessaire après innerHTML)
+  location.reload();
+}
+
+// Fonction pour charger les autres statuts du chauffeur
+function loadAutresStatuts(chauffeurId) {
+  const container = $('#autresStatutsList');
+  container.html('<span class="loading-text"><i class="fas fa-spinner fa-spin"></i> Chargement...</span>');
+
+  $.ajax({
+    url: `/admin/get_statuts_chauffeur_ajax/${chauffeurId}`,
+    method: 'GET',
+    success: function(response) {
+      if (response.success && response.statuts) {
+        if (response.statuts.length === 0) {
+          container.html('<span class="text-muted">Aucun autre statut</span>');
+        } else {
+          let html = '';
+          response.statuts.forEach(function(statut) {
+            const dateDebut = statut.date_debut ? new Date(statut.date_debut).toLocaleDateString('fr-FR') : 'Non définie';
+            const dateFin = statut.date_fin ? new Date(statut.date_fin).toLocaleDateString('fr-FR') : 'Non définie';
+
+            let statutLabel = statut.statut;
+            let statutClass = 'status-secondary';
+
+            if (statut.statut === 'CONGE') {
+              statutLabel = 'Congé';
+              statutClass = 'status-warning';
+            } else if (statut.statut === 'PERMANENCE') {
+              statutLabel = 'Permanence';
+              statutClass = 'status-info';
+            } else if (statut.statut === 'SERVICE_WEEKEND') {
+              statutLabel = 'Week-end';
+              statutClass = 'status-secondary';
+            } else if (statut.statut === 'SERVICE_SEMAINE') {
+              statutLabel = 'Semaine';
+              statutClass = 'status-primary';
+            }
+
+            html += `
+              <div class="statut-item mb-2 p-2 border rounded">
+                <span class="status-badge ${statutClass}">${statutLabel}</span>
+                <div class="text-small text-muted mt-1">
+                  <i class="fas fa-calendar"></i> ${dateDebut} → ${dateFin}
+                </div>
+              </div>
+            `;
+          });
+          container.html(html);
+        }
+      } else {
+        container.html('<span class="text-danger">Erreur lors du chargement</span>');
+      }
+    },
+    error: function() {
+      container.html('<span class="text-danger">Erreur lors du chargement</span>');
+    }
+  });
+}
+
+function formatDateTime(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+</script>
+{% endblock %}

@@ -1,4 +1,4 @@
-from app import db
+from app.database import db
 from datetime import datetime
 
 class ChauffeurStatut(db.Model):
@@ -9,7 +9,7 @@ class ChauffeurStatut(db.Model):
     statut = db.Column(db.Enum('CONGE', 'PERMANENCE', 'SERVICE_WEEKEND', 'SERVICE_SEMAINE', name='statut_chauffeur'), nullable=False)
     date_debut = db.Column(db.DateTime, nullable=False)
     date_fin = db.Column(db.DateTime, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)  # Colonne non présente en base
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)  # Colonne présente en base
 
     # Relation avec Chauffeur
     chauffeur = db.relationship('Chauffeur', backref=db.backref('statuts', lazy=True, cascade='all, delete-orphan'))

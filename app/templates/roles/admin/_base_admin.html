@@ -1,0 +1,50 @@
+{% extends "_base_dashboard.html" %}
+
+{% set sidebar_title = "Admin Panel" %}
+{% set sidebar_subtitle = "Transport Universitaire" %}
+
+{% block nav_menu %}
+<div class="nav-item">
+    <a href="{{ url_for('admin.dashboard') }}" class="nav-link {% if active_page == 'accueil' %}active{% endif %}">
+        <i class="fas fa-tachometer-alt"></i>
+        {% if current_user.role == 'SUPERVISEUR' %}
+            Tableau de Bord <span class="badge bg-info ms-1">Lecture</span>
+        {% else %}
+            Accueil
+        {% endif %}
+    </a>
+</div>
+<div class="nav-item">
+    <a href="{{ url_for('admin.bus') }}" class="nav-link {% if active_page == 'bus' %}active{% endif %}">
+        <i class="fas fa-bus"></i> Bus UdM
+        {% if current_user.role == 'SUPERVISEUR' %}<span class="badge bg-info ms-1">Lecture</span>{% endif %}
+    </a>
+</div>
+<div class="nav-item">
+    <a href="{{ url_for('admin.chauffeurs') }}" class="nav-link {% if active_page == 'chauffeurs' %}active{% endif %}">
+        <i class="fas fa-user-tie"></i> Chauffeurs
+        {% if current_user.role == 'SUPERVISEUR' %}<span class="badge bg-info ms-1">Lecture</span>{% endif %}
+    </a>
+</div>
+{% if current_user.role == 'ADMIN' %}
+<div class="nav-item">
+    <a href="{{ url_for('admin.utilisateurs') }}" class="nav-link {% if active_page == 'utilisateurs' %}active{% endif %}">
+        <i class="fas fa-users"></i> Utilisateurs
+    </a>
+</div>
+{% endif %}
+<div class="nav-item">
+    <a href="{{ url_for('admin.rapports') }}" class="nav-link {% if active_page == 'rapports' %}active{% endif %}">
+        <i class="fas fa-chart-bar"></i> Rapports
+        {% if current_user.role == 'SUPERVISEUR' %}<span class="badge bg-success ms-1">Export</span>{% endif %}
+    </a>
+</div>
+{% if current_user.role == 'ADMIN' %}
+<div class="nav-item">
+    <a href="{{ url_for('admin.parametres') }}" class="nav-link {% if active_page == 'parametres' %}active{% endif %}">
+        <i class="fas fa-cog"></i> Paramètres
+    </a>
+</div>
+{% endif %}
+{% endblock %}
+

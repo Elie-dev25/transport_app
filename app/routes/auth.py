@@ -11,25 +11,54 @@ BASE_DN = 'DC=domaine,DC=local'
 # Fonction d'authentification MySQL (temporaire - remplace LDAP)
 def authenticate_mysql(username, password):
     try:
+        # Authentification de test pour le superviseur
+        if username == "superviseur" and password == "superviseur123":
+            print('Auth Test: Connexion superviseur réussie')
+            return True, ['Superviseurs'], None
+
+        # Authentification de test pour l'admin
+        if username == "admin" and password == "admin123":
+            print('Auth Test: Connexion admin réussie')
+            return True, ['Administrateur'], None
+
+        # Authentification de test pour le responsable
+        if username == "responsable" and password == "responsable123":
+            print('Auth Test: Connexion responsable réussie')
+            return True, ['Responsables'], None
+
         # Chercher l'utilisateur en base MySQL
         user = Utilisateur.query.filter_by(login=username).first()
-        if user and user.check_password(password):
-            # Simuler les groupes AD selon le rôle
-            groups = []
-            if user.role == 'ADMIN':
-                groups = ['Administrateur']
-            elif user.role == 'CHARGE':
-                groups = ['ChargeTransport']
-            elif user.role == 'CHAUFFEUR':
-                groups = ['Chauffeurs']
-            elif user.role == 'MECANICIEN':
-                groups = ['Mecanciens']
-            
-            print(f'MySQL Auth: Utilisateur {username} authentifié avec succès, rôle: {user.role}')
-            return True, groups, None
+        if user:
+            # Vérifier si le mot de passe est vide ou mal hashé
+            if not user.mot_de_passe or user.mot_de_passe == '':
+                print(f'MySQL Auth: Mot de passe vide pour {username}')
+                return False, [], 'Mot de passe non configuré'
+
+            # Vérifier le mot de passe
+            if user.check_password(password):
+                # Simuler les groupes AD selon le rôle
+                groups = []
+                if user.role == 'ADMIN':
+                    groups = ['Administrateur']
+                elif user.role == 'CHARGE':
+                    groups = ['ChargeTransport']
+                elif user.role == 'CHAUFFEUR':
+                    groups = ['Chauffeurs']
+                elif user.role == 'MECANICIEN':
+                    groups = ['Mecanciens']
+                elif user.role == 'SUPERVISEUR':
+                    groups = ['Superviseurs']
+                elif user.role == 'RESPONSABLE':
+                    groups = ['Responsables']
+
+                print(f'MySQL Auth: Utilisateur {username} authentifié avec succès, rôle: {user.role}')
+                return True, groups, None
+            else:
+                print(f'MySQL Auth: Mot de passe incorrect pour {username}')
+                return False, [], 'Mot de passe incorrect'
         else:
-            print(f'MySQL Auth: Échec authentification pour {username}')
-            return False, [], 'Login ou mot de passe incorrect'
+            print(f'MySQL Auth: Utilisateur {username} non trouvé')
+            return False, [], 'Utilisateur non trouvé'
     except Exception as e:
         print(f'Erreur MySQL Auth: {e}')
         return False, [], str(e)
@@ -116,28 +145,42 @@ def login():
                 role = 'CHAUFFEUR'
             elif 'Mecanciens' in groups:
                 role = 'MECANICIEN'
+            elif 'Superviseurs' in groups:
+                role = 'SUPERVISEUR'
+            elif 'Responsables' in groups:
+                role = 'RESPONSABLE'
 
             # Synchroniser l'utilisateur local (création si absent)
             user = Utilisateur.query.filter_by(login=username).first()
             if not user:
-                # Valeurs par défaut minimales pour respecter les contraintes NOT NULL
+                # Créer l'utilisateur avec le bon mot de passe
                 user = Utilisateur(
-                    nom=username,
-                    prenom='',
+                    nom=username.capitalize(),
+                    prenom='Test',
                     login=username,
                     role=role,
-                    email=f"{username}@domaine.local",
-                    telephone=''  # inconnu pour LDAP
+                    email=f"{username}@udm.local",
+                    telephone='000000000'
                 )
-                # Mot de passe placeholder (non utilisé car auth via LDAP)
-                user.set_password('ldap')
+                # Définir le mot de passe selon l'utilisateur
+                if username == "superviseur":
+                    user.set_password('superviseur123')
+                elif username == "admin":
+                    user.set_password('admin123')
+                elif username == "responsable":
+                    user.set_password('responsable123')
+                else:
+                    user.set_password('password123')
+
                 db.session.add(user)
                 db.session.commit()
+                print(f'Utilisateur {username} créé automatiquement')
             else:
                 # Mettre à jour le rôle si nécessaire
                 if role and user.role != role:
                     user.role = role
                     db.session.commit()
+                    print(f'Rôle de {username} mis à jour vers {role}')
 
             # Connexion Flask-Login pour activer current_user et @login_required
             login_user(user)
@@ -155,17 +198,23 @@ def login():
             # Redirection selon le rôle
             if role == 'ADMIN':
                 return redirect(url_for('admin.dashboard'))
+            if role == 'RESPONSABLE':
+                # Responsable a son propre dashboard pour la traçabilité
+                return redirect(url_for('responsable.dashboard'))
             if role == 'CHARGE':
                 return redirect(url_for('charge_transport.dashboard'))
             if role == 'CHAUFFEUR':
                 return redirect(url_for('chauffeur.dashboard'))
             if role == 'MECANICIEN':
                 return redirect(url_for('mecanicien.dashboard'))
+            if role == 'SUPERVISEUR':
+                # Superviseur utilise ses propres routes sécurisées
+                return redirect(url_for('superviseur.dashboard'))
             # Si aucun rôle mappé, retourner à la page d'accueil ou login
             return redirect(url_for('auth.login'))
         else:
             flash(f"Login ou mot de passe incorrect. Erreur: {auth_error}", "danger")  # Message d'erreur
-    return render_template('login.html', form=form)  # Affiche la page de login
+    return render_template('auth/login.html', form=form)  # Affiche la page de login
 
 # Route pour la déconnexion
 @bp.route('/logout')

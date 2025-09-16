@@ -1,0 +1,244 @@
+{% set active_page = 'bus_udm' %}
+{% extends "roles/superviseur/_base_superviseur.html" %}
+
+{% block title %}Détail Bus {{ bus.numero }} - Superviseur{% endblock %}
+
+{% block superviseur_content %}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="fas fa-bus me-2"></i>
+            Bus N° {{ bus.numero }}
+            <small class="text-muted">{{ bus.immatriculation }}</small>
+        </h2>
+        <a href="{{ url_for('superviseur.bus_udm') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i>Retour à la liste
+        </a>
+    </div>
+
+    {% if error %}
+    <div class="alert alert-danger" role="alert">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        {{ error }}
+    </div>
+    {% else %}
+
+    <!-- Informations générales du bus -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Informations Générales
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Numéro:</strong></td>
+                                    <td>{{ bus.numero }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Immatriculation:</strong></td>
+                                    <td>{{ bus.immatriculation }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Marque:</strong></td>
+                                    <td>{{ bus.marque or 'Non renseigné' }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Modèle:</strong></td>
+                                    <td>{{ bus.modele or 'Non renseigné' }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Année:</strong></td>
+                                    <td>{{ bus.annee or 'Non renseigné' }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Capacité:</strong></td>
+                                    <td>{{ bus.capacite or 'Non renseigné' }} places</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>État:</strong></td>
+                                    <td>
+                                        {% if bus.etat_vehicule == 'DEFAILLANT' %}
+                                            <span class="badge bg-danger">HORS SERVICE</span>
+                                        {% elif bus.etat_vehicule == 'ACTIF' %}
+                                            <span class="badge bg-success">ACTIF</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ bus.etat_vehicule }}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Kilométrage:</strong></td>
+                                    <td>{{ "{:,}".format(bus.kilometrage) if bus.kilometrage else 'Non renseigné' }} km</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>Statistiques
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if bus.stats %}
+                    <div class="mb-3">
+                        <small class="text-muted">Trajets ce mois</small>
+                        <h4 class="mb-0">{{ bus.stats.trajets_mois or 0 }}</h4>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted">Pannes ce mois</small>
+                        <h4 class="mb-0 text-warning">{{ bus.stats.pannes_mois or 0 }}</h4>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted">Dernière vidange</small>
+                        <p class="mb-0">
+                            {% if bus.stats.derniere_vidange %}
+                                {{ bus.stats.derniere_vidange|date_fr }}
+                            {% else %}
+                                Non renseigné
+                            {% endif %}
+                        </p>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">Statistiques non disponibles</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Historique des pannes -->
+    {% if pannes %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                Historique des Pannes (10 dernières)
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th>Immobilisation</th>
+                            <th>Coût</th>
+                            <th>Statut</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for panne in pannes %}
+                        <tr>
+                            <td>{{ panne.date_heure|date_fr if panne.date_heure else 'Non renseigné' }}</td>
+                            <td>
+                                <div class="text-truncate" style="max-width: 200px;" title="{{ panne.description }}">
+                                    {{ panne.description or 'Non renseigné' }}
+                                </div>
+                            </td>
+                            <td>
+                                {% if panne.immobilisation %}
+                                    <span class="badge bg-danger">Oui</span>
+                                {% else %}
+                                    <span class="badge bg-success">Non</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if panne.cout_reparation %}
+                                    {{ "{:,.0f}".format(panne.cout_reparation) }} FCFA
+                                {% else %}
+                                    Non renseigné
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if panne.date_resolution %}
+                                    <span class="badge bg-success">Résolue</span>
+                                {% else %}
+                                    <span class="badge bg-warning">En cours</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Historique des vidanges -->
+    {% if vidanges %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-oil-can me-2"></i>
+                Historique des Vidanges (10 dernières)
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Kilométrage</th>
+                            <th>Type d'huile</th>
+                            <th>Quantité</th>
+                            <th>Coût</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for vidange in vidanges %}
+                        <tr>
+                            <td>{{ vidange.date_vidange|date_fr if vidange.date_vidange else 'Non renseigné' }}</td>
+                            <td>{{ "{:,}".format(vidange.kilometrage) if vidange.kilometrage else 'Non renseigné' }} km</td>
+                            <td>{{ vidange.type_huile or 'Non renseigné' }}</td>
+                            <td>{{ vidange.quantite_huile or 'Non renseigné' }} L</td>
+                            <td>
+                                {% if vidange.cout %}
+                                    {{ "{:,.0f}".format(vidange.cout) }} FCFA
+                                {% else %}
+                                    Non renseigné
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Message si pas d'historique -->
+    {% if not pannes and not vidanges %}
+    <div class="card">
+        <div class="card-body text-center">
+            <i class="fas fa-info-circle fa-3x text-muted mb-3"></i>
+            <h5>Aucun historique de maintenance</h5>
+            <p class="text-muted">Ce bus n'a pas encore d'historique de pannes ou de vidanges enregistré.</p>
+        </div>
+    </div>
+    {% endif %}
+
+    {% endif %}
+</div>
+
+{% endblock %}

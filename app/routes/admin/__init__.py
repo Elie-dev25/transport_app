@@ -12,3 +12,4 @@ from . import maintenance
 from . import gestion_utilisateurs
 from . import parametres
 from . import utils
+from . import audit

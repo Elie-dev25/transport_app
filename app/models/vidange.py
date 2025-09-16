@@ -1,4 +1,4 @@
-from app.extensions import db
+from app.database import db
 from sqlalchemy import Enum
 
 class Vidange(db.Model):
