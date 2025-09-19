@@ -539,6 +539,23 @@
     font-weight: 500;
 }
 
+/* === ANIMATION DE RAFRAÎCHISSEMENT === */
+.table tbody.refreshing {
+    opacity: 0.7;
+    transition: opacity 0.3s ease;
+}
+
+.status-badge.updated,
+.statut-clickable.updated {
+    animation: statusUpdate 1s ease;
+}
+
+@keyframes statusUpdate {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); background-color: #e3f2fd; }
+    100% { transform: scale(1); }
+}
+
 /* === RESPONSIVE === */
 
 /* Mobile */
@@ -931,6 +948,241 @@
 
 .table-btn.secondary:hover {
     background: linear-gradient(135deg, #4b5563, #374151);
+}
+
+/* ===== MODALS MODERNES ===== */
+
+/* Modal de détails de statut */
+.modal-details {
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.modal-details .modal-header {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: #ffffff;
+    padding: 20px 30px;
+    border-radius: 16px 16px 0 0;
+    border-bottom: none;
+}
+
+.modal-details .modal-header h3 {
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.modal-details .modal-header i {
+    font-size: 1.2rem;
+    opacity: 0.9;
+}
+
+.modal-details .close-btn {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    border: none;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 14px;
+}
+
+.modal-details .close-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.modal-details .modal-body {
+    padding: 30px;
+    background: #ffffff;
+}
+
+/* Éléments de détail */
+.detail-item {
+    margin-bottom: 25px;
+    padding: 20px;
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+    border-radius: 12px;
+    border-left: 4px solid #10b981;
+    transition: all 0.3s ease;
+}
+
+.detail-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+.detail-item strong {
+    display: block;
+    color: #1f2937;
+    font-weight: 600;
+    margin-bottom: 8px;
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.detail-item span:not(.status-badge) {
+    color: #4b5563;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+/* Informations de période */
+.period-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.period-date {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 15px;
+    background: #ffffff;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    transition: all 0.3s ease;
+}
+
+.period-date:hover {
+    border-color: #10b981;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.1);
+}
+
+.period-date i {
+    font-size: 0.9rem;
+}
+
+.period-date strong {
+    margin: 0 5px 0 0;
+    font-size: 0.85rem;
+    color: #6b7280;
+    text-transform: none;
+    letter-spacing: normal;
+}
+
+/* Liste des autres statuts */
+.other-statuts {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-top: 15px;
+}
+
+.statut-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 20px;
+    margin-bottom: 12px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.statut-item:hover {
+    border-color: #10b981;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
+    transform: translateY(-2px);
+}
+
+.statut-item-content {
+    flex: 1;
+}
+
+.statut-item-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.statut-action-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 12px;
+}
+
+.statut-action-btn.edit {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: #ffffff;
+}
+
+.statut-action-btn.edit:hover {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.statut-action-btn.delete {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: #ffffff;
+}
+
+.statut-action-btn.delete:hover {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.text-small {
+    font-size: 0.85rem;
+    color: #6b7280;
+    margin-top: 5px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.loading-text {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #6b7280;
+    font-style: italic;
+    justify-content: center;
+    padding: 20px;
+}
+
+/* Styles pour SweetAlert2 */
+.swal-title-blue {
+    color: #3b82f6 !important;
+}
+
+.swal-confirm-delete {
+    background-color: #ef4444 !important;
+    border-color: #ef4444 !important;
+}
+
+.swal-confirm-delete:hover {
+    background-color: #dc2626 !important;
+    border-color: #dc2626 !important;
 }
 
 /* ===== RESPONSIVE POUR LES GRAPHIQUES ===== */

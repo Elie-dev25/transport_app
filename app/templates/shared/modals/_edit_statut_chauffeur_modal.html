@@ -14,7 +14,7 @@
         <input type="hidden" id="chauffeurId" name="chauffeur_id">
 
         <div class="form-grid">
-          <div class="form-group full-width">
+          <div class="form-group">
             <label>Statut :</label>
             <select name="statut" required>
               <option value="">-- Sélectionner un statut --</option>
@@ -22,6 +22,15 @@
               <option value="PERMANENCE">Permanence</option>
               <option value="SERVICE_WEEKEND">Service Week-end</option>
               <option value="SERVICE_SEMAINE">Service Semaine</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Lieu d'affectation :</label>
+            <select name="lieu" required>
+              <option value="">-- Sélectionner un lieu --</option>
+              <option value="CUM">CUM</option>
+              <option value="CAMPUS">Campus</option>
+              <option value="CONJOINTEMENT">Conjointement</option>
             </select>
           </div>
           <div class="form-group">

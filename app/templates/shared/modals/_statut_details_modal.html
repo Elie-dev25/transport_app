@@ -1,6 +1,6 @@
 <!-- Modale pour afficher les détails du statut -->
 <div id="statutDetailsModal" class="modal">
-  <div class="modal-content">
+  <div class="modal-content modal-details">
     <button type="button" id="closeStatutDetailsModal" class="close-btn"><i class="fas fa-times"></i></button>
     <div class="modal-header">
       <h3><i class="fas fa-info-circle"></i> Détails du statut</h3>
@@ -8,30 +8,12 @@
     <div class="modal-body">
       <div id="statutDetailsContent">
         <div class="detail-item">
-          <strong>Chauffeur:</strong>
-          <span id="detailChauffeurNom"></span>
-        </div>
-        <div class="detail-item">
-          <strong>Statut:</strong>
-          <span id="detailStatut" class="status-badge"></span>
-        </div>
-        <div class="detail-item">
-          <strong>Période:</strong>
-          <div class="period-info">
-            <div class="period-date">
-              <i class="fas fa-play text-success"></i>
-              <strong>Début:</strong> <span id="detailDateDebut"></span>
-            </div>
-            <div class="period-date">
-              <i class="fas fa-stop text-danger"></i>
-              <strong>Fin:</strong> <span id="detailDateFin"></span>
-            </div>
-          </div>
-        </div>
-        <div class="detail-item">
-          <strong>Autres statuts du chauffeur:</strong>
+          <strong>Tous les statuts du chauffeur</strong>
           <div id="autresStatutsList" class="other-statuts">
-            <span class="loading-text">Chargement...</span>
+            <div class="loading-text">
+              <i class="fas fa-spinner fa-spin"></i>
+              Chargement des statuts...
+            </div>
           </div>
         </div>
       </div>
@@ -40,26 +22,21 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Gestionnaire pour le bouton de fermeture
-    const closeBtn = document.getElementById('closeStatutDetailsModal');
-    if (closeBtn) {
-        closeBtn.addEventListener('click', function() {
-            const modal = document.getElementById('statutDetailsModal');
-            if (modal) {
-                modal.style.display = 'none';
-            }
-        });
+// Utilisation de délégation d'événements pour éviter les problèmes de rechargement
+document.addEventListener('click', function(e) {
+    // Fermeture par bouton close
+    if (e.target && e.target.id === 'closeStatutDetailsModal') {
+        const modal = document.getElementById('statutDetailsModal');
+        if (modal) {
+            modal.classList.remove('show');
+            modal.style.display = 'none';
+        }
     }
 
-    // Fermer en cliquant en dehors
-    const modal = document.getElementById('statutDetailsModal');
-    if (modal) {
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) {
-                modal.style.display = 'none';
-            }
-        });
+    // Fermeture par clic sur l'overlay
+    if (e.target && e.target.id === 'statutDetailsModal') {
+        e.target.classList.remove('show');
+        e.target.style.display = 'none';
     }
 });
 </script>

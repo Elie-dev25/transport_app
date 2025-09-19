@@ -7,6 +7,7 @@ class ChauffeurStatut(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     chauffeur_id = db.Column(db.Integer, db.ForeignKey('chauffeur.chauffeur_id', ondelete='CASCADE', onupdate='CASCADE'), nullable=False)
     statut = db.Column(db.Enum('CONGE', 'PERMANENCE', 'SERVICE_WEEKEND', 'SERVICE_SEMAINE', name='statut_chauffeur'), nullable=False)
+    lieu = db.Column(db.Enum('CUM', 'CAMPUS', 'CONJOINTEMENT', name='lieu_chauffeur_statut'), nullable=False, default='CUM')
     date_debut = db.Column(db.DateTime, nullable=False)
     date_fin = db.Column(db.DateTime, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)  # Colonne présente en base
@@ -23,6 +24,7 @@ class ChauffeurStatut(db.Model):
             'id': self.id,
             'chauffeur_id': self.chauffeur_id,
             'statut': self.statut,
+            'lieu': self.lieu,
             'date_debut': self.date_debut.isoformat() if self.date_debut else None,
             'date_fin': self.date_fin.isoformat() if self.date_fin else None
         }

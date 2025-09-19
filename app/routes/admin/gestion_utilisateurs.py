@@ -202,10 +202,11 @@ def modifier_statut_chauffeur_ajax():
     try:
         chauffeur_id = request.form.get('chauffeur_id')
         statut = request.form.get('statut')
+        lieu = request.form.get('lieu')
         date_debut_raw = request.form.get('date_debut')
         date_fin_raw = request.form.get('date_fin')
 
-        if not chauffeur_id or not statut or not date_debut_raw or not date_fin_raw:
+        if not chauffeur_id or not statut or not lieu or not date_debut_raw or not date_fin_raw:
             return jsonify({'success': False, 'message': 'Champs requis manquants.'}), 400
 
         from datetime import datetime
@@ -233,6 +234,7 @@ def modifier_statut_chauffeur_ajax():
         new_statut = ChauffeurStatut(
             chauffeur_id=int(chauffeur_id),
             statut=statut,
+            lieu=lieu,
             date_debut=date_debut,
             date_fin=date_fin,
         )
@@ -292,37 +294,116 @@ def get_chauffeurs_planning_ajax():
                 .all()
             )
 
+            # Préparer les données du chauffeur
+            chauffeur_data = {
+                'chauffeur_id': chauffeur.chauffeur_id,
+                'nom': chauffeur.nom,
+                'prenom': chauffeur.prenom,
+                'statuts': []
+            }
+
             if statuts:
                 for statut in statuts:
                     # Calculer la durée
                     duree_jours = (statut.date_fin - statut.date_debut).days + 1
                     duree_str = f"{duree_jours} jour{'s' if duree_jours > 1 else ''}"
 
-                    # Mapper les statuts pour un affichage plus lisible
-                    statut_display = {
-                        'CONGE': 'Congé',
-                        'PERMANENCE': 'Permanence',
-                        'SERVICE_WEEKEND': 'Service Week-end',
-                        'SERVICE_SEMAINE': 'Service Semaine'
-                    }.get(statut.statut, statut.statut)
-
-                    planning_data.append({
-                        'chauffeur': f"{chauffeur.nom} {chauffeur.prenom}",
-                        'statut': statut_display,
-                        'date_debut': statut.date_debut.strftime('%d/%m/%Y'),
-                        'date_fin': statut.date_fin.strftime('%d/%m/%Y'),
+                    chauffeur_data['statuts'].append({
+                        'statut': statut.statut,
+                        'lieu': statut.lieu,
+                        'date_debut': statut.date_debut.isoformat(),
+                        'date_fin': statut.date_fin.isoformat(),
+                        'date_debut_formatted': statut.date_debut.strftime('%d/%m/%Y'),
+                        'date_fin_formatted': statut.date_fin.strftime('%d/%m/%Y'),
                         'duree': duree_str
                     })
-            else:
-                # Chauffeur sans statut spécifique
-                planning_data.append({
-                    'chauffeur': f"{chauffeur.nom} {chauffeur.prenom}",
-                    'statut': 'Disponible',
-                    'date_debut': '-',
-                    'date_fin': '-',
-                    'duree': '-'
-                })
+
+            planning_data.append(chauffeur_data)
 
         return jsonify({'success': True, 'planning': planning_data})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
+
+# Modifier un statut individuel
+@admin_only
+@bp.route('/modifier_statut_individuel_ajax', methods=['POST'])
+def modifier_statut_individuel_ajax():
+    try:
+        from datetime import datetime
+
+        statut_id = request.form.get('statut_id')
+        chauffeur_id = request.form.get('chauffeur_id')
+        statut = request.form.get('statut')
+        lieu = request.form.get('lieu')
+        date_debut_raw = request.form.get('date_debut')
+        date_fin_raw = request.form.get('date_fin')
+
+        if not all([statut_id, chauffeur_id, statut, lieu, date_debut_raw, date_fin_raw]):
+            return jsonify({'success': False, 'message': 'Champs requis manquants.'}), 400
+
+        # Vérifier que le statut existe
+        statut_obj = ChauffeurStatut.query.get(int(statut_id))
+        if not statut_obj:
+            return jsonify({'success': False, 'message': 'Statut introuvable.'}), 404
+
+        # Vérifier que le chauffeur existe
+        chauffeur = Chauffeur.query.get(int(chauffeur_id))
+        if not chauffeur:
+            return jsonify({'success': False, 'message': 'Chauffeur introuvable.'}), 404
+
+        # Parser les dates
+        try:
+            date_debut = datetime.fromisoformat(date_debut_raw.replace('T', ' '))
+            date_fin = datetime.fromisoformat(date_fin_raw.replace('T', ' '))
+        except ValueError:
+            return jsonify({'success': False, 'message': 'Format de date invalide.'}), 400
+
+        # Vérifier que la date de fin est après la date de début
+        if date_fin <= date_debut:
+            return jsonify({'success': False, 'message': 'La date de fin doit être postérieure à la date de début.'}), 400
+
+        # Mettre à jour le statut
+        statut_obj.statut = statut
+        statut_obj.lieu = lieu
+        statut_obj.date_debut = date_debut
+        statut_obj.date_fin = date_fin
+
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': 'Statut modifié avec succès.',
+            'statut': statut_obj.to_dict()
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f'Erreur lors de la modification: {str(e)}'}), 500
+
+# Supprimer un statut individuel
+@admin_only
+@bp.route('/supprimer_statut_individuel_ajax', methods=['POST'])
+def supprimer_statut_individuel_ajax():
+    try:
+        statut_id = request.form.get('statut_id')
+
+        if not statut_id:
+            return jsonify({'success': False, 'message': 'ID du statut manquant.'}), 400
+
+        # Vérifier que le statut existe
+        statut_obj = ChauffeurStatut.query.get(int(statut_id))
+        if not statut_obj:
+            return jsonify({'success': False, 'message': 'Statut introuvable.'}), 404
+
+        # Supprimer le statut
+        db.session.delete(statut_obj)
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': 'Statut supprimé avec succès.'
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f'Erreur lors de la suppression: {str(e)}'}), 500

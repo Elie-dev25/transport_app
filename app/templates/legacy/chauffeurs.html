@@ -325,6 +325,7 @@
                     <th>Permis</th>
                     <th>Contact</th>
                     <th>Statut</th>
+                    <th>Lieu</th>
                     {% if not readonly and current_user.role != 'CHARGE' %}
                     <th class="no-sort">Actions</th>
                     {% endif %}
@@ -332,7 +333,7 @@
             </thead>
             <tbody>
                 {% for chauffeur in chauffeur_list %}
-                <tr>
+                <tr data-chauffeur-id="{{ chauffeur.chauffeur_id }}">
                     <td><strong>{{ chauffeur.nom }}</strong></td>
                     <td>{{ chauffeur.prenom }}</td>
                     <td>
@@ -382,8 +383,30 @@
                                   data-chauffeur-prenom="{{ chauffeur.prenom }}"
                                   style="cursor: pointer;"
                                   title="Cliquez pour voir les détails">
-                                {{ status_badge('Disponible', 'success', 'check-circle') }}
+                                {{ status_badge('Attente', 'secondary', 'question-circle') }}
                             </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if chauffeur.statuts_actuels %}
+                            {% for statut in chauffeur.statuts_actuels %}
+                                {% if statut.lieu %}
+                                    {% if statut.lieu == 'CUM' %}
+                                        {{ icon_cell('building', 'CUM') }}
+                                    {% elif statut.lieu == 'CAMPUS' %}
+                                        {{ icon_cell('university', 'Campus') }}
+                                    {% elif statut.lieu == 'CONJOINTEMENT' %}
+                                        <span>Conjointement</span>
+                                    {% else %}
+                                        <span class="text-muted">{{ statut.lieu }}</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted">Attente</span>
+                                {% endif %}
+                                {% if not loop.last %}<br>{% endif %}
+                            {% endfor %}
+                        {% else %}
+                            <span class="text-muted">Attente</span>
                         {% endif %}
                     </td>
                     {% if not readonly and current_user.role != 'CHARGE' %}
@@ -407,7 +430,7 @@
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="{% if readonly or current_user.role == 'CHARGE' %}5{% else %}6{% endif %}" class="table-empty">
+                    <td colspan="{% if readonly or current_user.role == 'CHARGE' %}6{% else %}7{% endif %}" class="table-empty">
                         <i class="fas fa-user-tie"></i>
                         <h5>Aucun chauffeur enregistré</h5>
                         {% if not readonly %}
@@ -496,6 +519,9 @@
 
 <!-- Inclure la modale des détails de statut -->
 {% include 'shared/modals/_statut_details_modal.html' %}
+
+<!-- Inclure la modale de modification de statut individuel -->
+{% include 'shared/modals/_edit_individual_statut_modal.html' %}
 
 
 {% endblock %}
@@ -591,8 +617,8 @@ function showStatutDetails(button) {
 }
 
 $(function() {
-  // Gestion des clics sur les statuts pour afficher les détails
-  $('.statut-clickable').on('click', function(e) {
+  // Gestion des clics sur les statuts pour afficher les détails avec délégation d'événements
+  $(document).on('click', '.statut-clickable', function(e) {
     e.preventDefault();
 
     const chauffeurId = $(this).data('chauffeur-id');
@@ -604,7 +630,7 @@ $(function() {
     const dateFin = $(this).data('date-fin');
 
     // Remplir les informations dans la modale
-    $('#detailChauffeurNom').text(chauffeurNom + ' ' + chauffeurPrenom);
+    $('#detailChauffeurNom').text(chauffeurNom + ' ' + chauffeurPrenom).data('chauffeur-id', chauffeurId);
 
     // Afficher le statut avec le bon style
     const statutBadge = $('#detailStatut');
@@ -619,7 +645,7 @@ $(function() {
     } else if (statut === 'SERVICE_SEMAINE') {
       statutBadge.addClass('status-primary').html('<i class="fas fa-calendar-day"></i> Semaine');
     } else if (!statut || statut === 'Disponible') {
-      statutBadge.addClass('status-success').html('<i class="fas fa-check-circle"></i> Disponible');
+      statutBadge.addClass('status-secondary').html('<i class="fas fa-question-circle"></i> Attente');
     } else {
       statutBadge.addClass('status-secondary').text(statut);
     }
@@ -641,12 +667,16 @@ $(function() {
     loadAutresStatuts(chauffeurId);
 
     // Afficher la modale
-    $('#statutDetailsModal').addClass('show');
+    const modal = $('#statutDetailsModal');
+    modal.addClass('show');
+    modal.css('display', 'flex');
   });
 
-  // Fermeture de la modale des détails du statut
-  $('#closeStatutDetailsModal').on('click', function() {
-    $('#statutDetailsModal').removeClass('show');
+  // Fermeture de la modale des détails du statut avec délégation d'événements
+  $(document).on('click', '#closeStatutDetailsModal', function() {
+    const modal = $('#statutDetailsModal');
+    modal.removeClass('show');
+    modal.css('display', 'none');
   });
 
   // Fermeture par clic sur l'overlay
@@ -656,22 +686,46 @@ $(function() {
     }
   });
 
-  // Gestion du bouton de modification de statut
-  $('.edit-statut-btn').on('click', function(e) {
+  // Gestion du bouton de modification de statut avec délégation d'événements
+  // Cela permet de gérer les boutons ajoutés dynamiquement après AJAX
+  $(document).on('click', '.edit-statut-btn', function(e) {
     e.preventDefault();
     const chauffeurId = $(this).data('id');
+    const chauffeurNom = $(this).data('nom');
+    const chauffeurPrenom = $(this).data('prenom');
+
+    console.log('Ouverture modal statut pour chauffeur:', chauffeurId, chauffeurNom, chauffeurPrenom);
 
     // Remplir l'ID du chauffeur dans la modale
     $('#chauffeurId').val(chauffeurId);
 
-    // Afficher la modale
-    $('#editStatutChauffeurModal').addClass('show');
+    // Réinitialiser le formulaire pour éviter les données résiduelles
+    $('#editStatutChauffeurForm')[0].reset();
+    $('#chauffeurId').val(chauffeurId); // Remettre l'ID après reset
+
+    // Afficher la modale avec toutes les propriétés nécessaires
+    const modal = $('#editStatutChauffeurModal');
+    modal.removeClass('show').addClass('show'); // Force refresh
+    modal.css('display', 'flex');
+    modal.removeAttr('hidden');
+    modal.attr('aria-hidden', 'false');
+
+    // Focus sur le premier champ pour améliorer l'UX
+    setTimeout(() => {
+      modal.find('select[name="statut"]').focus();
+    }, 100);
   });
 
-  // Fermeture de la modale
-  $('#closeEditStatutModal, #cancelEditStatut').on('click', function() {
-    $('#editStatutChauffeurModal').removeClass('show');
+  // Fermeture de la modale avec délégation d'événements
+  $(document).on('click', '#closeEditStatutModal, #cancelEditStatut', function() {
+    const modal = $('#editStatutChauffeurModal');
+    modal.removeClass('show');
+    modal.css('display', 'none');
+    modal.attr('hidden', '');
+    modal.attr('aria-hidden', 'true');
     $('#editStatutChauffeurForm')[0].reset();
+
+    console.log('Modal statut fermée');
   });
 
   // Fermeture par clic sur l'overlay
@@ -739,58 +793,7 @@ $(function() {
     $('input[name="date_fin"]').val(formatDateTime(endDate));
   });
 
-  // Soumission du formulaire de modification de statut
-  $('#editStatutChauffeurForm').on('submit', function(e) {
-    e.preventDefault();
 
-    const formData = new FormData(this);
-
-    $.ajax({
-      url: '/admin/modifier_statut_chauffeur_ajax',
-      method: 'POST',
-      data: formData,
-      processData: false,
-      contentType: false,
-      success: function(resp) {
-        if (resp.success) {
-          $('#editStatutChauffeurModal').removeClass('show');
-          $('#editStatutChauffeurForm')[0].reset();
-          // Utiliser SweetAlert2 si disponible
-          if (typeof Swal !== 'undefined') {
-            Swal.fire('Succès', 'Statut modifié avec succès !', 'success').then(() => {
-              location.reload();
-            });
-          } else {
-            alert('Statut modifié avec succès !');
-            location.reload();
-          }
-        } else {
-          if (typeof Swal !== 'undefined') {
-            Swal.fire('Erreur', resp.message || 'Erreur lors de la modification du statut', 'error');
-          } else {
-            alert(resp.message || 'Erreur lors de la modification du statut');
-          }
-        }
-      },
-      error: function(xhr) {
-        try {
-          const json = xhr.responseJSON || JSON.parse(xhr.responseText || '{}');
-          const msg = (json && (json.message || json.error)) || 'Erreur lors de la modification du statut';
-          if (typeof Swal !== 'undefined') {
-            Swal.fire('Erreur', msg, 'error');
-          } else {
-            alert(msg);
-          }
-        } catch (e) {
-          if (typeof Swal !== 'undefined') {
-            Swal.fire('Erreur', 'Erreur lors de la modification du statut', 'error');
-          } else {
-            alert('Erreur lors de la modification du statut');
-          }
-        }
-      }
-    });
-  });
 
   // Gestion du bouton de suppression
   $('.delete-chauffeur-btn').on('click', function(e) {
@@ -949,15 +952,56 @@ function generatePlanningTableFromAjax(planningData) {
   const tbody = document.getElementById('planningTableBody');
   tbody.innerHTML = '';
 
-  planningData.forEach(function(item) {
+  if (!planningData || planningData.length === 0) {
     const newRow = tbody.insertRow();
     newRow.innerHTML = `
-      <td>${item.chauffeur}</td>
-      <td>${item.statut}</td>
-      <td>${item.date_debut}</td>
-      <td>${item.date_fin}</td>
-      <td>${item.duree}</td>
+      <td colspan="5" style="text-align: center; font-style: italic;">
+        Aucune donnée de planification disponible
+      </td>
     `;
+    return;
+  }
+
+  planningData.forEach(function(chauffeur) {
+    const chauffeurNom = `${chauffeur.nom} ${chauffeur.prenom}`;
+
+    if (chauffeur.statuts && chauffeur.statuts.length > 0) {
+      // Créer une ligne pour chaque statut du chauffeur
+      chauffeur.statuts.forEach(function(statut) {
+        const newRow = tbody.insertRow();
+
+        // Formater le statut pour l'affichage
+        let statutLabel = statut.statut;
+        if (statut.statut === 'CONGE') statutLabel = 'Congé';
+        else if (statut.statut === 'PERMANENCE') statutLabel = 'Permanence';
+        else if (statut.statut === 'SERVICE_WEEKEND') statutLabel = 'Week-end';
+        else if (statut.statut === 'SERVICE_SEMAINE') statutLabel = 'Semaine';
+
+        // Ajouter le lieu au statut
+        let lieuLabel = '';
+        if (statut.lieu === 'CUM') lieuLabel = ' (CUM)';
+        else if (statut.lieu === 'CAMPUS') lieuLabel = ' (Campus)';
+        else if (statut.lieu === 'CONJOINTEMENT') lieuLabel = ' (Conjointement)';
+
+        newRow.innerHTML = `
+          <td>${chauffeurNom}</td>
+          <td>${statutLabel}${lieuLabel}</td>
+          <td>${statut.date_debut_formatted}</td>
+          <td>${statut.date_fin_formatted}</td>
+          <td>${statut.duree}</td>
+        `;
+      });
+    } else {
+      // Chauffeur sans statut
+      const newRow = tbody.insertRow();
+      newRow.innerHTML = `
+        <td>${chauffeurNom}</td>
+        <td>Attente</td>
+        <td>-</td>
+        <td>-</td>
+        <td>-</td>
+      `;
+    }
   });
 }
 
@@ -988,17 +1032,17 @@ function generatePlanningFromPage() {
 
   chauffeurRows.forEach(function(row) {
     const cells = row.querySelectorAll('td');
-    if (cells.length >= 4) {
+    if (cells.length >= 5) {
       const nom = cells[0].textContent.trim();
       const prenom = cells[1].textContent.trim();
-      const statutCell = cells[3];
+      const statutCell = cells[4]; // Colonne Statut est à l'index 4
 
       // Récupérer les statuts cliquables
       const statutsClickables = statutCell.querySelectorAll('.statut-clickable');
 
       if (statutsClickables.length > 0) {
         statutsClickables.forEach(function(statutSpan) {
-          const statut = statutSpan.dataset.statut || 'Disponible';
+          const statut = statutSpan.dataset.statut || 'ATTENTE';
           const dateDebut = statutSpan.dataset.dateDebut || 'Non définie';
           const dateFin = statutSpan.dataset.dateFin || 'Non définie';
 
@@ -1022,8 +1066,9 @@ function generatePlanningFromPage() {
           const statutDisplay = {
             'CONGE': 'Congé',
             'PERMANENCE': 'Permanence',
-            'SERVICE_WEEKEND': 'Service Week-end',
-            'SERVICE_SEMAINE': 'Service Semaine'
+            'SERVICE_WEEKEND': 'Week-end',
+            'SERVICE_SEMAINE': 'Semaine',
+            'ATTENTE': 'Attente'
           }[statut] || statut;
 
           // Ajouter la ligne au tableau
@@ -1041,7 +1086,7 @@ function generatePlanningFromPage() {
         const newRow = tbody.insertRow();
         newRow.innerHTML = `
           <td>${nom} ${prenom}</td>
-          <td>Disponible</td>
+          <td>Attente</td>
           <td>-</td>
           <td>-</td>
           <td>-</td>
@@ -1115,7 +1160,7 @@ function printPlanningTable() {
 // Fonction pour charger les autres statuts du chauffeur
 function loadAutresStatuts(chauffeurId) {
   const container = $('#autresStatutsList');
-  container.html('<span class="loading-text"><i class="fas fa-spinner fa-spin"></i> Chargement...</span>');
+  container.html('<div class="loading-text"><i class="fas fa-spinner fa-spin"></i> Chargement des statuts...</div>');
 
   $.ajax({
     url: `/admin/get_statuts_chauffeur_ajax/${chauffeurId}`,
@@ -1123,7 +1168,7 @@ function loadAutresStatuts(chauffeurId) {
     success: function(response) {
       if (response.success && response.statuts) {
         if (response.statuts.length === 0) {
-          container.html('<span class="text-muted">Aucun autre statut</span>');
+          container.html('<div style="color:#6b7280; text-align: center; padding: 20px;">Aucun statut trouvé.</div>');
         } else {
           let html = '';
           response.statuts.forEach(function(statut) {
@@ -1131,27 +1176,61 @@ function loadAutresStatuts(chauffeurId) {
             const dateFin = statut.date_fin ? new Date(statut.date_fin).toLocaleDateString('fr-FR') : 'Non définie';
 
             let statutLabel = statut.statut;
-            let statutClass = 'status-secondary';
+            let statutClass = 'secondary';
+            let statutIcon = 'question-circle';
 
             if (statut.statut === 'CONGE') {
               statutLabel = 'Congé';
-              statutClass = 'status-warning';
+              statutClass = 'warning';
+              statutIcon = 'calendar-times';
             } else if (statut.statut === 'PERMANENCE') {
               statutLabel = 'Permanence';
-              statutClass = 'status-info';
+              statutClass = 'info';
+              statutIcon = 'clock';
             } else if (statut.statut === 'SERVICE_WEEKEND') {
               statutLabel = 'Week-end';
-              statutClass = 'status-secondary';
+              statutClass = 'secondary';
+              statutIcon = 'calendar-week';
             } else if (statut.statut === 'SERVICE_SEMAINE') {
               statutLabel = 'Semaine';
-              statutClass = 'status-primary';
+              statutClass = 'primary';
+              statutIcon = 'calendar-day';
+            }
+
+            // Déterminer le lieu
+            let lieuDisplay = 'Attente';
+            if (statut.lieu === 'CUM') {
+              lieuDisplay = '<i class="fas fa-building"></i> CUM';
+            } else if (statut.lieu === 'CAMPUS') {
+              lieuDisplay = '<i class="fas fa-university"></i> Campus';
+            } else if (statut.lieu === 'CONJOINTEMENT') {
+              lieuDisplay = 'Conjointement';
             }
 
             html += `
-              <div class="statut-item mb-2 p-2 border rounded">
-                <span class="status-badge ${statutClass}">${statutLabel}</span>
-                <div class="text-small text-muted mt-1">
-                  <i class="fas fa-calendar"></i> ${dateDebut} → ${dateFin}
+              <div class="statut-item" data-statut-id="${statut.id}">
+                <div class="statut-item-content">
+                  <div>
+                    <span class="status-badge ${statutClass}">
+                      <i class="fas fa-${statutIcon}"></i> ${statutLabel}
+                    </span>
+                    <span style="margin-left: 10px; color: #6b7280;">${lieuDisplay}</span>
+                  </div>
+                  <div class="text-small">
+                    <i class="fas fa-calendar"></i> ${dateDebut} → ${dateFin}
+                  </div>
+                </div>
+                <div class="statut-item-actions">
+                  <button class="statut-action-btn edit"
+                          onclick="editIndividualStatut(${statut.id}, ${chauffeurId}, '${statut.statut}', '${statut.lieu}', '${statut.date_debut}', '${statut.date_fin}')"
+                          title="Modifier ce statut">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button class="statut-action-btn delete"
+                          onclick="deleteIndividualStatut(${statut.id}, '${statutLabel}')"
+                          title="Supprimer ce statut">
+                    <i class="fas fa-trash"></i>
+                  </button>
                 </div>
               </div>
             `;
@@ -1159,11 +1238,11 @@ function loadAutresStatuts(chauffeurId) {
           container.html(html);
         }
       } else {
-        container.html('<span class="text-danger">Erreur lors du chargement</span>');
+        container.html('<div style="color:#ef4444; text-align: center; padding: 20px;">Erreur lors du chargement des statuts.</div>');
       }
     },
     error: function() {
-      container.html('<span class="text-danger">Erreur lors du chargement</span>');
+      container.html('<div style="color:#ef4444; text-align: center; padding: 20px;">Erreur lors du chargement des statuts.</div>');
     }
   });
 }
@@ -1175,6 +1254,130 @@ function formatDateTime(date) {
   const hours = String(date.getHours()).padStart(2, '0');
   const minutes = String(date.getMinutes()).padStart(2, '0');
   return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
+// Fonction pour modifier un statut individuel
+function editIndividualStatut(statutId, chauffeurId, statut, lieu, dateDebut, dateFin) {
+  // Remplir le formulaire
+  $('#individualStatutId').val(statutId);
+  $('#individualChauffeurId').val(chauffeurId);
+  $('#individualStatut').val(statut);
+  $('#individualLieu').val(lieu);
+
+  // Convertir les dates au format datetime-local
+  const formatDateForInput = (dateStr) => {
+    const date = new Date(dateStr);
+    return date.toISOString().slice(0, 16);
+  };
+
+  $('#individualDateDebut').val(formatDateForInput(dateDebut));
+  $('#individualDateFin').val(formatDateForInput(dateFin));
+
+  // Ouvrir la modal
+  $('#editIndividualStatutModal').addClass('show');
+}
+
+// Fonction pour supprimer un statut individuel
+function deleteIndividualStatut(statutId, statutLabel) {
+  // Fermer la modal de détails avant d'afficher la confirmation
+  const detailsModal = document.getElementById('statutDetailsModal');
+  if (detailsModal) {
+    detailsModal.classList.remove('show');
+    detailsModal.style.display = 'none';
+  }
+
+  // Attendre un peu pour que la modal se ferme complètement
+  setTimeout(() => {
+    if (typeof Swal !== 'undefined') {
+      Swal.fire({
+        title: 'Confirmer la suppression',
+        text: `Voulez-vous vraiment supprimer ce statut "${statutLabel}" ?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3b82f6', // Couleur bleue pour le titre
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Oui, supprimer',
+        cancelButtonText: 'Annuler',
+        customClass: {
+          confirmButton: 'swal-confirm-delete',
+          title: 'swal-title-blue'
+        }
+      }).then((result) => {
+        if (result.isConfirmed) {
+          performDeleteStatut(statutId);
+        } else {
+          // Si annulé, rouvrir la modal de détails
+          if (detailsModal) {
+            detailsModal.classList.add('show');
+            detailsModal.style.display = 'flex';
+          }
+        }
+      });
+    } else {
+      if (confirm(`Voulez-vous vraiment supprimer ce statut "${statutLabel}" ?`)) {
+        performDeleteStatut(statutId);
+      } else {
+        // Si annulé, rouvrir la modal de détails
+        if (detailsModal) {
+          detailsModal.classList.add('show');
+          detailsModal.style.display = 'flex';
+        }
+      }
+    }
+  }, 200);
+}
+
+// Fonction pour effectuer la suppression
+function performDeleteStatut(statutId) {
+  const formData = new FormData();
+  formData.append('statut_id', statutId);
+
+  fetch('/admin/supprimer_statut_individuel_ajax', {
+    method: 'POST',
+    body: formData,
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest'
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      if (typeof Swal !== 'undefined') {
+        Swal.fire('Supprimé!', data.message, 'success');
+      } else {
+        alert(data.message);
+      }
+
+      // Recharger la liste des statuts dans la modal de détails
+      const modal = document.getElementById('statutDetailsModal');
+      if (modal && modal.classList.contains('show')) {
+        const chauffeurId = $('#detailChauffeurNom').data('chauffeur-id');
+        if (chauffeurId) {
+          loadAutresStatuts(chauffeurId);
+        }
+      }
+
+      // Rafraîchir les données de la page
+      if (typeof FormModalManager !== 'undefined' && FormModalManager.refreshPageData) {
+        FormModalManager.refreshPageData();
+        FormModalManager.reattachEventListeners();
+      }
+    } else {
+      if (typeof Swal !== 'undefined') {
+        Swal.fire('Erreur', data.message, 'error');
+      } else {
+        alert('Erreur: ' + data.message);
+      }
+    }
+  })
+  .catch(error => {
+    console.error('Erreur:', error);
+    if (typeof Swal !== 'undefined') {
+      Swal.fire('Erreur', 'Erreur de communication avec le serveur', 'error');
+    } else {
+      alert('Erreur de communication avec le serveur');
+    }
+  });
 }
 </script>
 {% endblock %}

@@ -9,6 +9,11 @@ class Affectation(db.Model):
         Enum('EN_SEMAINE', 'WEEK_END', 'PERMANENCE', 'CONGE', name='type_affectation_enum'),
         nullable=False
     )
+    lieu = db.Column(
+        Enum('CUM', 'CAMPUS', 'CONJOINTEMENT', name='lieu_affectation_enum'),
+        nullable=False,
+        default='CUM'
+    )
     date_debut = db.Column(db.Date, nullable=False)
     date_fin = db.Column(db.Date, nullable=False)
     chauffeur_id = db.Column(db.Integer, db.ForeignKey('chauffeur.chauffeur_id'), nullable=False)

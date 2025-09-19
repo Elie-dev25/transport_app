@@ -1,0 +1,142 @@
+<!-- Modal for Edit Individual Statut Form -->
+{% from 'shared/macros/form_macros.html' import error_container %}
+
+<div id="editIndividualStatutModal" class="modal">
+  <div class="modal-content modal-details">
+    <button type="button" id="closeEditIndividualStatutModal" class="close-btn"><i class="fas fa-times"></i></button>
+    <div class="modal-header">
+      <h3><i class="fas fa-edit"></i> Modifier le statut</h3>
+    </div>
+    <div class="modal-body">
+      {{ error_container('individualStatutError') }}
+
+      <form id="editIndividualStatutForm" action="/admin/modifier_statut_individuel_ajax" method="POST">
+        <input type="hidden" id="individualStatutId" name="statut_id">
+        <input type="hidden" id="individualChauffeurId" name="chauffeur_id">
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="individualStatut">Statut :</label>
+            <select id="individualStatut" name="statut" required>
+              <option value="">-- Sélectionner un statut --</option>
+              <option value="CONGE">Congé</option>
+              <option value="PERMANENCE">Permanence</option>
+              <option value="SERVICE_WEEKEND">Service Week-end</option>
+              <option value="SERVICE_SEMAINE">Service Semaine</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="individualLieu">Lieu d'affectation :</label>
+            <select id="individualLieu" name="lieu" required>
+              <option value="">-- Sélectionner un lieu --</option>
+              <option value="CUM">CUM</option>
+              <option value="CAMPUS">Campus</option>
+              <option value="CONJOINTEMENT">Conjointement</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="individualDateDebut">Date de début :</label>
+            <input type="datetime-local" id="individualDateDebut" name="date_debut" required>
+          </div>
+
+          <div class="form-group">
+            <label for="individualDateFin">Date de fin :</label>
+            <input type="datetime-local" id="individualDateFin" name="date_fin" required>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="submit-btn">
+            <i class="fas fa-save"></i> Enregistrer les modifications
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+// Gestion manuelle du formulaire pour éviter le rechargement de page
+document.addEventListener('DOMContentLoaded', function() {
+    // Gestionnaire pour le bouton de fermeture
+    const closeBtn = document.getElementById('closeEditIndividualStatutModal');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', function() {
+            const modal = document.getElementById('editIndividualStatutModal');
+            if (modal) {
+                modal.classList.remove('show');
+                modal.style.display = 'none';
+            }
+        });
+    }
+
+    // Gestionnaire pour la soumission du formulaire
+    const form = document.getElementById('editIndividualStatutForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(form);
+            const errorContainer = document.getElementById('individualStatutError');
+
+            // Masquer les erreurs précédentes
+            if (errorContainer) {
+                errorContainer.style.display = 'none';
+            }
+
+            fetch('/admin/modifier_statut_individuel_ajax', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Fermer la modal
+                    const modal = document.getElementById('editIndividualStatutModal');
+                    if (modal) {
+                        modal.classList.remove('show');
+                        modal.style.display = 'none';
+                    }
+
+                    // Afficher le message de succès
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire('Succès!', data.message, 'success');
+                    } else {
+                        alert(data.message);
+                    }
+
+                    // Recharger SEULEMENT la liste des statuts dans la modal de détails
+                    const detailsModal = document.getElementById('statutDetailsModal');
+                    if (detailsModal && detailsModal.classList.contains('show')) {
+                        const chauffeurId = $('#detailChauffeurNom').data('chauffeur-id');
+                        if (chauffeurId) {
+                            loadAutresStatuts(chauffeurId);
+                        }
+                    }
+
+                    // NE PAS recharger la page entière
+
+                } else {
+                    // Afficher l'erreur
+                    if (errorContainer) {
+                        errorContainer.innerHTML = '<div class="alert alert-danger">' + (data.message || 'Erreur lors de la modification.') + '</div>';
+                        errorContainer.style.display = 'block';
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                if (errorContainer) {
+                    errorContainer.innerHTML = '<div class="alert alert-danger">Erreur de communication avec le serveur.</div>';
+                    errorContainer.style.display = 'block';
+                }
+            });
+        });
+    }
+});
+</script>
