@@ -1,4 +1,22 @@
-{% extends base_template if base_template is defined else 'roles/chauffeur/_base_chauffeur.html' %}
+{% if base_template is defined %}
+{% extends base_template %}
+{% elif current_user and current_user.is_authenticated %}
+  {% if current_user.role == 'MECANICIEN' %}
+  {% extends "roles/mecanicien/_base_mecanicien.html" %}
+  {% elif current_user.role == 'CHARGE' %}
+  {% extends "roles/charge_transport/_base_charge.html" %}
+  {% elif current_user.role == 'SUPERVISEUR' %}
+  {% extends "roles/superviseur/_base_superviseur.html" %}
+  {% elif current_user.role == 'CHAUFFEUR' %}
+  {% extends "roles/chauffeur/_base_chauffeur.html" %}
+  {% elif current_user.role == 'ADMIN' or current_user.role == 'RESPONSABLE' %}
+  {% extends "roles/admin/_base_admin.html" %}
+  {% else %}
+  {% extends "roles/admin/_base_admin.html" %}
+  {% endif %}
+{% else %}
+{% extends "roles/admin/_base_admin.html" %}
+{% endif %}
 {% from 'shared/macros/tableaux_components.html' import table_container, status_badge, level_indicator, voyant_indicator, icon_cell, date_cell, number_cell %}
 
 {% block title %}Bus UdM{% endblock %}
@@ -78,17 +96,32 @@
 
 {% block dashboard_content %}
 <div class="container-fluid">
-    <!-- Bouton d'ajout -->
-    {% if not readonly %}
-    <div class="d-flex justify-content-end mb-3">
-        <button id="openAddBusModal" class="btn btn-primary rounded-circle" style="width:50px;height:50px;" title="Ajouter un Bus UdM">
-            <i class="fas fa-plus"></i>
-        </button>
-    </div>
-    {% endif %}
+    <!-- En-tête du tableau avec bouton d'ajout -->
+    <div class="table-container" id="busTable">
+        <div class="table-header">
+            <div class="d-flex justify-content-between align-items-center w-100">
+                <div>
+                    <h3 class="table-title">
+                        <i class="fas fa-bus"></i>
+                        Liste des Bus UdM
+                    </h3>
+                    <p class="table-subtitle">Gestion de la flotte universitaire</p>
+                </div>
+                {% if not readonly and current_user.role != 'CHARGE' %}
+                <button id="openAddBusModal" class="btn btn-success d-flex align-items-center gap-2" title="Ajouter un Bus UdM">
+                    <i class="fas fa-plus"></i>
+                    <span>Ajouter un bus</span>
+                </button>
+                {% endif %}
+            </div>
+        </div>
+        <div class="table-search">
+            <div class="search-container">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" class="form-control search-input" placeholder="Rechercher un bus..." id="searchInput">
+            </div>
+        </div>
 
-    <!-- Tableau des bus avec le nouveau design -->
-    {% call table_container('Liste des Bus UdM', 'bus', search=true, subtitle='Gestion de la flotte de bus universitaires', table_id='busTable') %}
         <table class="table table-striped table-hover sortable">
             <thead>
                 <tr>
@@ -97,7 +130,9 @@
                     <th>Kilométrage</th>
                     <th>État</th>
                     <th>Capacité</th>
+                    {% if current_user.role != 'CHARGE' %}
                     <th class="no-sort">Actions</th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody>
@@ -136,23 +171,24 @@
                             <span class="text-muted">Non défini</span>
                         {% endif %}
                     </td>
+                    {% if current_user.role != 'CHARGE' %}
                     <td>
                         <div class="table-actions">
                             <button class="table-btn view" onclick="showBusDetails({{ bus.id }})" title="Voir la fiche">
                                 <i class="fas fa-eye"></i>
                             </button>
-                            <button class="table-btn action" onclick="openPanneModal({{ bus.numero|tojson }}, {{ (bus.immatriculation|default('', true))|tojson }}, {{ (bus.kilometrage or 0)|tojson }})" title="Déclarer panne">
+                            {% if not readonly %}
+                            <button class="table-btn action" onclick="openPanneModal('{{ bus.numero }}', '{{ bus.immatriculation|default('', true) }}', {{ bus.kilometrage or 0 }})" title="Déclarer panne">
                                 <i class="fas fa-exclamation-triangle"></i>
                             </button>
-                            <button class="table-btn edit" onclick="openDocModal({{ bus.id }})" title="Ajouter un document">
-                                <i class="fas fa-plus"></i>
-                            </button>
+                            {% endif %}
                         </div>
                     </td>
+                    {% endif %}
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="6" class="table-empty">
+                    <td colspan="{% if current_user.role == 'CHARGE' %}5{% else %}6{% endif %}" class="table-empty">
                         <i class="fas fa-bus"></i>
                         <h5>Aucun bus enregistré</h5>
                         <p>Cliquez sur le bouton + pour ajouter votre premier bus.</p>
@@ -161,9 +197,10 @@
                 {% endfor %}
             </tbody>
         </table>
-    {% endcall %}
+    </div>
 
-    <!-- Actions rapides (restreintes pour Chauffeur) -->
+    <!-- Actions rapides (restreintes pour Chauffeur et masquées pour Chargé) -->
+    {% if current_user.role != 'CHARGE' %}
     <div class="quick-actions" style="margin-top:30px;">
         <h2 class="section-title">
             <i class="fas fa-tools"></i>
@@ -192,16 +229,17 @@
             {% endif %}
         </div>
     </div>
+    {% endif %}
 </div>
 
-{% include 'shared/modals/_document_modal.html' %}
+
 
 <!-- Modal détails bus -->
 <div id="busDetailsModal" class="modal">
-  <div class="modal-content" style="max-width:500px;">
+  <div class="modal-content">
+    <button type="button" id="closeBusDetailsModal" class="close-btn"><i class="fas fa-times"></i></button>
     <div class="modal-header">
       <h3>Fiche personnel Bus UdM</h3>
-      <button type="button" id="closeBusDetailsModal" class="close-btn">&times;</button>
     </div>
     <div class="modal-body" id="busDetailsBody">
       <!-- Contenu injecté via JS -->
@@ -222,17 +260,7 @@ $(document).ready(function() {
   // Ouvrir automatiquement la modale Document si on arrive avec ?open=doc&bus_id=...
   (function(){
     const params = new URLSearchParams(window.location.search);
-    if (params.get('open') === 'doc') {
-      const bid = params.get('bus_id');
-      if (bid) {
-        window.selectedBusId = bid;
-        $('#docFormModal').addClass('show');
-        // Nettoyer l'URL pour éviter ré-ouverture au refresh
-        if (window.history && window.history.replaceState) {
-          window.history.replaceState({}, document.title, window.location.pathname);
-        }
-      }
-    } else if (params.get('open') === 'panne') {
+    if (params.get('open') === 'panne') {
       // Ouvrir la modale de déclaration de panne
       $('#panneModal').removeAttr('hidden').addClass('show').attr('aria-hidden','false');
       // Nettoyer l'URL pour éviter ré-ouverture au refresh
@@ -405,14 +433,16 @@ $(document).ready(function() {
 
   // Fonction pour afficher les détails d'un bus (redirige vers la page serveur)
   window.showBusDetails = function(busId) {
+    {% if current_user.role == 'MECANICIEN' %}
+    window.location.href = '/mecanicien/bus/details/' + busId;
+    {% elif current_user.role == 'CHARGE' %}
+    window.location.href = '/charge_transport/bus/details/' + busId;
+    {% else %}
     window.location.href = '/admin/bus/details/' + busId;
+    {% endif %}
   };
 
-  // Fonction pour ouvrir la modale de document
-  window.openDocModal = function(busId) {
-    window.selectedBusId = busId;
-    $('#docFormModal').addClass('show');
-  };
+
 
   // Fonction pour ouvrir la modale de panne avec des données pré-remplies
   window.openPanneModal = function(numero, immatriculation, kilometrage) {
@@ -424,24 +454,24 @@ $(document).ready(function() {
     $('#panneModal').removeAttr('hidden').addClass('show').attr('aria-hidden','false');
   };
 
+  // Gestionnaire pour le bouton de fermeture de busDetailsModal
+  $('#closeBusDetailsModal').on('click', function() {
+    $('#busDetailsModal').css('display', 'none');
+  });
+
+  // Fermer busDetailsModal en cliquant en dehors
+  $('#busDetailsModal').on('click', function(e) {
+    if (e.target === this) {
+      $(this).css('display', 'none');
+    }
+  });
+
   // Fermeture des modales
   $('#closeDocFormModal').on('click', function(){ $('#docFormModal').removeClass('show'); });
   $('#closeBusDetailsModal').on('click', function(){ $('#busDetailsModal').removeClass('show'); });
   $('#busDetailsModal').on('click', function(e){ if(e.target === this){ $(this).removeClass('show'); }});
 
-  // Soumission formulaire document
-  $('#docForm').on('submit', function(e){
-    e.preventDefault();
-    const formData = $(this).serialize();
-    $.post('/admin/ajouter_document_udm_ajax/'+window.selectedBusId, formData, function(resp){
-      if(resp.success){
-        Swal.fire('Succès', resp.message, 'success');
-        $('#docFormModal').removeClass('show');
-      }else{
-        Swal.fire('Erreur', resp.message, 'error');
-      }
-    });
-  });
+
 });
 </script>
 {% endblock %}

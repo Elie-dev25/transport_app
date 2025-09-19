@@ -72,6 +72,87 @@ def bus():
         base_template='roles/charge_transport/_base_charge.html'
     )
 
+# Route pour les détails d'un bus (accessible aux chargés de transport)
+@bp.route('/bus/details/<int:bus_id>')
+def details_bus(bus_id):
+    from app.models.bus_udm import BusUdM
+    bus = BusUdM.query.get_or_404(bus_id)
+
+    # Récupérer l'historique complet du bus
+    from app.models.trajet import Trajet
+    from app.models.carburation import Carburation
+    from app.models.vidange import Vidange
+    from app.models.panne_bus_udm import PanneBusUdM
+    from app.models.depannage import Depannage
+    from app.models.document_bus_udm import DocumentBusUdM
+
+    # Historique des trajets
+    trajets = Trajet.query.filter_by(numero_bus_udm=bus.numero).order_by(Trajet.date_heure_depart.desc()).limit(10).all()
+
+    # Historique des carburations
+    carburations = Carburation.query.filter_by(bus_udm_id=bus.id).order_by(Carburation.date_carburation.desc()).limit(10).all()
+
+    # Historique des vidanges
+    vidanges = Vidange.query.filter_by(bus_udm_id=bus.id).order_by(Vidange.date_vidange.desc()).limit(10).all()
+
+    # Historique des pannes
+    pannes = PanneBusUdM.query.filter_by(bus_udm_id=bus.id).order_by(PanneBusUdM.date_heure.desc()).limit(10).all()
+
+    # Historique des dépannages
+    depannages = Depannage.query.filter_by(bus_udm_id=bus.id).order_by(Depannage.date_heure.desc()).limit(10).all()
+
+    # Documents administratifs avec calcul des statuts
+    documents_raw = DocumentBusUdM.query.filter_by(numero_bus_udm=bus.numero).order_by(DocumentBusUdM.date_debut.desc()).all()
+
+    # Calculer un statut de validité par document
+    from datetime import date
+    today = date.today()
+    documents = []
+    for d in documents_raw:
+        status = 'BLEU'
+        percent_left = None
+        try:
+            total_days = (d.date_expiration - d.date_debut).days if d.date_expiration and d.date_debut else None
+            left_days = (d.date_expiration - today).days if d.date_expiration else None
+            if d.date_expiration and today > d.date_expiration:
+                status = 'ROUGE'
+                percent_left = 0
+            elif total_days and total_days > 0 and left_days is not None:
+                ratio = max(0, left_days) / total_days
+                percent_left = round(ratio * 100)
+                if ratio <= 0.10:
+                    status = 'ORANGE'
+                else:
+                    status = 'BLEU'
+            else:
+                status = 'BLEU'
+        except Exception:
+            status = 'BLEU'
+            percent_left = None
+
+        documents.append({
+            'document_id': d.document_id,
+            'numero_bus_udm': d.numero_bus_udm,
+            'type_document': d.type_document,
+            'date_debut': d.date_debut,
+            'date_expiration': d.date_expiration,
+            'status': status,
+            'percent_left': percent_left,
+        })
+
+    return render_template(
+        'pages/details_bus.html',
+        bus=bus,
+        trajets=trajets,
+        carburations=carburations,
+        vidanges=vidanges,
+        pannes=pannes,
+        depannages=depannages,
+        documents=documents,
+        active_page='bus_udm',
+        base_template='roles/charge_transport/_base_charge.html'
+    )
+
 # Route pour la gestion des chauffeurs
 @bp.route('/chauffeurs')
 def chauffeurs():
@@ -84,7 +165,12 @@ def chauffeurs():
     for chauffeur in chauffeur_list:
         chauffeur.statuts_actuels = ChauffeurStatut.get_current_statuts(chauffeur.chauffeur_id)
 
-    return render_template('legacy/chauffeurs.html', chauffeur_list=chauffeur_list, active_page='chauffeurs')
+    return render_template(
+        'legacy/chauffeurs.html',
+        chauffeur_list=chauffeur_list,
+        active_page='chauffeurs',
+        base_template='roles/charge_transport/_base_charge.html'
+    )
 
 # Route pour la gestion des rapports
 @bp.route('/rapports')
@@ -122,10 +208,16 @@ def depart_aed_banekane():
 @bp.route('/trajet_prestataire_modernise', methods=['POST'])
 def trajet_prestataire_modernise():
     """Route pour les trajets prestataires modernisés"""
+    from app.models.prestataire import Prestataire
+
     form = TrajetPrestataireForm(request.form)
 
-    # Peupler les choix dynamiques avant validation
-    FormService.populate_trajet_form_choices(form)
+    # Peupler UNIQUEMENT les choix de prestataires (pas les chauffeurs UdM)
+    try:
+        form.nom_prestataire.choices = [(p.id, p.nom_prestataire) for p in Prestataire.query.all()]
+    except Exception as e:
+        form.nom_prestataire.choices = []
+        print(f"Erreur lors du peuplement des prestataires: {e}")
 
     if not form.validate():
         return jsonify({'success': False, 'message': 'Formulaire invalide', 'errors': form.errors}), 400

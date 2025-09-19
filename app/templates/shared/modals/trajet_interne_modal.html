@@ -1,5 +1,7 @@
 <!-- Modal Trajet Interne Bus UdM - Version Partagée -->
 <!-- Utilisable par tous les rôles (admin, responsable, chargé transport) -->
+{% from 'shared/macros/form_macros.html' import error_container %}
+
 <div id="trajetInterneBusUdMModal" class="modal">
   <div class="modal-content">
     <button type="button" id="closeTrajetInterneBusUdMModal" class="close-btn"><i class="fas fa-times"></i></button>
@@ -7,7 +9,7 @@
       <h3><i class="fas fa-bus"></i> Trajet interne de bus UdM</h3>
     </div>
     <div class="modal-body">
-      <div class="alert alert-danger" style="display:none;" id="trajetInterneBusUdMError"></div>
+      {{ error_container('trajetInterneBusUdMError') }}
       <form method="POST" id="trajetInterneBusUdMForm" class="modal-form" action="{{ trajet_interne_url or url_for('admin.trajet_interne_bus_udm') }}">
         {{ form_trajet_interne.hidden_tag() }}
         <div class="form-grid">
@@ -49,10 +51,16 @@
             {{ form_trajet_interne.kilometrage_actuel() }}
           </div>
         </div>
-        <button type="submit" class="submit-btn modal-submit">{{ form_trajet_interne.submit.label }}</button>
+        <div class="form-actions">
+          <button type="submit" class="submit-btn">
+            <i class="fas fa-save"></i> Enregistrer le trajet
+          </button>
+        </div>
       </form>
-      <div id="trajetInterneBusUdMFeedback"></div>
     </div>
   </div>
 </div>
-<!-- End Modal Trajet Interne Bus UdM -->
+
+<!-- Initialisation du gestionnaire unifié -->
+{% from 'shared/macros/form_macros.html' import init_modal_form %}
+{{ init_modal_form('trajetInterneBusUdMForm', 'trajetInterneBusUdMModal', 'trajetInterneBusUdMError', 'Trajet interne enregistré avec succès.') }}

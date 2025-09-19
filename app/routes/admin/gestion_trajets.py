@@ -114,7 +114,16 @@ def trajet_interne_bus_udm():
         form.numero_bus_udm.choices = []
 
     if not form.validate():
-        return jsonify({'success': False, 'message': 'Formulaire invalide', 'errors': form.errors}), 400
+        # Créer un message d'erreur plus spécifique
+        error_details = []
+        for field_name, errors in form.errors.items():
+            field_label = getattr(form[field_name], 'label', field_name)
+            field_label_text = field_label.text if hasattr(field_label, 'text') else str(field_label)
+            for error in errors:
+                error_details.append(f"{field_label_text}: {error}")
+
+        error_msg = " | ".join(error_details) if error_details else "Formulaire invalide"
+        return jsonify({'success': False, 'message': error_msg, 'errors': form.errors}), 400
 
     ok, msg = enregistrer_trajet_interne_bus_udm(form, current_user)
     status = 200 if ok else 400
@@ -129,19 +138,36 @@ def trajet_prestataire_modernise():
     from app.models.prestataire import Prestataire
 
     form = TrajetPrestataireForm(request.form)
-    
-    # Peupler les choix de prestataires dynamiquement
+
+    # Peupler UNIQUEMENT les choix de prestataires (pas les chauffeurs UdM)
     try:
         form.nom_prestataire.choices = [(p.id, p.nom_prestataire) for p in Prestataire.query.all()]
-    except Exception:
+        # Convertir en int pour la validation
+        if hasattr(form.nom_prestataire, 'coerce'):
+            form.nom_prestataire.coerce = int
+    except Exception as e:
         form.nom_prestataire.choices = []
+        print(f"Erreur lors du peuplement des prestataires: {e}")
+
+    # NE PAS peupler chauffeur_id et numero_bus_udm pour les prestataires
 
     print(f"DEBUG - Erreurs de validation: {form.errors}")
     print(f"DEBUG - Données reçues: {dict(request.form)}")
     print(f"DEBUG - Choix prestataires: {form.nom_prestataire.choices}")
+    print(f"DEBUG - Valeur nom_prestataire: {form.nom_prestataire.data}")
 
     if not form.validate():
-        return jsonify({'success': False, 'message': 'Formulaire invalide', 'errors': form.errors}), 400
+        # Créer un message d'erreur plus spécifique
+        error_details = []
+        for field_name, errors in form.errors.items():
+            field_label = getattr(form[field_name], 'label', field_name)
+            field_label_text = field_label.text if hasattr(field_label, 'text') else str(field_label)
+            for error in errors:
+                error_details.append(f"{field_label_text}: {error}")
+
+        error_msg = " | ".join(error_details) if error_details else "Formulaire invalide"
+        print(f"DEBUG - Validation échouée: {error_msg}")
+        return jsonify({'success': False, 'message': error_msg, 'errors': form.errors}), 400
 
     ok, msg = enregistrer_trajet_prestataire_modernise(form, current_user)
     status = 200 if ok else 400
@@ -159,12 +185,29 @@ def autres_trajets():
     try:
         form.chauffeur_id.choices = [(c.chauffeur_id, f"{c.nom} {c.prenom}") for c in Chauffeur.query.all()]
         form.numero_bus_udm.choices = [(a.numero, a.numero) for a in BusUdM.query.all()]
-    except Exception:
+    except Exception as e:
         form.chauffeur_id.choices = []
         form.numero_bus_udm.choices = []
+        print(f"Erreur lors du peuplement des choix autres trajets: {e}")
+
+    # Debug pour autres trajets
+    print(f"DEBUG AUTRES TRAJETS - Erreurs: {form.errors}")
+    print(f"DEBUG AUTRES TRAJETS - Données: {dict(request.form)}")
+    print(f"DEBUG AUTRES TRAJETS - Choix chauffeurs: {len(form.chauffeur_id.choices)}")
+    print(f"DEBUG AUTRES TRAJETS - Choix bus: {len(form.numero_bus_udm.choices)}")
 
     if not form.validate():
-        return jsonify({'success': False, 'message': 'Formulaire invalide', 'errors': form.errors}), 400
+        # Créer un message d'erreur plus spécifique
+        error_details = []
+        for field_name, errors in form.errors.items():
+            field_label = getattr(form[field_name], 'label', field_name)
+            field_label_text = field_label.text if hasattr(field_label, 'text') else str(field_label)
+            for error in errors:
+                error_details.append(f"{field_label_text}: {error}")
+
+        error_msg = " | ".join(error_details) if error_details else "Formulaire invalide"
+        print(f"DEBUG AUTRES TRAJETS - Validation échouée: {error_msg}")
+        return jsonify({'success': False, 'message': error_msg, 'errors': form.errors}), 400
 
     ok, msg = enregistrer_autres_trajets(form, current_user)
     status = 200 if ok else 400

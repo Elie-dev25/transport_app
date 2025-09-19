@@ -1,172 +1,115 @@
-<!-- Tableau de bord mécanicien -->
-<!-- Cette page est dédiée au mécanicien pour la gestion des entretiens, réparations, etc. -->
-
-<!-- Mecanicien dashboard -->
 {% extends "roles/mecanicien/_base_mecanicien.html" %}
-{% block title %}Dashboard Mécanicien{% endblock %}
+{% block title %}Tableau de Bord Mécanicien{% endblock %}
 
-{% block head %}
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <!-- CSS Modulaire - Architecture optimisée pour la maintenance -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard-main.css') }}?v=20250821">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
-{% endblock %}
+{% set active_page = 'dashboard' %}
+{% set page_title = 'Tableau de Bord Mécanicien' %}
 
-{% block content %}
-<div class="sidebar mecanicien-sidebar">
-    <div class="sidebar-header">
-        <div class="logo"><i class="fas fa-tools"></i></div>
-        <div class="admin-info">
-            <h2>Mécanicien</h2>
-            <p>Gestion des bus AED</p>
-        </div>
-    </div>
-    <div class="sidebar-content"></div>
-    <nav class="nav-menu sidebar-bottom">
-        <a class="nav-link" href="#"><i class="fas fa-cog"></i> Paramètres</a>
-        <a class="nav-link" href="{{ url_for('mecanicien.vidange') }}"><i class="fas fa-oil-can"></i> Vidange</a>
-        <a class="nav-link" href="#"><i class="fas fa-history"></i> Historique</a>
-        <a class="nav-link" href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
-    </nav>
-</div>
-<div class="main-content" style="margin-left:280px;min-height:100vh;">
-    <!-- Top Bar -->
-    <div class="top-bar">
-        <h1 class="page-title">État des Bus AED</h1>
-        <div class="top-bar-actions">
-            <div class="notification-bell" onclick="toggleNotifications()">
-                <i class="fas fa-bell"></i>
-                {% if notifications|length > 0 %}
-                    <span class="notification-badge">{{ notifications|length }}</span>
-                {% endif %}
+{% block dashboard_content %}
+        <!-- Statistics Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value">{{ stats.bus_total }}</div>
+                        <div class="stat-label">Bus AED Total</div>
+                    </div>
+                    <div class="stat-icon blue">
+                        <i class="fas fa-bus"></i>
+                    </div>
+                </div>
+                <div class="stat-change positive">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>Flotte UdM</span>
+                </div>
             </div>
-            <div class="user-menu">
-                <div class="user-avatar">{{ current_user.initials }}</div>
-                <div>
-                    <div style="font-weight: 600; font-size: 14px;">{{ ((current_user.nom ~ ' ' ~ current_user.prenom)|trim) or current_user.login }}</div>
-                    <div style="font-size: 12px; color: #64748b;">{{ current_user.login }}</div>
+
+            <div class="stat-card success">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value">{{ stats.bus_bon_etat }}</div>
+                        <div class="stat-label">Bus en Bon État</div>
+                    </div>
+                    <div class="stat-icon green">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                </div>
+                <div class="stat-change positive">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>Opérationnels</span>
+                </div>
+            </div>
+
+            <div class="stat-card danger">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value">{{ stats.bus_en_panne }}</div>
+                        <div class="stat-label">Bus en Panne</div>
+                    </div>
+                    <div class="stat-icon red">
+                        <i class="fas fa-exclamation-circle"></i>
+                    </div>
+                </div>
+                <div class="stat-change negative">
+                    <i class="fas fa-arrow-down"></i>
+                    <span>Hors service</span>
+                </div>
+            </div>
+
+            <div class="stat-card warning">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value">{{ stats.bus_vidange_urgente }}</div>
+                        <div class="stat-label">Vidanges Urgentes</div>
+                    </div>
+                    <div class="stat-icon orange">
+                        <i class="fas fa-oil-can"></i>
+                    </div>
+                </div>
+                <div class="stat-change negative">
+                    <i class="fas fa-arrow-down"></i>
+                    <span>À traiter</span>
                 </div>
             </div>
         </div>
-    </div>
-    <div class="dashboard-content">
-        <table style="width:100%;background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(30,64,175,0.07);overflow:hidden;">
-            <thead style="background:linear-gradient(90deg,#1e3a8a,#2563eb);color:#fff;">
-                <tr>
-                    <th style="padding:14px;">Numéro AED</th>
-                    <th>État</th>
-                    <th>Kilométrage</th>
-                    <th>Type Huile</th>
-                    <th>Km Critique Huile</th>
-                    <th>Km Restant</th>
-                    <th>Statut Huile</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for bus in bus_list %}
-                <tr style="text-align:center;">
-                    <td style="padding:10px 0;">{{ bus.numero }}</td>
-                    <td>{{ bus.etat_vehicule|status_label }}</td>
-                    <td>{{ bus.kilometrage if bus.kilometrage else '-' }} {{ 'km' if bus.kilometrage else '' }}</td>
-                    <td>{{ bus.type_huile if bus.type_huile else '-' }}</td>
-                    <td>{{ bus.km_critique_huile if bus.km_critique_huile else '-' }} {{ 'km' if bus.km_critique_huile else '' }}</td>
-                    <td>
-                        {% if bus.km_restant is not none %}
-                            {% if bus.km_restant <= 0 %}
-                                <span style="color:#ef4444;font-weight:bold;">URGENT</span>
-                            {% elif bus.km_restant <= 1000 %}
-                                <span style="color:#eab308;font-weight:bold;">{{ bus.km_restant }} km</span>
-                            {% else %}
-                                <span style="color:#22c55e;">{{ bus.km_restant }} km</span>
-                            {% endif %}
-                        {% else %}
-                            <span style="color:#94a3b8;">-</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        <div style="width:90px;height:16px;background:#f1f5f9;border-radius:8px;overflow:hidden;display:inline-block;vertical-align:middle;">
-                            <div style="width:100%;height:100%;background:{{ bus.color }};"></div>
-                        </div>
-                    </td>
-                    {% set slider_color = '#ef4444' if bus.etat_vehicule == 'DEFAILLANT' else '#22c55e' %}
-{% set slider_pos = '20px' if bus.etat_vehicule == 'DEFAILLANT' else '2px' %}
-{% set etat_color = '#ef4444' if bus.etat_vehicule == 'DEFAILLANT' else '#22c55e' %}
-{% set has_vidange = bus.color == '#eab308' or bus.color == '#ef4444' %}
-<td class="actions-cell">
-    <div class="action-group{% if not has_vidange %} no-vidange{% endif %}">
-        <div class="action-switch">
-            <label class="switch-etat" style="display:inline-flex;align-items:center;cursor:pointer;position:relative;">
-                <input type="checkbox" class="toggle-etat" data-id="{{ bus.id }}" {% if bus.etat_vehicule == 'DEFAILLANT' %}checked{% endif %} style="opacity:0;position:absolute;left:0;top:0;width:38px;height:20px;cursor:pointer;z-index:2;">
-                <span class="slider-etat" style="width:38px;height:20px;background:{{ slider_color }};border-radius:12px;position:relative;transition:background 0.2s;display:inline-block;z-index:1;">
-                    <span style="position:absolute;top:2px;left:{{ slider_pos }};width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 4px #0002;transition:left 0.2s;"></span>
-                </span>
-                <span style="margin-left:8px;font-size:13px;font-weight:bold;color:{{ etat_color }};">
-                    {% if bus.etat_vehicule == 'DEFAILLANT' %}Hors service{% else %}Bonne{% endif %}
-                </span>
-            </label>
-        </div>
-        <span class="action-separator"></span>
-        <div class="action-vidange">
-            {% if has_vidange %}
-            <button class="btn-vidange" data-id="{{ bus.id }}" title="Demander une vidange" style="background:#eab308;border:none;padding:2px 6px;border-radius:50%;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 1px 4px #eab30855;color:#fff;" data-bs-toggle="tooltip" data-bs-placement="top">📝</button>
-            {% endif %}
-        </div>
-    </div>
-</td>
-                </tr>
-                {% else %}
-                <tr><td colspan="6" style="padding:20px;color:#64748b;">Aucun bus AED enregistré.</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
 
-<!-- Notification Panel -->
-<div class="notification-panel" id="notificationPanel">
-    <div class="notification-header">
-        <h3>Notifications</h3>
-        <button onclick="toggleNotifications()" style="background: none; border: none; cursor: pointer; font-size: 16px;">
-            <i class="fas fa-times"></i>
-        </button>
-    </div>
-    {% for notif in notifications %}
-    <div class="notification-item">
-        <div class="notification-icon {{ notif.type }}">
-            <i class="{{ notif.icon }}"></i>
+        <!-- Actions Rapides -->
+        <div class="quick-actions">
+            <h2 class="section-title">
+                <i class="fas fa-bolt"></i>
+                Actions Rapides
+            </h2>
+            <div class="actions-grid">
+                <a href="{{ url_for('mecanicien.vidange') }}" class="action-btn">
+                    <i class="fas fa-oil-can"></i>
+                    <span>Vidange</span>
+                </a>
+                <a href="{{ url_for('mecanicien.carburation') }}" class="action-btn">
+                    <i class="fas fa-gas-pump"></i>
+                    <span>Carburation</span>
+                </a>
+                <a href="#" id="declare-panne-btn" class="action-btn">
+                    <i class="fas fa-triangle-exclamation"></i>
+                    <span>Déclaration de panne</span>
+                </a>
+                <a href="{{ url_for('mecanicien.depannage') }}" class="action-btn">
+                    <i class="fas fa-tools"></i>
+                    <span>Dépannage</span>
+                </a>
+            </div>
         </div>
-        <div>
-            <div style="font-weight: 600; margin-bottom: 5px;">{{ notif.title }}</div>
-            <div style="font-size: 14px; color: #64748b;">{{ notif.time }}</div>
-        </div>
-    </div>
-    {% endfor %}
-</div>
+
+        {% include 'shared/modals/_declaration_panne_modal.html' %}
+
+{% endblock %}
+
+{% block extra_scripts %}
 <script>
-$(document).ready(function() {
-    // Basculer l'état du véhicule
-    $(document).on('change', '.toggle-etat', function() {
-        var checkbox = $(this);
-        var aedId = checkbox.data('id');
-        $.post('/mecanicien/aed/' + aedId + '/toggle_etat', function(response) {
-            if (response.success) {
-                // Mettre à jour l'état visuellement sans recharger
-                var statusBadge = checkbox.closest('tr').find('.status-badge');
-                if (response.etat === 'DEFAILLANT') {
-                    statusBadge.removeClass('status-ok').addClass('status-defaillant').text('DÉFAILLANT');
-                } else {
-                    statusBadge.removeClass('status-defaillant').addClass('status-ok').text('BON');
-                }
-            } else {
-                alert('Erreur : ' + response.message);
-            }
-        });
-    });
-});
-$(function () {
-  $('[data-bs-toggle="tooltip"]').tooltip();
+$(function() {
+  // Bouton Déclaration de panne
+  $('#declare-panne-btn').on('click', function(e) {
+    e.preventDefault();
+    $('#panneModal').addClass('show');
+  });
 });
 </script>
 {% endblock %}

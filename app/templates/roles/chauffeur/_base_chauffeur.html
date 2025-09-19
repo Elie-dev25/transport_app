@@ -196,7 +196,8 @@
 {% block nav_menu %}
 <div class="nav-item">
     <a href="{{ url_for('chauffeur.dashboard') }}" class="nav-link{% if active_page == 'dashboard' %} active{% endif %}">
-        <i class="fas fa-tachometer-alt"></i> <span>Tableau de Bord</span>
+        <i class="fas fa-tachometer-alt"></i>
+        <span>Tableau de Bord</span>
     </a>
 </div>
 <div class="nav-item">
@@ -213,17 +214,20 @@
 </div>
 <div class="nav-item">
     <a href="{{ url_for('chauffeur.bus_udm') }}" class="nav-link{% if active_page == 'bus_udm' %} active{% endif %}">
-        <i class="fas fa-bus"></i> <span>Bus</span>
+        <i class="fas fa-bus"></i>
+        <span>Bus UdM</span>
     </a>
 </div>
 <div class="nav-item">
     <a href="{{ url_for('chauffeur.carburation') }}" class="nav-link{% if active_page == 'carburation' %} active{% endif %}">
-        <i class="fas fa-gas-pump"></i> <span>Carburation</span>
+        <i class="fas fa-gas-pump"></i>
+        <span>Carburation</span>
     </a>
-    </div>
+</div>
 <div class="nav-item">
     <a href="{{ url_for('chauffeur.bus_udm') }}?open=panne" class="nav-link">
-        <i class="fas fa-triangle-exclamation"></i> <span>Déclarer panne</span>
+        <i class="fas fa-triangle-exclamation"></i>
+        <span>Déclarer panne</span>
     </a>
 </div>
 {% endblock %}

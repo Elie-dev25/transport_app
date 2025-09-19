@@ -1,10 +1,12 @@
 <!-- Modal Déclaration de Panne -->
-<div id="panneModal" class="modal" aria-hidden="true" hidden>
-    <div class="modal-content" style="max-width: 600px;">
-        <div class="modal-header">
-            <h3><i class="fas fa-triangle-exclamation"></i> Déclaration de Panne</h3>
-            <button type="button" id="closePanneModal" class="close-btn">&times;</button>
-        </div>
+{% from 'shared/macros/form_macros.html' import error_container %}
+
+<div id="panneModal" class="modal">
+  <div class="modal-content">
+    <button type="button" id="closePanneModal" class="close-btn"><i class="fas fa-times"></i></button>
+    <div class="modal-header">
+      <h3><i class="fas fa-triangle-exclamation"></i> Déclaration de Panne</h3>
+    </div>
 
 <script>
 // Helpers universels pour la modale Déclaration de Panne
@@ -74,8 +76,9 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
         <div class="modal-body">
-            <form id="panneForm">
-                <div class="form-row">
+            {{ error_container('panneError') }}
+            <form id="panneForm" action="/admin/declarer_panne" method="POST">
+                <div class="form-grid">
                     <div class="form-group">
                         <label for="numero_bus_udm_panne">Numéro Bus UdM *</label>
                         <input type="text" id="numero_bus_udm_panne" name="numero_bus_udm" placeholder="Ex: UDM-1234" list="busUdMNumerosList" autocomplete="off">
@@ -85,8 +88,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         <label for="immatriculation_panne">Immatriculation</label>
                         <input type="text" id="immatriculation_panne" name="immatriculation" placeholder="Ex: AB-123-CD">
                     </div>
-                </div>
-                <div class="form-row">
                     <div class="form-group">
                         <label for="kilometrage_panne">Kilométrage actuel</label>
                         <input type="number" id="kilometrage_panne" name="kilometrage" step="0.1" placeholder="Ex: 152340" required>
@@ -100,28 +101,45 @@ document.addEventListener('DOMContentLoaded', function() {
                             <option value="HAUTE">Haute</option>
                         </select>
                     </div>
-                </div>
-                <div class="form-group">
-                    <label for="description_panne">Description de la panne *</label>
-                    <textarea id="description_panne" name="description" rows="4" required 
-                              placeholder="Décrivez la panne observée..."></textarea>
-                </div>
-                <div class="form-group">
-                    <label>
-                        <input type="checkbox" id="immobilisation_panne" name="immobilisation" value="1">
-                        Bus immobilisé (ne peut plus circuler)
-                    </label>
-                </div>
-                <div class="form-group">
-                    <label for="enregistre_par_panne">Enregistré par</label>
-                    <input type="text" id="enregistre_par_panne" name="enregistre_par" readonly style="background-color: #f3f4f6;"
-                           value="{{ ((current_user.nom ~ ' ' ~ current_user.prenom)|trim) or current_user.login }}">
+                    <div class="form-group full-width">
+                        <label for="description_panne">Description de la panne *</label>
+                        <textarea id="description_panne" name="description" rows="4" required
+                                  placeholder="Décrivez la panne observée..."></textarea>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>
+                            <input type="checkbox" id="immobilisation_panne" name="immobilisation" value="1">
+                            Bus immobilisé (ne peut plus circuler)
+                        </label>
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="enregistre_par_panne">Enregistré par</label>
+                        <input type="text" id="enregistre_par_panne" name="enregistre_par" readonly
+                               value="{{ ((current_user.nom ~ ' ' ~ current_user.prenom)|trim) or current_user.login }}">
+                    </div>
                 </div>
                 <div class="form-actions">
-                    
-                    <button type="submit" class="submit-btn">Enregistrer la panne</button>
+                    <button type="submit" class="submit-btn">
+                        <i class="fas fa-save"></i> Enregistrer la panne
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+<!-- Initialisation du gestionnaire unifié -->
+{% from 'shared/macros/form_macros.html' import init_modal_form %}
+{{ init_modal_form('panneForm', 'panneModal', 'panneError', 'Panne déclarée avec succès.') }}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Gestionnaire pour le bouton de fermeture
+    const closeBtn = document.getElementById('closePanneModal');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', function() {
+            FormModalManager.closeModal('panneModal');
+        });
+    }
+});
+</script>

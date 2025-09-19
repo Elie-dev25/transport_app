@@ -8,7 +8,7 @@ from wtforms import (
     StringField, IntegerField, SelectField, DateTimeLocalField,
     TextAreaField, HiddenField, SubmitField
 )
-from wtforms.validators import DataRequired, NumberRange, Optional
+# Imports supprimés car non utilisés
 
 from .constants import FormChoices, FormDefaults, FormLabels
 from .validators import CommonValidators, FormValidators
@@ -23,7 +23,7 @@ class BaseTrajetForm(FlaskForm):
     # Champs communs à tous les trajets
     date_heure_depart = DateTimeLocalField(
         FormLabels.DATE_HEURE_DEPART,
-        validators=CommonValidators.DATE_FUTURE,
+        validators=CommonValidators.DATE_TRAJET_EFFECTUE,
         format='%Y-%m-%dT%H:%M'
     )
     
@@ -42,20 +42,24 @@ class BaseTrajetForm(FlaskForm):
     chauffeur_id = SelectField(
         FormLabels.CHAUFFEUR,
         choices=[],  # Sera peuplé dynamiquement par FormService
-        validators=[CommonValidators.REQUIRED],
+        validators=[],  # Pas requis par défaut - sera ajouté selon le type de trajet
         coerce=int
     )
-    
+
     # Champs optionnels communs
     kilometrage_actuel = IntegerField(
         FormLabels.KILOMETRAGE_ACTUEL,
-        validators=CommonValidators.KILOMETRAGE,
+        validators=[],  # Pas requis par défaut - sera ajouté selon le type de trajet
         render_kw={'placeholder': FormDefaults.PLACEHOLDER_KILOMETRAGE}
     )
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._setup_common_choices()
+        # Pré-remplir avec l'heure actuelle si pas de données
+        if not self.date_heure_depart.data:
+            from datetime import datetime
+            self.date_heure_depart.data = datetime.now()
     
     def _setup_common_choices(self):
         """Configure les choix communs (peut être surchargé)"""
@@ -78,13 +82,13 @@ class BaseTrajetInterneForm(BaseTrajetForm):
     Classe de base pour les trajets internes (Bus UdM)
     Hérite de BaseTrajetForm et ajoute les champs spécifiques aux bus UdM
     """
-    
+
     lieu_depart = SelectField(
         FormLabels.LIEU_DEPART,
         choices=FormChoices.LIEUX,
         validators=CommonValidators.LIEU_VALIDE
     )
-    
+
     point_arriver = SelectField(
         FormLabels.LIEU_ARRIVEE,
         choices=FormChoices.LIEUX,
@@ -97,38 +101,72 @@ class BaseTrajetInterneForm(BaseTrajetForm):
         validators=[CommonValidators.REQUIRED]
     )
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Pour les trajets internes, chauffeur_id et kilometrage_actuel sont REQUIS
+        self.chauffeur_id.validators = [CommonValidators.REQUIRED]
+        self.kilometrage_actuel.validators = CommonValidators.KILOMETRAGE
+
     def validate_point_arriver(self, field):
         """Validation spécifique: lieu d'arrivée différent du départ"""
         FormValidators.validate_lieu_different(self, field)
 
 
-class BasePrestataireForm(BaseTrajetForm):
+class BasePrestataireForm(FlaskForm):
     """
     Classe de base pour les trajets prestataires
-    Hérite de BaseTrajetForm et ajoute les champs spécifiques aux prestataires
+    INDÉPENDANTE de BaseTrajetForm pour éviter les champs UdM non pertinents
     """
-    
+
+    # Champs communs aux trajets (copiés de BaseTrajetForm mais sans chauffeur_id/kilometrage_actuel)
+    date_heure_depart = DateTimeLocalField(
+        FormLabels.DATE_HEURE_DEPART,
+        validators=CommonValidators.DATE_TRAJET_EFFECTUE,
+        format='%Y-%m-%dT%H:%M'
+    )
+
+    type_passagers = SelectField(
+        FormLabels.TYPE_PASSAGERS,
+        choices=FormChoices.TYPE_PASSAGERS,
+        validators=CommonValidators.TYPE_PASSAGERS_VALIDE
+    )
+
+    nombre_places_occupees = IntegerField(
+        FormLabels.NOMBRE_PLACES_OCCUPEES,
+        validators=CommonValidators.NOMBRE_PLACES,
+        default=0
+    )
+
+    # Champs spécifiques aux prestataires
     nom_prestataire = SelectField(
         FormLabels.NOM_PRESTATAIRE,
         choices=[],  # Sera peuplé par FormService
-        validators=[CommonValidators.REQUIRED]
+        validators=[CommonValidators.REQUIRED],
+        coerce=int  # Convertir en entier pour correspondre aux IDs
     )
-    
+
     immat_bus = StringField(
         FormLabels.IMMAT_BUS,
         validators=CommonValidators.IMMATRICULATION
     )
-    
+
     nombre_places_bus = IntegerField(
         FormLabels.NOMBRE_PLACES_BUS,
         validators=CommonValidators.NOMBRE_PLACES,
         default=FormDefaults.NOMBRE_PLACES_BUS_PRESTATAIRE
     )
-    
+
     nom_chauffeur_prestataire = StringField(
         FormLabels.NOM_CHAUFFEUR_PRESTATAIRE,
         validators=CommonValidators.NOM_CHAUFFEUR
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Pré-remplir avec l'heure actuelle si pas de données
+        if not self.date_heure_depart.data:
+            from datetime import datetime
+            self.date_heure_depart.data = datetime.now()
 
 
 class BaseAutreTrajetForm(BaseTrajetForm):
@@ -136,7 +174,7 @@ class BaseAutreTrajetForm(BaseTrajetForm):
     Classe de base pour les autres trajets (hors ville, spéciaux)
     Hérite de BaseTrajetForm et ajoute les champs pour trajets spéciaux
     """
-    
+
     point_arriver = StringField(
         FormLabels.DESTINATION,
         validators=[
@@ -145,7 +183,7 @@ class BaseAutreTrajetForm(BaseTrajetForm):
         ],
         render_kw={'placeholder': FormDefaults.PLACEHOLDER_LIEU_ARRIVEE}
     )
-    
+
     motif_trajet = TextAreaField(
         FormLabels.MOTIF_TRAJET,
         validators=[
@@ -154,12 +192,25 @@ class BaseAutreTrajetForm(BaseTrajetForm):
         ],
         render_kw={'placeholder': FormDefaults.PLACEHOLDER_MOTIF, 'rows': 3}
     )
-    
+
     numero_bus_udm = SelectField(
         FormLabels.NUMERO_BUS_UDM,
         choices=[],  # Sera peuplé par FormService
         validators=[CommonValidators.REQUIRED]
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Pour les autres trajets, chauffeur_id et kilometrage_actuel sont REQUIS (bus UdM)
+        self.chauffeur_id.validators = [CommonValidators.REQUIRED]
+        self.kilometrage_actuel.validators = CommonValidators.KILOMETRAGE
+
+        # Pour les autres trajets, certains champs ne sont PAS requis (pas affichés dans le template)
+        self.type_passagers.validators = []  # Supprimer la validation obligatoire
+        self.type_passagers.data = 'ETUDIANT'  # Valeur par défaut
+
+        # nombre_places_occupees n'est pas affiché non plus, donner une valeur par défaut
+        self.nombre_places_occupees.data = 0  # Valeur par défaut
 
 
 # Formulaires spécialisés (legacy compatibility)

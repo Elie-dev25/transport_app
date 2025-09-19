@@ -1,0 +1,76 @@
+{# 
+   MACROS UNIFIÉES POUR LES FORMULAIRES
+   Évite la duplication de code - Bonne pratique
+#}
+
+{# Macro pour le conteneur d'erreur unifié #}
+{% macro error_container(error_id) %}
+<div id="{{ error_id }}" class="form-error-container">
+    <i class="fas fa-exclamation-triangle"></i>
+    <span class="error-text"></span>
+</div>
+{% endmacro %}
+
+{# Macro pour un formulaire modal unifié #}
+{% macro modal_form_container(modal_id, form_id, title, icon, error_id, action_url) %}
+<div id="{{ modal_id }}" class="modal" aria-hidden="true" hidden>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-{{ icon }}"></i> {{ title }}</h3>
+            <button type="button" class="close-btn" onclick="FormModalManager.closeModal('{{ modal_id }}')">&times;</button>
+        </div>
+        <div class="modal-body">
+            {{ error_container(error_id) }}
+            <form id="{{ form_id }}" action="{{ action_url }}" method="POST" class="modal-form">
+                {{ caller() }}
+            </form>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+{# Macro pour les boutons de soumission unifiés #}
+{% macro submit_button(text="Enregistrer", icon="save") %}
+<div class="form-actions">
+    <button type="submit" class="submit-btn">
+        <i class="fas fa-{{ icon }}"></i> {{ text }}
+    </button>
+</div>
+{% endmacro %}
+
+{# Macro pour initialiser un formulaire modal #}
+{% macro init_modal_form(form_id, modal_id, error_id, success_message=None) %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    FormModalManager.initModalForm(
+        '{{ form_id }}', 
+        '{{ modal_id }}', 
+        '{{ error_id }}'
+        {% if success_message %}, '{{ success_message }}'{% endif %}
+    );
+});
+</script>
+{% endmacro %}
+
+{# Macro pour un groupe de champs avec validation #}
+{% macro form_group(field, required=False, help_text=None) %}
+<div class="form-group">
+    {{ field.label(class="form-label" + (" required" if required else "")) }}
+    {{ field(class="form-input" + (" error" if field.errors else "")) }}
+    {% if field.errors %}
+        {% for error in field.errors %}
+            <span class="field-error">{{ error }}</span>
+        {% endfor %}
+    {% endif %}
+    {% if help_text %}
+        <small class="form-help">{{ help_text }}</small>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{# Macro pour une grille de formulaire responsive #}
+{% macro form_grid(columns=2) %}
+<div class="form-grid" style="grid-template-columns: repeat({{ columns }}, 1fr);">
+    {{ caller() }}
+</div>
+{% endmacro %}

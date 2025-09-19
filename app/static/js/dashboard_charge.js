@@ -184,32 +184,9 @@
 
         // Fonction pour initialiser les soumissions AJAX des formulaires
         function initTrajetFormsAjax() {
-            // Formulaire Trajet Interne
-            const trajetInterneForm = document.getElementById('trajetInterneBusUdMForm');
-            if (trajetInterneForm) {
-                trajetInterneForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    submitTrajetForm(this, 'trajetInterneBusUdMModal', 'trajetInterneBusUdMError');
-                });
-            }
-
-            // Formulaire Trajet Prestataire
-            const trajetPrestataireForm = document.getElementById('trajetPrestataireModerniseForm');
-            if (trajetPrestataireForm) {
-                trajetPrestataireForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    submitTrajetForm(this, 'trajetPrestataireModerniseModal', 'trajetPrestataireModerniseError');
-                });
-            }
-
-            // Formulaire Autres Trajets
-            const autresTrajetsForm = document.getElementById('autresTrajetsForm');
-            if (autresTrajetsForm) {
-                autresTrajetsForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    submitTrajetForm(this, 'autresTrajetsModal', 'autresTrajetsError');
-                });
-            }
+            // ⚠️ DÉSACTIVÉ - Les formulaires utilisent maintenant FormModalManager unifié
+            // Les gestionnaires sont dans main.js via init_modal_form()
+            console.log('Anciens gestionnaires AJAX désactivés - utilisation de FormModalManager');
         }
 
         // Fonction générique pour soumettre les formulaires de trajets

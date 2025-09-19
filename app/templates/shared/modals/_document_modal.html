@@ -1,26 +1,58 @@
 <!-- Modal formulaire document (réutilisable) -->
+{% from 'shared/macros/form_macros.html' import error_container %}
+
 <div id="docFormModal" class="modal">
-  <div class="modal-content" style="max-width:500px;">
-    <div class="modal-header"><h3>Ajouter un document administratif</h3><button type="button" id="closeDocFormModal" class="close-btn">&times;</button></div>
+  <div class="modal-content">
+    <button type="button" id="closeDocFormModal" class="close-btn"><i class="fas fa-times"></i></button>
+    <div class="modal-header">
+      <h3><i class="fas fa-file-alt"></i> Ajouter un document administratif</h3>
+    </div>
     <div class="modal-body">
-      <form id="docForm">
-        <div class="form-group">
-          <label>Type de document</label>
-          <select name="type_document" required>
-            <option value="">-- Choisir --</option>
-            <option value="VISITE_TECHNIQUE">Visite technique</option>
-            <option value="ASSURANCE_VIGNETTE">Assurance/Vignette</option>
-            <option value="TAXE_STATIONNEMENT">Taxe de stationnement</option>
-            <option value="TAXE_PUBLICITAIRE">Taxe publicitaire</option>
-            <option value="CARTE_GRISE">Carte grise</option>
-          </select>
+      {{ error_container('documentError') }}
+      <form id="docForm" method="POST">
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <label>Type de document</label>
+            <select name="type_document" required>
+              <option value="">-- Choisir --</option>
+              <option value="VISITE_TECHNIQUE">Visite technique</option>
+              <option value="ASSURANCE_VIGNETTE">Assurance/Vignette</option>
+              <option value="TAXE_STATIONNEMENT">Taxe de stationnement</option>
+              <option value="TAXE_PUBLICITAIRE">Taxe publicitaire</option>
+              <option value="CARTE_GRISE">Carte grise</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Date de production</label>
+            <input type="date" name="date_debut" required>
+          </div>
+          <div class="form-group" id="dateExpGroup">
+            <label>Date expiration *</label>
+            <input type="date" name="date_expiration" required>
+          </div>
         </div>
-        <div class="form-group"><label>Date de production</label><input type="date" name="date_debut" required></div>
-        <div class="form-group" id="dateExpGroup"><label>Date expiration *</label><input type="date" name="date_expiration" required></div>
-        <div style="text-align:right;margin-top:12px;">
-          <button type="submit" class="submit-btn">Enregistrer</button>
+        <div class="form-actions">
+          <button type="submit" class="submit-btn">
+            <i class="fas fa-save"></i> Enregistrer le document
+          </button>
         </div>
       </form>
     </div>
   </div>
 </div>
+
+<!-- Initialisation du gestionnaire unifié -->
+{% from 'shared/macros/form_macros.html' import init_modal_form %}
+{{ init_modal_form('docForm', 'docFormModal', 'documentError', 'Document ajouté avec succès.') }}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Gestionnaire pour le bouton de fermeture
+    const closeBtn = document.getElementById('closeDocFormModal');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', function() {
+            FormModalManager.closeModal('docFormModal');
+        });
+    }
+});
+</script>

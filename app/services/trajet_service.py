@@ -434,7 +434,7 @@ def enregistrer_trajet_prestataire_modernise(form, user) -> Tuple[bool, str]:
         # Debug: afficher les données reçues du formulaire
         print(f"DEBUG MODERNISE - Form data:")
         print(f"  - nom_prestataire: {form.nom_prestataire.data}")
-        print(f"  - nom_chauffeur: {form.nom_chauffeur.data}")
+        print(f"  - nom_chauffeur_prestataire: {form.nom_chauffeur_prestataire.data}")
         print(f"  - immat_bus: {form.immat_bus.data}")
         print(f"  - lieu_depart: {form.lieu_depart.data}")
         print(f"  - point_arriver: {form.point_arriver.data}")
@@ -452,7 +452,7 @@ def enregistrer_trajet_prestataire_modernise(form, user) -> Tuple[bool, str]:
             chauffeur_id=None,
             numero_bus_udm=None,
             immat_bus=form.immat_bus.data,
-            nom_chauffeur=form.nom_chauffeur.data,
+            nom_chauffeur=form.nom_chauffeur_prestataire.data,
             enregistre_par=user.utilisateur_id,
         )
         

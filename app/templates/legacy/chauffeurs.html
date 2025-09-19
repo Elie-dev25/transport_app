@@ -1,13 +1,21 @@
 {% if base_template is defined %}
     {% extends base_template %}
-{% elif superviseur_mode %}
+{% elif superviseur_mode is defined and superviseur_mode %}
     {% extends "roles/superviseur/_base_superviseur.html" %}
-{% elif current_user.role == 'ADMIN' or current_user.role == 'RESPONSABLE' %}
-    {% extends "roles/admin/_base_admin.html" %}
-{% elif current_user.role == 'CHARGE' %}
-    {% extends "roles/charge_transport/_base_charge.html" %}
-{% elif current_user.role == 'SUPERVISEUR' %}
-    {% extends "roles/superviseur/_base_superviseur.html" %}
+{% elif current_user and current_user.is_authenticated %}
+    {% if current_user.role == 'ADMIN' or current_user.role == 'RESPONSABLE' %}
+        {% extends "roles/admin/_base_admin.html" %}
+    {% elif current_user.role == 'CHARGE' %}
+        {% extends "roles/charge_transport/_base_charge.html" %}
+    {% elif current_user.role == 'SUPERVISEUR' %}
+        {% extends "roles/superviseur/_base_superviseur.html" %}
+    {% elif current_user.role == 'MECANICIEN' %}
+        {% extends "roles/mecanicien/_base_mecanicien.html" %}
+    {% elif current_user.role == 'CHAUFFEUR' %}
+        {% extends "roles/chauffeur/_base_chauffeur.html" %}
+    {% else %}
+        {% extends "roles/admin/_base_admin.html" %}
+    {% endif %}
 {% else %}
     {% extends "roles/admin/_base_admin.html" %}
 {% endif %}
@@ -300,12 +308,6 @@
                     </h3>
                     <p class="table-subtitle">Gestion du personnel de conduite</p>
                 </div>
-                {% if not readonly %}
-                <button id="openAddChauffeurModal" class="btn btn-success d-flex align-items-center gap-2" title="Ajouter un chauffeur">
-                    <i class="fas fa-plus"></i>
-                    <span>Ajouter un chauffeur</span>
-                </button>
-                {% endif %}
             </div>
         </div>
 
@@ -323,7 +325,7 @@
                     <th>Permis</th>
                     <th>Contact</th>
                     <th>Statut</th>
-                    {% if not readonly %}
+                    {% if not readonly and current_user.role != 'CHARGE' %}
                     <th class="no-sort">Actions</th>
                     {% endif %}
                 </tr>
@@ -384,7 +386,7 @@
                             </span>
                         {% endif %}
                     </td>
-                    {% if not readonly %}
+                    {% if not readonly and current_user.role != 'CHARGE' %}
                     <td>
                         <div class="table-actions">
                             <button class="table-btn edit edit-statut-btn"
@@ -405,7 +407,7 @@
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="{% if readonly %}5{% else %}6{% endif %}" class="table-empty">
+                    <td colspan="{% if readonly or current_user.role == 'CHARGE' %}5{% else %}6{% endif %}" class="table-empty">
                         <i class="fas fa-user-tie"></i>
                         <h5>Aucun chauffeur enregistré</h5>
                         {% if not readonly %}
@@ -658,12 +660,9 @@ $(function() {
   $('.edit-statut-btn').on('click', function(e) {
     e.preventDefault();
     const chauffeurId = $(this).data('id');
-    const nom = $(this).data('nom');
-    const prenom = $(this).data('prenom');
 
-    // Remplir les informations du chauffeur dans la modale
+    // Remplir l'ID du chauffeur dans la modale
     $('#chauffeurId').val(chauffeurId);
-    $('#chauffeurNomPrenom').text(nom + ' ' + prenom);
 
     // Afficher la modale
     $('#editStatutChauffeurModal').addClass('show');
@@ -870,29 +869,55 @@ $(function() {
 // Fonction pour imprimer la liste des chauffeurs
 function printChauffeursList() {
   const printArea = document.getElementById('printListeArea');
-  const originalContent = document.body.innerHTML;
 
-  // Créer une copie de la zone d'impression avec la classe print-area
+  if (!printArea) {
+    alert('Zone d\'impression non trouvée');
+    return;
+  }
+
+  // Créer une copie de la zone d'impression
   const printContent = printArea.cloneNode(true);
   printContent.classList.remove('d-none');
-  printContent.classList.add('print-area');
+  printContent.style.display = 'block';
+  printContent.style.visibility = 'visible';
+  printContent.style.position = 'static';
 
   // Définir la date d'impression
   const now = new Date();
   const dateStr = now.toLocaleDateString('fr-FR') + ' à ' + now.toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'});
-  printContent.querySelector('#printDate').textContent = dateStr;
+  const dateElement = printContent.querySelector('#printDate');
+  if (dateElement) {
+    dateElement.textContent = dateStr;
+  }
 
-  // Remplacer le contenu de la page
-  document.body.innerHTML = printContent.outerHTML;
+  // Créer une nouvelle fenêtre pour l'impression
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Liste des Chauffeurs</title>
+      <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .print-header { text-align: center; margin-bottom: 30px; }
+        .print-header h1 { color: #333; margin-bottom: 10px; }
+        .print-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .print-table th, .print-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .print-table th { background-color: #f5f5f5; font-weight: bold; }
+        .print-table tr:nth-child(even) { background-color: #f9f9f9; }
+        @media print { body { margin: 0; } }
+      </style>
+    </head>
+    <body>
+      ${printContent.outerHTML}
+    </body>
+    </html>
+  `);
 
-  // Imprimer
-  window.print();
-
-  // Restaurer le contenu original
-  document.body.innerHTML = originalContent;
-
-  // Réattacher les événements (nécessaire après innerHTML)
-  location.reload();
+  printWindow.document.close();
+  printWindow.focus();
+  printWindow.print();
+  printWindow.close();
 }
 
 // Fonction pour imprimer la planification des chauffeurs
@@ -939,10 +964,27 @@ function generatePlanningTableFromAjax(planningData) {
 // Générer le tableau de planification à partir des données de la page
 function generatePlanningFromPage() {
   const tbody = document.getElementById('planningTableBody');
+  if (!tbody) {
+    console.error('Tableau de planification non trouvé');
+    return;
+  }
+
   tbody.innerHTML = '';
 
-  // Parcourir tous les chauffeurs visibles dans le tableau
-  const chauffeurRows = document.querySelectorAll('tbody tr');
+  // Parcourir tous les chauffeurs visibles dans le tableau principal
+  const chauffeurRows = document.querySelectorAll('.table-container tbody tr');
+
+  if (chauffeurRows.length === 0) {
+    console.warn('Aucune ligne de chauffeur trouvée');
+    // Ajouter une ligne par défaut
+    const newRow = tbody.insertRow();
+    newRow.innerHTML = `
+      <td colspan="5" style="text-align: center; font-style: italic;">
+        Aucune donnée de planification disponible
+      </td>
+    `;
+    return;
+  }
 
   chauffeurRows.forEach(function(row) {
     const cells = row.querySelectorAll('td');
@@ -1012,29 +1054,62 @@ function generatePlanningFromPage() {
 // Imprimer le tableau de planification
 function printPlanningTable() {
   const printArea = document.getElementById('printPlanningArea');
-  const originalContent = document.body.innerHTML;
 
-  // Créer une copie de la zone d'impression avec la classe print-area
+  if (!printArea) {
+    alert('Zone d\'impression de planification non trouvée');
+    return;
+  }
+
+  // Vérifier qu'il y a des données dans le tableau
+  const tbody = printArea.querySelector('#planningTableBody');
+  if (!tbody || tbody.children.length === 0) {
+    alert('Aucune donnée de planification à imprimer');
+    return;
+  }
+
+  // Créer une copie de la zone d'impression
   const printContent = printArea.cloneNode(true);
   printContent.classList.remove('d-none');
-  printContent.classList.add('print-area');
+  printContent.style.display = 'block';
+  printContent.style.visibility = 'visible';
+  printContent.style.position = 'static';
 
   // Définir la date d'impression
   const now = new Date();
   const dateStr = now.toLocaleDateString('fr-FR') + ' à ' + now.toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'});
-  printContent.querySelector('#printPlanningDate').textContent = dateStr;
+  const dateElement = printContent.querySelector('#printPlanningDate');
+  if (dateElement) {
+    dateElement.textContent = dateStr;
+  }
 
-  // Remplacer le contenu de la page
-  document.body.innerHTML = printContent.outerHTML;
+  // Créer une nouvelle fenêtre pour l'impression
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Planification des Chauffeurs</title>
+      <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .print-header { text-align: center; margin-bottom: 30px; }
+        .print-header h1 { color: #333; margin-bottom: 10px; }
+        .print-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .print-table th, .print-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .print-table th { background-color: #f5f5f5; font-weight: bold; }
+        .print-table tr:nth-child(even) { background-color: #f9f9f9; }
+        @media print { body { margin: 0; } }
+      </style>
+    </head>
+    <body>
+      ${printContent.outerHTML}
+    </body>
+    </html>
+  `);
 
-  // Imprimer
-  window.print();
-
-  // Restaurer le contenu original
-  document.body.innerHTML = originalContent;
-
-  // Réattacher les événements (nécessaire après innerHTML)
-  location.reload();
+  printWindow.document.close();
+  printWindow.focus();
+  printWindow.print();
+  printWindow.close();
 }
 
 // Fonction pour charger les autres statuts du chauffeur

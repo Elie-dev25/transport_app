@@ -8,49 +8,49 @@
 <div class="nav-item">
     <a href="{{ url_for('superviseur.dashboard') }}" class="nav-link {% if active_page == 'dashboard' %}active{% endif %}">
         <i class="fas fa-tachometer-alt"></i>
-        Dashboard
+        <span>Dashboard</span>
     </a>
 </div>
 <div class="nav-item">
     <a href="{{ url_for('superviseur.carburation') }}" class="nav-link {% if active_page == 'carburation' %}active{% endif %}">
         <i class="fas fa-gas-pump"></i>
-        Carburation
+        <span>Carburation</span>
     </a>
 </div>
 <div class="nav-item">
     <a href="{{ url_for('superviseur.bus_udm') }}" class="nav-link {% if active_page == 'bus_udm' %}active{% endif %}">
         <i class="fas fa-bus"></i>
-        Bus UdM
+        <span>Bus UdM</span>
     </a>
 </div>
 <div class="nav-item">
     <a href="{{ url_for('superviseur.vidanges') }}" class="nav-link {% if active_page == 'vidanges' %}active{% endif %}">
         <i class="fas fa-oil-can"></i>
-        Vidanges
+        <span>Vidanges</span>
     </a>
 </div>
 <div class="nav-item">
     <a href="{{ url_for('superviseur.chauffeurs') }}" class="nav-link {% if active_page == 'chauffeurs' %}active{% endif %}">
         <i class="fas fa-user-tie"></i>
-        Chauffeurs
+        <span>Chauffeurs</span>
     </a>
 </div>
 <div class="nav-item">
     <a href="{{ url_for('superviseur.utilisateurs') }}" class="nav-link {% if active_page == 'utilisateurs' %}active{% endif %}">
         <i class="fas fa-users"></i>
-        Utilisateurs
+        <span>Utilisateurs</span>
     </a>
 </div>
 <div class="nav-item">
     <a href="{{ url_for('superviseur.maintenance') }}" class="nav-link {% if active_page == 'maintenance' %}active{% endif %}">
         <i class="fas fa-wrench"></i>
-        Maintenance
+        <span>Maintenance</span>
     </a>
 </div>
 <div class="nav-item">
     <a href="{{ url_for('superviseur.rapports') }}" class="nav-link {% if active_page == 'rapports' %}active{% endif %}">
         <i class="fas fa-chart-bar"></i>
-        Rapports
+        <span>Rapports</span>
     </a>
 </div>
 {% endblock %}

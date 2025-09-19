@@ -319,7 +319,8 @@ def bus_udm():
             bus_list=buses,  # Le template attend bus_list, pas buses
             current_user=current_user,
             active_page='bus_udm',
-            readonly=True  # Mode lecture seule pour les chauffeurs
+            readonly=True,  # Mode lecture seule pour les chauffeurs
+            base_template='roles/chauffeur/_base_chauffeur.html'
         )
     except Exception as e:
         print(f"Erreur lors du chargement des bus: {str(e)}")
@@ -329,7 +330,8 @@ def bus_udm():
             current_user=current_user,
             active_page='bus_udm',
             readonly=True,
-            error_message="Erreur lors du chargement de la liste des bus"
+            error_message="Erreur lors du chargement de la liste des bus",
+            base_template='roles/chauffeur/_base_chauffeur.html'
         )
 
 @bp.route('/trafic')

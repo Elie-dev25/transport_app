@@ -1,4 +1,8 @@
+{% if current_user.role == 'MECANICIEN' %}
+{% extends "roles/mecanicien/_base_mecanicien.html" %}
+{% else %}
 {% extends "roles/admin/_base_admin.html" %}
+{% endif %}
 {% from 'shared/macros/tableaux_components.html' import table_container, status_badge, icon_cell, date_cell, number_cell, money_cell %}
 
 {% block title %}Dépannage{% endblock %}

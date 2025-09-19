@@ -1,9 +1,17 @@
+{% if base_template is defined %}
+{% extends base_template %}
+{% elif current_user.role == 'MECANICIEN' %}
+{% extends "roles/mecanicien/_base_mecanicien.html" %}
+{% elif current_user.role == 'CHARGE' %}
+{% extends "roles/charge_transport/_base_charge.html" %}
+{% else %}
 {% extends "roles/admin/_base_admin.html" %}
+{% endif %}
 {% from 'shared/macros/tableaux_components.html' import table_container, status_badge, icon_cell, date_cell, number_cell, money_cell %}
 
 {% block title %}Fiche personnel Bus UdM{% endblock %}
 
-{% set active_page = 'bus' %}
+{% set active_page = 'bus_udm' %}
 {% set page_title = 'Fiche personnel Bus UdM' %}
 
 {% block dashboard_content %}
@@ -18,10 +26,22 @@
             <p class="page-subtitle">Détails complets et gestion documentaire du véhicule</p>
         </div>
         <div class="page-actions">
+            {% if current_user.role == 'MECANICIEN' %}
+            <a href="{{ url_for('mecanicien.bus_udm') }}" class="table-btn secondary">
+                <i class="fas fa-arrow-left"></i>
+                Retour à la liste
+            </a>
+            {% elif current_user.role == 'CHARGE' %}
+            <a href="{{ url_for('charge_transport.bus') }}" class="table-btn secondary">
+                <i class="fas fa-arrow-left"></i>
+                Retour à la liste
+            </a>
+            {% else %}
             <a href="{{ url_for('admin.bus') }}" class="table-btn secondary">
                 <i class="fas fa-arrow-left"></i>
                 Retour à la liste
             </a>
+            {% endif %}
         </div>
     </div>
 

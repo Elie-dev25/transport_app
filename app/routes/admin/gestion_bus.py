@@ -230,6 +230,10 @@ def details_bus(bus_id):
     # Historique des pannes
     pannes = PanneBusUdM.query.filter_by(bus_udm_id=bus.id).order_by(PanneBusUdM.date_heure.desc()).all()
 
+    # Historique des dépannages
+    from app.models.depannage import Depannage
+    depannages = Depannage.query.filter_by(bus_udm_id=bus.id).order_by(Depannage.date_heure.desc()).all()
+
     # Récupérer les documents liés à ce bus via le numéro (FK: DocumentBusUdM.numero_bus_udm -> BusUdM.numero)
     documents = DocumentBusUdM.query.filter_by(numero_bus_udm=bus.numero).all()
 
@@ -275,6 +279,7 @@ def details_bus(bus_id):
         carburations=carburations,
         vidanges=vidanges,
         pannes=pannes,
+        depannages=depannages,
         documents=documents_vm,
     )
 

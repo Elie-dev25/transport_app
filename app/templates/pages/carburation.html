@@ -4,6 +4,8 @@
 {% extends "roles/superviseur/_base_superviseur.html" %}
 {% elif readonly %}
 {% extends "roles/chauffeur/_base_chauffeur.html" %}
+{% elif current_user.role == 'MECANICIEN' %}
+{% extends "roles/mecanicien/_base_mecanicien.html" %}
 {% else %}
 {% extends "roles/admin/_base_admin.html" %}
 {% endif %}
@@ -17,7 +19,26 @@
 
 {% block extra_head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/tableaux.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/form-errors.css') }}">
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+/* Styles de base pour les modales */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    align-items: center;
+    justify-content: center;
+}
+.modal.show {
+    display: flex;
+}
+</style>
 {% endblock %}
 
 {% block dashboard_content %}
@@ -197,69 +218,69 @@
 
 {# --- Modale --- #}
 <!-- Formulaire de confirmation carburation -->
-<div id="formulaireCarburationModal" class="modal" aria-hidden="true">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3><i class="fas fa-gas-pump"></i> Formulaire de confirmation carburation</h3>
-            <button type="button" class="close-btn" onclick="closeFormulaireCarburation()">&times;</button>
-        </div>
-        <div class="modal-body">
-        <form id="formulaire-carburation">
-            <input type="hidden" id="bus_udm_id_hidden" name="bus_udm_id_hidden">
-            <div style="margin-bottom:12px;display:flex;gap:12px;">
-                <div style="flex:1;">
-                    <label for="numero_bus_udm">Numéro Bus UdM :</label>
-                    <input type="text" id="numero_bus_udm" name="numero_bus_udm" readonly style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;background:#f3f4f6;">
-                </div>
-                <div style="flex:1;">
-                    <label for="kilometrage_input">Kilométrage :</label>
-                    <input type="number" id="kilometrage_input" name="kilometrage_input" min="0" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
-                </div>
-            </div>
-            <div style="margin-bottom:12px;display:flex;gap:12px;">
-                <div style="flex:1;">
-                    <label for="quantite_input">Quantité (L) :</label>
-                    <input type="number" id="quantite_input" name="quantite_input" step="0.1" min="0" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
-                </div>
-                <div style="flex:1;">
-                    <label for="prix_unitaire_input">Prix unitaire (FCFA/L) :</label>
-                    <input type="number" id="prix_unitaire_input" name="prix_unitaire_input" step="0.01" min="0" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
-                </div>
-            </div>
-            <div style="margin-bottom:12px;display:flex;gap:12px;">
-                <div style="flex:1;">
-                    <label for="cout_total_input">Coût total (FCFA) :</label>
-                    <input type="number" id="cout_total_input" name="cout_total_input" readonly style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;background:#f3f4f6;">
-                </div>
-                <div style="flex:1;">
-                    <!-- Espace vide pour alignement -->
-                </div>
-            </div>
-            <div style="margin-bottom:12px;display:flex;gap:12px;">
-                <div style="flex:1;">
-                    <label for="chauffeur_select">Chauffeur :</label>
-                    <select id="chauffeur_select" name="chauffeur_select" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
-                        <option value="">-- Sélectionner un chauffeur --</option>
-                        {% for chauffeur in chauffeurs %}
-                        <option value="{{ chauffeur.chauffeur_id }}">{{ chauffeur.nom }} {{ chauffeur.prenom }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div style="flex:1;">
-                    <label for="superviseur_input">Superviseur :</label>
-                    <input type="text" id="superviseur_input" name="superviseur_input" readonly value="{{ (current_user.nom ~ ' ' ~ current_user.prenom)|trim or current_user.login }}" style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;background:#f3f4f6;">
-                    <input type="hidden" id="superviseur_id" name="superviseur_id" value="{{ current_user.utilisateur_id }}">
-                </div>
-            </div>
-            <div style="margin-bottom:12px;">
-                <label for="remarque_input">Remarque :</label>
-                <textarea id="remarque_input" name="remarque_input" rows="3" style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;"></textarea>
-            </div>
-            <button type="submit" class="action-btn" style="width:100%;margin-top:8px;"><i class="fas fa-save"></i> Enregistrer la carburation</button>
-        </form>
-        </div>
+{% from 'shared/macros/form_macros.html' import error_container %}
+
+<div id="formulaireCarburationModal" class="modal">
+  <div class="modal-content">
+    <button type="button" id="closeFormulaireCarburationModal" class="close-btn"><i class="fas fa-times"></i></button>
+    <div class="modal-header">
+      <h3><i class="fas fa-gas-pump"></i> Carburation</h3>
     </div>
+    <div class="modal-body">
+      {{ error_container('carburationError') }}
+      <form method="POST" id="formulaire-carburation" class="modal-form">
+        <input type="hidden" id="bus_udm_id_hidden" name="bus_udm_id_hidden">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="numero_bus_udm">Numéro Bus UdM</label>
+            <input type="text" id="numero_bus_udm" name="numero_bus_udm" readonly>
+          </div>
+          <div class="form-group">
+            <label for="kilometrage_input">Kilométrage</label>
+            <input type="number" id="kilometrage_input" name="kilometrage_input" min="0" required>
+          </div>
+          <div class="form-group">
+            <label for="quantite_input">Quantité (L)</label>
+            <input type="number" id="quantite_input" name="quantite_input" step="0.1" min="0" required>
+          </div>
+          <div class="form-group">
+            <label for="prix_unitaire_input">Prix unitaire (FCFA/L)</label>
+            <input type="number" id="prix_unitaire_input" name="prix_unitaire_input" step="0.01" min="0" required>
+          </div>
+          <div class="form-group">
+            <label for="cout_total_input">Coût total (FCFA)</label>
+            <input type="number" id="cout_total_input" name="cout_total_input" readonly>
+          </div>
+          <div class="form-group">
+            <label for="chauffeur_select">Chauffeur</label>
+            <select id="chauffeur_select" name="chauffeur_select" required>
+              <option value="">-- Sélectionner un chauffeur --</option>
+              {% for chauffeur in chauffeurs %}
+              <option value="{{ chauffeur.chauffeur_id }}">{{ chauffeur.nom }} {{ chauffeur.prenom }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="superviseur_input">Superviseur</label>
+            <input type="text" id="superviseur_input" name="superviseur_input" readonly value="{{ (current_user.nom ~ ' ' ~ current_user.prenom)|trim or current_user.login }}">
+            <input type="hidden" id="superviseur_id" name="superviseur_id" value="{{ current_user.utilisateur_id }}">
+          </div>
+          <div class="form-group full-width">
+            <label for="remarque_input">Remarque (optionnel)</label>
+            <textarea id="remarque_input" name="remarque_input" rows="3"></textarea>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="submit-btn">
+            <i class="fas fa-save"></i> Confirmer la carburation
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>
+
+<!-- Modal carburation avec gestion spécifique -->
 {% endblock %}
 
 {% block extra_scripts %}
@@ -325,26 +346,74 @@ document.addEventListener('DOMContentLoaded', function () {
                 // MAJ de la ligne correspondante
                 if (data.bus_updated) updateBusRow(data.bus_updated);
                 closeFormulaireCarburation();
+
+                // Confirmation avec SweetAlert2
+                Swal.fire({
+                    title: 'Succès!',
+                    text: 'Carburation enregistrée avec succès.',
+                    icon: 'success',
+                    confirmButtonText: 'OK'
+                });
+
                 // Rafraîchir l'historique sans recharger la page
                 if (typeof filterHistoriqueCarburation === 'function') {
                     filterHistoriqueCarburation();
                 }
             } else {
-                alert('Erreur: ' + (data.message || 'enregistrement'));
+                // Afficher l'erreur dans le formulaire
+                showCarburationError(data.message || 'Erreur lors de l\'enregistrement');
             }
         })
-        .catch(() => alert('Erreur serveur.'));
+        .catch(() => {
+            showCarburationError('Erreur de connexion au serveur.');
+        });
+    });
+
+    // Gestionnaire pour le bouton de fermeture
+    document.getElementById('closeFormulaireCarburationModal').addEventListener('click', closeFormulaireCarburation);
+
+    // Fermer la modal en cliquant en dehors
+    document.getElementById('formulaireCarburationModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeFormulaireCarburation();
+        }
     });
 });
 
-// Helpers d'ouverture/fermeture
+// Fonctions d'ouverture/fermeture de la modal carburation
 function openFormulaireCarburation() {
-    const m = document.getElementById('formulaireCarburationModal');
-    if (m) m.setAttribute('aria-hidden', 'false');
+    const modal = document.getElementById('formulaireCarburationModal');
+    if (modal) {
+        modal.classList.add('show');
+        // Effacer les erreurs précédentes
+        hideCarburationError();
+    }
 }
+
 function closeFormulaireCarburation() {
-    const m = document.getElementById('formulaireCarburationModal');
-    if (m) m.setAttribute('aria-hidden', 'true');
+    const modal = document.getElementById('formulaireCarburationModal');
+    if (modal) {
+        modal.classList.remove('show');
+        // Réinitialiser le formulaire
+        document.getElementById('formulaire-carburation').reset();
+        hideCarburationError();
+    }
+}
+
+function showCarburationError(message) {
+    const errorDiv = document.getElementById('carburationError');
+    if (errorDiv) {
+        errorDiv.textContent = message;
+        errorDiv.style.display = 'block';
+    }
+}
+
+function hideCarburationError() {
+    const errorDiv = document.getElementById('carburationError');
+    if (errorDiv) {
+        errorDiv.style.display = 'none';
+        errorDiv.textContent = '';
+    }
 }
 
 function printCarburationFiche() {

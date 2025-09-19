@@ -1,13 +1,16 @@
 <!-- Modal for Add Bus Form -->
+{% from 'shared/macros/form_macros.html' import error_container %}
+
 <div id="addBusModal" class="modal">
   <div class="modal-content">
+    <button type="button" id="closeAddBusModal" class="close-btn"><i class="fas fa-times"></i></button>
     <div class="modal-header">
       <h3><i class="fas fa-bus"></i> Ajouter un bus UdM</h3>
-      <button type="button" id="closeAddBusModal" class="close-btn">&times;</button>
     </div>
     <div class="modal-body">
-      <form id="addBusForm">
-        <div class="form-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      {{ error_container('addBusError') }}
+      <form id="addBusForm" action="/admin/ajouter_bus_ajax" method="POST">
+        <div class="form-grid">
           <div class="form-group">
             <label>Numéro du bus :</label>
             <input type="text" name="numero" placeholder="Ex: AED-01" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
@@ -90,8 +93,32 @@
             <input type="date" name="derniere_maintenance" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
           </div>
         </div>
-        <button type="submit" class="submit-btn" style="width:100%;margin-top:16px;padding:12px;background:#2563eb;color:#fff;border:none;border-radius:8px;cursor:pointer;">Ajouter</button>
+        <div class="form-actions">
+          <button type="submit" class="submit-btn">
+            <i class="fas fa-bus"></i> Ajouter le bus
+          </button>
+        </div>
       </form>
-    </div> 
+    </div>
   </div>
 </div>
+
+<!-- Initialisation du gestionnaire unifié -->
+{% from 'shared/macros/form_macros.html' import init_modal_form %}
+{{ init_modal_form('addBusForm', 'addBusModal', 'addBusError', 'Bus ajouté avec succès.') }}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Gestionnaire pour le bouton de fermeture (secours si pas défini ailleurs)
+    const closeBtn = document.getElementById('closeAddBusModal');
+    if (closeBtn && !closeBtn.hasAttribute('data-listener-added')) {
+        closeBtn.addEventListener('click', function() {
+            const modal = document.getElementById('addBusModal');
+            if (modal) {
+                modal.classList.remove('show');
+            }
+        });
+        closeBtn.setAttribute('data-listener-added', 'true');
+    }
+});
+</script>

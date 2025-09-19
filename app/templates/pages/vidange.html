@@ -1,4 +1,10 @@
-{% extends base_template if base_template is defined else "roles/admin/_base_admin.html" %}
+{% if base_template is defined %}
+{% extends base_template %}
+{% elif current_user.role == 'MECANICIEN' %}
+{% extends "roles/mecanicien/_base_mecanicien.html" %}
+{% else %}
+{% extends "roles/admin/_base_admin.html" %}
+{% endif %}
 {% from 'shared/macros/tableaux_components.html' import table_container, status_badge, level_indicator, voyant_indicator, icon_cell, date_cell, number_cell %}
 
 {% block title %}Vidange{% endblock %}
@@ -91,14 +97,17 @@
 {# --- Modales --- #}
 
 <!-- Modale formulaire de confirmation vidange (single instance) -->
+{% from 'shared/macros/form_macros.html' import error_container %}
+
 <div id="formulaireVidangeModal" class="modal" aria-hidden="true">
     <div class="modal-content">
         <div class="modal-header">
             <h3><i class="fas fa-oil-can"></i> Formulaire de confirmation vidange</h3>
-            <button type="button" class="close-btn" onclick="closeFormulaireVidangeModal()">&times;</button>
+            <button type="button" id="closeFormulaireVidangeModal" class="close-btn"><i class="fas fa-times"></i></button>
         </div>
         <div class="modal-body">
-        <form id="formulaire-vidange">
+            {{ error_container('vidangeError') }}
+        <form id="formulaire-vidange" action="{{ post_url }}" method="POST">
             <input type="hidden" id="bus_udm_id_hidden" name="bus_udm_id_hidden">
             <div style="margin-bottom:18px;">
                 <label for="numero_udm">Numéro UdM :</label>
@@ -123,90 +132,53 @@
                 <label for="remarque">Remarque :</label>
                 <textarea id="remarque" name="remarque" rows="3" style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;"></textarea>
             </div>
-            <button type="submit" class="action-btn" style="width:100%;margin-top:12px;"><i class="fas fa-save"></i> Enregistrer la vidange</button>
+            <div class="form-actions">
+                <button type="submit" class="submit-btn">
+                    <i class="fas fa-save"></i> Enregistrer la vidange
+                </button>
+            </div>
         </form>
         </div>
     </div>
 </div>
 
+<!-- Initialisation du gestionnaire unifié -->
+{% from 'shared/macros/form_macros.html' import init_modal_form %}
+{{ init_modal_form('formulaire-vidange', 'formulaireVidangeModal', 'vidangeError', 'Vidange enregistrée avec succès.') }}
+
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const form = document.getElementById('formulaire-vidange');
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        const kilometrage = document.getElementById('kilometrage').value;
-        const type_huile = document.getElementById('type_huile').value;
-        const remarque = document.getElementById('remarque').value;
-        const bus_udm_id = document.getElementById('bus_udm_id_hidden').value;
-        if (!bus_udm_id) {
-            alert("Erreur : aucun véhicule sélectionné. Veuillez ouvrir la fiche de vidange avant de confirmer.");
-            return;
-        }
+document.addEventListener('DOMContentLoaded', function() {
+    // Gestionnaire pour les boutons "Vidanger" (ouvre directement le formulaire)
+    document.querySelectorAll('button[data-open-formulaire-direct="1"]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const busId = this.getAttribute('data-bus-id');
+            const numero = this.getAttribute('data-numero');
+            const demandeur = this.getAttribute('data-demandeur');
 
-        // Prepare CSRF header if available
-        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-        const headers = {
-            'Content-Type': 'application/json'
-        };
-        if (csrfToken) headers['X-CSRFToken'] = csrfToken;
+            // Remplir les champs du formulaire
+            document.getElementById('bus_udm_id_hidden').value = busId || '';
+            document.getElementById('numero_udm').value = numero || '';
 
-        fetch('{{ post_url }}', {
-            method: 'POST',
-            headers: headers,
-            body: JSON.stringify({
-                bus_udm_id: bus_udm_id,
-                kilometrage: kilometrage,
-                type_huile: type_huile,
-                remarque: remarque
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Vidange enregistrée avec succès !');
-                
-                // Mettre à jour la ligne du tableau si les données sont retournées
-                if (data.bus_updated) {
-                    const busRow = document.querySelector(`tr[data-bus-id="${data.bus_updated.id}"]`);
-                    if (busRow) {
-                        const cells = busRow.querySelectorAll('td');
-                        if (cells.length >= 5) {
-                            // Mettre à jour kilométrage (colonne 1)
-                            cells[1].textContent = data.bus_updated.kilometrage || '-';
-                            // Mettre à jour km critique huile (colonne 2)
-                            cells[2].textContent = data.bus_updated.km_critique_huile || '-';
-                            // Mettre à jour dernière vidange (colonne 3)
-                            cells[3].textContent = data.bus_updated.date_derniere_vidange || '-';
-                            // Mettre à jour voyant (colonne 4)
-                            const indicator = cells[4].querySelector('.indicator');
-                            if (indicator) {
-                                indicator.className = `indicator ${data.bus_updated.voyant}`;
-                            }
-                            const statusText = cells[4].querySelector('span:last-child');
-                            if (statusText) {
-                                if (data.bus_updated.voyant === 'green') {
-                                    statusText.textContent = 'OK';
-                                } else if (data.bus_updated.voyant === 'orange') {
-                                    statusText.textContent = 'Bientôt à faire';
-                                } else {
-                                    statusText.textContent = 'À faire !';
-                                }
-                            }
-                        }
-                    }
-                }
-                
-                closeFormulaireVidangeModal();
-            } else {
-                alert('Erreur lors de l\'enregistrement de la vidange.');
+            // Ouvrir directement le formulaire de vidange
+            const modal = document.getElementById('formulaireVidangeModal');
+            if (modal) {
+                modal.classList.add('show');
+                modal.setAttribute('aria-hidden', 'false');
             }
-        })
-        .catch(() => {
-            alert('Erreur serveur.');
         });
     });
+
+    // Gestionnaire pour le bouton de fermeture
+    const closeBtn = document.getElementById('closeFormulaireVidangeModal');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', function() {
+            FormModalManager.closeModal('formulaireVidangeModal');
+        });
+    }
 });
 </script>
+
+
 
     {# --- Historique des Vidanges --- #}
     <div style="margin-top: 40px;">

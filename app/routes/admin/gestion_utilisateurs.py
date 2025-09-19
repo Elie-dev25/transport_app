@@ -26,7 +26,12 @@ def chauffeurs():
         for statut in chauffeur.statuts_actuels:
             print(f"  - {statut.statut}: {statut.date_debut} -> {statut.date_fin}")
     
-    return render_template('legacy/chauffeurs.html', chauffeur_list=chauffeur_list, active_page='chauffeurs')
+    return render_template(
+        'legacy/chauffeurs.html',
+        chauffeur_list=chauffeur_list,
+        active_page='chauffeurs',
+        base_template='roles/admin/_base_admin.html'
+    )
 
 # Route pour la page Utilisateurs qui affiche la liste des utilisateurs depuis la base
 @admin_only
@@ -48,6 +53,115 @@ def supprimer_chauffeur_ajax(chauffeur_id):
         db.session.delete(chauffeur)
         db.session.commit()
         return jsonify({'success': True, 'message': 'Chauffeur supprimé avec succès.'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f'Erreur serveur : {str(e)}'}), 500
+
+# Route pour ajouter un utilisateur en AJAX
+@admin_only
+@bp.route('/ajouter_utilisateur_ajax', methods=['POST'])
+def ajouter_utilisateur_ajax():
+    try:
+        # Récupérer les données du formulaire
+        nom = request.form.get('nom', '').strip()
+        prenom = request.form.get('prenom', '').strip()
+        login = request.form.get('login', '').strip()
+        role = request.form.get('role', '').strip()
+        mot_de_passe = request.form.get('mot_de_passe', '').strip()
+        email = request.form.get('email', '').strip()
+        telephone = request.form.get('telephone', '').strip()
+
+        # Validation des champs obligatoires
+        if not all([nom, prenom, login, role, mot_de_passe, email, telephone]):
+            return jsonify({'success': False, 'message': 'Tous les champs obligatoires doivent être remplis.'}), 400
+
+        # Vérifier si le login existe déjà
+        existing_user = Utilisateur.query.filter_by(login=login).first()
+        if existing_user:
+            return jsonify({'success': False, 'message': 'Ce login existe déjà.'}), 400
+
+        # Vérifier si l'email existe déjà
+        existing_email = Utilisateur.query.filter_by(email=email).first()
+        if existing_email:
+            return jsonify({'success': False, 'message': 'Cet email existe déjà.'}), 400
+
+        # Créer le nouvel utilisateur
+        new_user = Utilisateur(
+            nom=nom,
+            prenom=prenom,
+            login=login,
+            role=role,
+            email=email,
+            telephone=telephone
+        )
+        new_user.set_password(mot_de_passe)
+
+        # Ajouter à la base de données
+        db.session.add(new_user)
+        db.session.commit()
+
+        # Créer les enregistrements spécifiques selon le rôle
+        if role == 'CHAUFFEUR':
+            from app.models.chauffeur import Chauffeur
+            numero_permis = request.form.get('numero_permis', '').strip()
+            date_delivrance_permis = request.form.get('date_delivrance_permis')
+            date_expiration_permis = request.form.get('date_expiration_permis')
+
+            # Pour les chauffeurs, les champs permis sont obligatoires
+            if not numero_permis or not date_delivrance_permis or not date_expiration_permis:
+                db.session.rollback()
+                return jsonify({'success': False, 'message': 'Pour un chauffeur, le numéro de permis et les dates sont obligatoires.'}), 400
+
+            chauffeur = Chauffeur(
+                chauffeur_id=new_user.utilisateur_id,
+                nom=nom,
+                prenom=prenom,
+                numero_permis=numero_permis,
+                telephone=telephone,
+                date_delivrance_permis=date_delivrance_permis,
+                date_expiration_permis=date_expiration_permis
+            )
+            db.session.add(chauffeur)
+
+        elif role == 'MECANICIEN':
+            from app.models.mecanicien import Mecanicien
+            numero_permis = request.form.get('numero_permis', '').strip()
+            date_delivrance_permis = request.form.get('date_delivrance_permis')
+            date_expiration_permis = request.form.get('date_expiration_permis')
+
+            # Pour les mécaniciens, les champs permis sont obligatoires
+            if not numero_permis or not date_delivrance_permis or not date_expiration_permis:
+                db.session.rollback()
+                return jsonify({'success': False, 'message': 'Pour un mécanicien, le numéro de permis et les dates sont obligatoires.'}), 400
+
+            mecanicien = Mecanicien(
+                mecanicien_id=new_user.utilisateur_id,
+                numero_permis=numero_permis,
+                date_delivrance_permis=date_delivrance_permis,
+                date_expiration_permis=date_expiration_permis
+            )
+            db.session.add(mecanicien)
+
+        elif role == 'CHARGE':
+            charge_transport = Chargetransport(
+                chargetransport_id=new_user.utilisateur_id
+            )
+            db.session.add(charge_transport)
+
+        elif role == 'ADMIN':
+            from app.models.administrateur import Administrateur
+            administrateur = Administrateur(
+                administrateur_id=new_user.utilisateur_id
+            )
+            db.session.add(administrateur)
+
+        # RESPONSABLE et SUPERVISEUR n'ont pas de tables personnelles spécifiques
+        # Ils utilisent seulement la table utilisateur
+
+        db.session.commit()
+
+        return jsonify({'success': True, 'message': f'Utilisateur {nom} {prenom} ajouté avec succès.'})
+
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': f'Erreur serveur : {str(e)}'}), 500

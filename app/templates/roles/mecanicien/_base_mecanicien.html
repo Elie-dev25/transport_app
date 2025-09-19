@@ -1,49 +1,37 @@
 {% extends "_base_dashboard.html" %}
 
 {% set sidebar_title = "Mécanicien" %}
-{% set sidebar_subtitle = "Gestion des bus AED" %}
+{% set sidebar_subtitle = "Maintenance & Réparations" %}
 
-{% block sidebar %}
-<div class="sidebar mecanicien-sidebar" id="sidebar">
-    <div class="sidebar-header">
-        <div class="logo"><i class="fas fa-tools"></i></div>
-        <div class="admin-info">
-            <h2>{{ sidebar_title }}</h2>
-            <p>{{ sidebar_subtitle }}</p>
-        </div>
-    </div>
-    <div class="sidebar-content"></div>
-    <nav class="nav-menu sidebar-bottom">
-        <div class="nav-item">
-            <a href="{{ url_for('mecanicien.dashboard') }}" class="nav-link {% if active_page == 'dashboard' %}active{% endif %}">
-                <i class="fas fa-tachometer-alt"></i>
-                <span>Tableau de Bord</span>
-            </a>
-        </div>
-        <div class="nav-item">
-            <a href="{{ url_for('mecanicien.vidange') }}" class="nav-link {% if active_page == 'vidange' %}active{% endif %}">
-                <i class="fas fa-oil-can"></i>
-                <span>Vidange</span>
-            </a>
-        </div>
-        <div class="nav-item">
-            <a href="#" class="nav-link">
-                <i class="fas fa-history"></i>
-                <span>Historique</span>
-            </a>
-        </div>
-        <div class="nav-item">
-            <a href="#" class="nav-link">
-                <i class="fas fa-cog"></i>
-                <span>Paramètres</span>
-            </a>
-        </div>
-        <div class="nav-item" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
-            <a href="{{ url_for('auth.logout') }}" class="nav-link">
-                <i class="fas fa-sign-out-alt"></i>
-                <span>Déconnexion</span>
-            </a>
-        </div>
-    </nav>
+{% block nav_menu %}
+<div class="nav-item">
+    <a href="{{ url_for('mecanicien.dashboard') }}" class="nav-link {% if active_page == 'dashboard' %}active{% endif %}">
+        <i class="fas fa-tachometer-alt"></i>
+        <span>Tableau de Bord</span>
+    </a>
+</div>
+<div class="nav-item">
+    <a href="{{ url_for('mecanicien.bus_udm') }}" class="nav-link {% if active_page == 'bus_udm' %}active{% endif %}">
+        <i class="fas fa-bus"></i>
+        <span>Bus UdM</span>
+    </a>
+</div>
+<div class="nav-item">
+    <a href="{{ url_for('mecanicien.vidange') }}" class="nav-link {% if active_page == 'vidange' %}active{% endif %}">
+        <i class="fas fa-oil-can"></i>
+        <span>Vidange</span>
+    </a>
+</div>
+<div class="nav-item">
+    <a href="{{ url_for('mecanicien.carburation') }}" class="nav-link {% if active_page == 'carburation' %}active{% endif %}">
+        <i class="fas fa-gas-pump"></i>
+        <span>Carburation</span>
+    </a>
+</div>
+<div class="nav-item">
+    <a href="{{ url_for('mecanicien.depannage') }}" class="nav-link {% if active_page == 'depannage' %}active{% endif %}">
+        <i class="fas fa-tools"></i>
+        <span>Dépannage</span>
+    </a>
 </div>
 {% endblock %}

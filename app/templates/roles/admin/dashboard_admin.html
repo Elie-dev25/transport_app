@@ -124,7 +124,7 @@
             <div class="actions-grid">
               <a href="#" id="openPlanifierTrajetModal" class="action-btn">
                 <i class="fas fa-route"></i>
-                <span>Planifier Trajet</span>
+                <span>Enregistrer un Trajet</span>
             </a>
                 <a href="{{ url_for('admin.carburation') }}" class="action-btn">
                     <i class="fas fa-gas-pump"></i>
@@ -408,7 +408,9 @@ $(function() {
     }
   });
 
-  // Gestion AJAX pour les nouveaux formulaires modernisés
+  // ⚠️ DÉSACTIVÉ - Gestion AJAX pour les nouveaux formulaires modernisés
+  // Les formulaires utilisent maintenant FormModalManager unifié (main.js)
+  /*
   $('#trajetInterneBusUdMForm').on('submit', function(e) {
     e.preventDefault();
     $.ajax({
@@ -428,44 +430,13 @@ $(function() {
       }
     });
   });
+  */
 
-  $('#trajetPrestataireModerniseForm').on('submit', function(e) {
-    e.preventDefault();
-    $.ajax({
-      url: '{{ url_for("admin.trajet_prestataire_modernise") }}',
-      method: 'POST',
-      data: $(this).serialize(),
-      success: function(resp) {
-        $('#trajetPrestataireModerniseModal').removeClass('show');
-        $('body').append('<div class="flash-message success">' + resp.message + '</div>');
-        setTimeout(function() { $('.flash-message.success').fadeOut(500, function() { $(this).remove(); }); }, 3000);
-        refreshDashboardStats();
-      },
-      error: function(xhr) {
-        let msg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Erreur lors de l\'enregistrement';
-        $('#trajetPrestataireModerniseError').text(msg).show();
-      }
-    });
-  });
-
-  $('#autresTrajetsForm').on('submit', function(e) {
-    e.preventDefault();
-    $.ajax({
-      url: '{{ url_for("admin.autres_trajets") }}',
-      method: 'POST',
-      data: $(this).serialize(),
-      success: function(resp) {
-        $('#autresTrajetsModal').removeClass('show');
-        $('body').append('<div class="flash-message success">' + resp.message + '</div>');
-        setTimeout(function() { $('.flash-message.success').fadeOut(500, function() { $(this).remove(); }); }, 3000);
-        refreshDashboardStats();
-      },
-      error: function(xhr) {
-        let msg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Erreur lors de l\'enregistrement';
-        $('#autresTrajetsError').text(msg).show();
-      }
-    });
-  });
+  // ⚠️ DÉSACTIVÉ - Autres gestionnaires AJAX remplacés par FormModalManager
+  /*
+  $('#trajetPrestataireModerniseForm').on('submit', function(e) { ... });
+  $('#autresTrajetsForm').on('submit', function(e) { ... });
+  */
 });
 </script>
 {% endblock %}

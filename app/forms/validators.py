@@ -5,7 +5,7 @@ Phase 2 - Élimine la duplication des validations dans 5+ formulaires
 
 from wtforms.validators import ValidationError, DataRequired, NumberRange
 from wtforms import Field
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from typing import Optional, Any
 
 from .constants import FormMessages, validate_lieu_choice, validate_type_passagers_choice
@@ -46,9 +46,32 @@ class FormValidators:
                 field_date = field.data
             else:
                 return  # Laisser d'autres validateurs gérer le format
-            
+
             if field_date < date.today():
                 raise ValidationError('La date ne peut pas être dans le passé.')
+
+    @staticmethod
+    def validate_date_trajet_effectue(form: Any, field: Field) -> None:
+        """
+        Valide que la date est dans les 48h passées (trajets déjà effectués)
+        Empêche les dates futures et les dates trop anciennes
+        """
+        if field.data:
+            if isinstance(field.data, datetime):
+                field_datetime = field.data
+            else:
+                return  # Laisser d'autres validateurs gérer le format
+
+            now = datetime.now()
+
+            # Empêcher les dates futures
+            if field_datetime > now:
+                raise ValidationError('Impossible d\'enregistrer un trajet futur. Seuls les trajets effectués peuvent être enregistrés.')
+
+            # Empêcher les dates trop anciennes (plus de 48h)
+            limite_48h = now - timedelta(hours=48)
+            if field_datetime < limite_48h:
+                raise ValidationError('Impossible d\'enregistrer un trajet de plus de 48h. Contactez l\'administrateur pour les trajets plus anciens.')
     
     @staticmethod
     def validate_nombre_places_positif(form: Any, field: Field) -> None:
@@ -181,6 +204,12 @@ class CommonValidators:
     DATE_FUTURE = [
         REQUIRED,
         FormValidators.validate_date_future_or_today
+    ]
+
+    # Date pour trajets effectués (48h max dans le passé)
+    DATE_TRAJET_EFFECTUE = [
+        REQUIRED,
+        FormValidators.validate_date_trajet_effectue
     ]
 
 

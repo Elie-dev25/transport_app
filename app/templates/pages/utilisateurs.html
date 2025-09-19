@@ -22,15 +22,31 @@
 
 {% block dashboard_content %}
 <div class="container-fluid">
-    <!-- Bouton d'ajout -->
-    <div class="d-flex justify-content-end mb-3">
-        <button id="openAddUserModal" class="btn btn-primary rounded-circle" style="width:50px;height:50px;" title="Ajouter un utilisateur">
-            <i class="fas fa-plus"></i>
-        </button>
-    </div>
-
-    <!-- Tableau des utilisateurs -->
-    {% call table_container('Liste des Utilisateurs', 'users', search=true, subtitle='Gestion des comptes et accès système', table_id='usersTable') %}
+    <!-- En-tête du tableau avec bouton d'ajout -->
+    <div class="table-container" id="usersTable">
+        <div class="table-header">
+            <div class="d-flex justify-content-between align-items-center w-100">
+                <div>
+                    <h3 class="table-title">
+                        <i class="fas fa-users"></i>
+                        Liste des Utilisateurs
+                    </h3>
+                    <p class="table-subtitle">Gestion des comptes et accès système</p>
+                </div>
+                {% if not readonly %}
+                <button id="openAddUserModal" class="btn btn-success d-flex align-items-center gap-2" title="Ajouter un utilisateur">
+                    <i class="fas fa-plus"></i>
+                    <span>Ajouter un utilisateur</span>
+                </button>
+                {% endif %}
+            </div>
+        </div>
+        <div class="table-search">
+            <div class="search-container">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" class="form-control search-input" placeholder="Rechercher un utilisateur..." id="searchInput">
+            </div>
+        </div>
         <table class="table table-striped table-hover sortable">
             <thead>
                 <tr>
@@ -97,7 +113,7 @@
                 {% endfor %}
             </tbody>
         </table>
-    {% endcall %}
+    </div>
 </div>
 
 <!-- Modal pour ajout utilisateur (partiel commun) -->
@@ -209,26 +225,8 @@ $(function() {
   $(document).on('input', '#addUserForm input[name="login"]', function(){
     $(this).data('userEdited', true);
   });
-  // Soumission du formulaire d'ajout d'utilisateur
-  $('#addUserForm').on('submit', function(e) {
-    e.preventDefault();
-    $.ajax({
-      url: '/admin/ajouter_utilisateur_ajax',
-      method: 'POST',
-      data: $(this).serialize(),
-      success: function(resp) {
-        $('#addUserModal').removeClass('show');
-        $('body').append('<div class="flash-message success">' + resp.message + '</div>');
-        setTimeout(function() { $('.flash-message.success').fadeOut(500, function() { $(this).remove(); }); }, 3000);
-        location.reload();
-      },
-      error: function(xhr) {
-        let msg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Erreur lors de l\'ajout';
-        $('body').append('<div class="flash-message danger">' + msg + '</div>');
-        setTimeout(function() { $('.flash-message.danger').fadeOut(500, function() { $(this).remove(); }); }, 3000);
-      }
-    });
-  });
+  // ✅ Formulaire géré par FormModalManager (système unifié)
+  // Plus besoin de gestionnaire jQuery - FormModalManager s'en charge
 });
 </script>
 {% endblock %}
