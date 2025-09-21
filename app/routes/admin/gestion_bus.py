@@ -122,7 +122,11 @@ def bus():
             # Si pas de panne ouverte et état NULL, afficher 'BON'
             b.etat_vehicule = 'BON'
 
-    return render_template('roles/admin/bus_udm.html', bus_list=bus_list)
+    # Utiliser l'utilitaire pour gérer le contexte de rôle
+    from app.utils.route_utils import add_role_context_to_template_vars
+
+    template_vars = add_role_context_to_template_vars(bus_list=bus_list)
+    return render_template('roles/admin/bus_udm.html', **template_vars)
 
 @admin_only
 @bp.route('/bus/ajouter', methods=['GET', 'POST'])
@@ -272,16 +276,20 @@ def details_bus(bus_id):
             'percent_left': percent_left,
         })
 
-    return render_template(
-        'pages/details_bus.html',
+    # Utiliser l'utilitaire pour gérer le contexte de rôle
+    from app.utils.route_utils import add_role_context_to_template_vars
+
+    template_vars = add_role_context_to_template_vars(
         bus=bus,
         trajets=trajets,
         carburations=carburations,
         vidanges=vidanges,
         pannes=pannes,
         depannages=depannages,
-        documents=documents_vm,
+        documents=documents_vm
     )
+
+    return render_template('pages/details_bus.html', **template_vars)
 
 @admin_only
 @bp.route('/bus/<int:bus_id>/details')

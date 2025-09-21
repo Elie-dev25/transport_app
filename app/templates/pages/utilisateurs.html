@@ -1,5 +1,7 @@
 {% if base_template is defined %}
 {% extends base_template %}
+{% elif use_responsable_base %}
+{% extends "roles/responsable/_base_responsable.html" %}
 {% elif superviseur_mode %}
 {% extends "roles/superviseur/_base_superviseur.html" %}
 {% else %}

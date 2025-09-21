@@ -1,0 +1,43 @@
+{% extends "_base_dashboard.html" %}
+
+{% set sidebar_title = "Responsable Panel" %}
+{% set sidebar_subtitle = "TransportUdM" %}
+
+{% block nav_menu %}
+<div class="nav-item">
+    <a href="{{ url_for('responsable.dashboard') }}" class="nav-link {% if active_page == 'accueil' %}active{% endif %}">
+        <i class="fas fa-tachometer-alt"></i>
+        <span>Tableau de bord</span>
+    </a>
+</div>
+<div class="nav-item">
+    <a href="{{ url_for('responsable.bus') }}" class="nav-link {% if active_page == 'bus' %}active{% endif %}">
+        <i class="fas fa-bus"></i>
+        <span>Bus UdM</span>
+    </a>
+</div>
+<div class="nav-item">
+    <a href="{{ url_for('responsable.chauffeurs') }}" class="nav-link {% if active_page == 'chauffeurs' %}active{% endif %}">
+        <i class="fas fa-user-tie"></i>
+        <span>Chauffeurs</span>
+    </a>
+</div>
+<div class="nav-item">
+    <a href="{{ url_for('responsable.utilisateurs') }}" class="nav-link {% if active_page == 'utilisateurs' %}active{% endif %}">
+        <i class="fas fa-users"></i>
+        <span>Utilisateurs</span>
+    </a>
+</div>
+<div class="nav-item">
+    <a href="{{ url_for('responsable.rapports') }}" class="nav-link {% if active_page == 'rapports' %}active{% endif %}">
+        <i class="fas fa-chart-bar"></i>
+        <span>Rapports</span>
+    </a>
+</div>
+<div class="nav-item">
+    <a href="{{ url_for('responsable.parametres') }}" class="nav-link {% if active_page == 'parametres' %}active{% endif %}">
+        <i class="fas fa-cog"></i>
+        <span>Paramètres</span>
+    </a>
+</div>
+{% endblock %}

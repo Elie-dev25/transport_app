@@ -437,6 +437,8 @@ $(document).ready(function() {
     window.location.href = '/mecanicien/bus/details/' + busId;
     {% elif current_user.role == 'CHARGE' %}
     window.location.href = '/charge_transport/bus/details/' + busId;
+    {% elif current_user.role == 'RESPONSABLE' %}
+    window.location.href = '/responsable/bus/details/' + busId;
     {% else %}
     window.location.href = '/admin/bus/details/' + busId;
     {% endif %}

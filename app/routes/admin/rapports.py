@@ -1,5 +1,5 @@
 from flask import render_template, request, jsonify, make_response
-from flask_login import login_required
+from flask_login import login_required, current_user
 from datetime import datetime, date, timedelta
 from sqlalchemy import func, and_, or_
 
@@ -76,6 +76,9 @@ def rapport_noblesse():
         mois_actuel = mois_noms[date_actuelle.month - 1]
         periode_formatee = f"{mois_actuel} {date_actuelle.year}"
 
+        # Récupérer les informations du prestataire Noblesse
+        prestataire_info = Prestataire.query.filter_by(nom_prestataire='Noblesse').first()
+
         return render_template(
             'legacy/rapport_entity.html',
             entity_name='Noblesse',
@@ -83,8 +86,12 @@ def rapport_noblesse():
             total_trajets=total_trajets,
             total_passagers=total_passagers,
             entity_type='prestataire',
+            prestataire_info=prestataire_info,
             superviseur_mode=False,
-            periode_formatee=periode_formatee
+            periode_formatee=periode_formatee,
+            start_date=start_date,
+            end_date=end_date,
+            periode=periode
         )
     except Exception as e:
         print(f"ERREUR rapport_noblesse: {e}")
@@ -142,6 +149,9 @@ def rapport_charter():
         mois_actuel = mois_noms[date_actuelle.month - 1]
         periode_formatee = f"{mois_actuel} {date_actuelle.year}"
 
+        # Récupérer les informations du prestataire Charter
+        prestataire_info = Prestataire.query.filter_by(nom_prestataire='Charter').first()
+
         return render_template(
             'legacy/rapport_entity.html',
             entity_name='Charter',
@@ -149,8 +159,12 @@ def rapport_charter():
             total_trajets=total_trajets,
             total_passagers=total_passagers,
             entity_type='prestataire',
+            prestataire_info=prestataire_info,
             superviseur_mode=False,
-            periode_formatee=periode_formatee
+            periode_formatee=periode_formatee,
+            start_date=start_date,
+            end_date=end_date,
+            periode=periode
         )
     except Exception as e:
         print(f"ERREUR rapport_charter: {e}")
@@ -212,6 +226,9 @@ def rapport_bus_udm():
         mois_actuel = mois_noms[date_actuelle.month - 1]
         periode_formatee = f"{mois_actuel} {date_actuelle.year}"
 
+        # DEBUG: Afficher les valeurs passées au template
+        print(f"DEBUG rapport_bus_udm: periode={periode}, start_date={start_date}, end_date={end_date}")
+
         return render_template(
             'legacy/rapport_entity.html',
             entity_name='Bus UdM',
@@ -225,7 +242,10 @@ def rapport_bus_udm():
                 'malades': malades
             },
             superviseur_mode=False,
-            periode_formatee=periode_formatee
+            periode_formatee=periode_formatee,
+            start_date=start_date,
+            end_date=end_date,
+            periode=periode
         )
     except Exception as e:
         print(f"ERREUR rapport_bus_udm: {e}")
@@ -247,7 +267,11 @@ def rapports():
         'fleet': get_fleet_stats()
     }
 
-    return render_template('pages/rapports.html', stats=stats)
+    # Détecter si appelé par un responsable
+    source = request.args.get('source', '')
+    use_responsable_base = source == 'responsable' or (hasattr(current_user, 'is_authenticated') and current_user.is_authenticated and current_user.role == 'RESPONSABLE')
+
+    return render_template('pages/rapports.html', stats=stats, use_responsable_base=use_responsable_base)
 
 @bp.route('/rapports/noblesse')
 def rapport_noblesse_alias():

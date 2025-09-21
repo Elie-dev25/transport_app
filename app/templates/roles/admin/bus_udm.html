@@ -1,4 +1,8 @@
+{% if use_responsable_base %}
+{% extends "roles/responsable/_base_responsable.html" %}
+{% else %}
 {% extends "roles/admin/_base_admin.html" %}
+{% endif %}
 {% from 'shared/macros/tableaux_components.html' import table_container, status_badge, level_indicator, voyant_indicator, icon_cell, date_cell, money_cell, number_cell %}
 
 {% block title %}Liste des Bus UdM{% endblock %}

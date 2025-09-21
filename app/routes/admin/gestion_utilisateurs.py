@@ -1,4 +1,5 @@
 from flask import render_template, jsonify, request
+from flask_login import current_user
 from app.models.chauffeur import Chauffeur
 from app.models.chauffeur_statut import ChauffeurStatut
 from app.models.utilisateur import Utilisateur
@@ -26,11 +27,18 @@ def chauffeurs():
         for statut in chauffeur.statuts_actuels:
             print(f"  - {statut.statut}: {statut.date_debut} -> {statut.date_fin}")
     
+    # Détecter si appelé par un responsable
+    source = request.args.get('source', '')
+    if source == 'responsable' or (current_user.is_authenticated and current_user.role == 'RESPONSABLE'):
+        base_template = 'roles/responsable/_base_responsable.html'
+    else:
+        base_template = 'roles/admin/_base_admin.html'
+
     return render_template(
         'legacy/chauffeurs.html',
         chauffeur_list=chauffeur_list,
         active_page='chauffeurs',
-        base_template='roles/admin/_base_admin.html'
+        base_template=base_template
     )
 
 # Route pour la page Utilisateurs qui affiche la liste des utilisateurs depuis la base
@@ -38,7 +46,11 @@ def chauffeurs():
 @bp.route('/utilisateurs')
 def utilisateurs():
     user_list = Utilisateur.query.order_by(Utilisateur.nom, Utilisateur.prenom).all()
-    return render_template('pages/utilisateurs.html', user_list=user_list, active_page='utilisateurs')
+    # Détecter si appelé par un responsable
+    source = request.args.get('source', '')
+    use_responsable_base = source == 'responsable' or (current_user.is_authenticated and current_user.role == 'RESPONSABLE')
+
+    return render_template('pages/utilisateurs.html', user_list=user_list, active_page='utilisateurs', use_responsable_base=use_responsable_base)
 
 # Route pour supprimer un chauffeur en AJAX
 @admin_only

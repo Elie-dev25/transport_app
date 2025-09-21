@@ -1,0 +1,394 @@
+{% extends "roles/responsable/_base_responsable.html" %}
+{% block title %}Tableau de Bord Responsable{% endblock %}
+
+{% set active_page = 'accueil' %}
+{% set page_title = 'Tableau de Bord' %}
+
+{% block extra_head %}
+    <script src="{{ url_for('static', filename='js/dashboard_admin.js') }}?v=20250129"></script>
+{% endblock %}
+
+{% block dashboard_content %}
+
+
+
+        <!-- Statistics Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value">{{ stats.bus_actifs }}</div>
+                        <div class="stat-label">Bus AED Actifs</div>
+                    </div>
+                    <div class="stat-icon blue">
+                        <i class="fas fa-bus"></i>
+                    </div>
+                </div>
+                <div class="stat-change positive">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>{{ stats.bus_actifs_change }}</span>
+                </div>
+            </div>
+
+            <div class="stat-card success">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value">{{ stats.trajets_jour_aed }}</div>
+                        <div class="stat-label">Trajets du Jour AED</div>
+                    </div>
+                    <div class="stat-icon green">
+                        <i class="fas fa-route"></i>
+                    </div>
+                </div>
+                <div class="stat-change positive">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>{{ stats.trajets_jour_change }}</span>
+                </div>
+            </div>
+
+            <div class="stat-card info">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value">{{ stats.trajets_jour_bus_agence }}</div>
+                        <div class="stat-label">Trajets du Jour prestataire</div>
+                    </div>
+                    <div class="stat-icon purple">
+                        <i class="fas fa-bus-alt"></i>
+                    </div>
+                </div>
+                <div class="stat-change positive">
+                    <i class="fas fa-arrow-up"></i>
+                    <!-- Placeholder, à personnaliser si besoin -->
+                    <span></span>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value">{{ stats.etudiants }}</div>
+                        <div class="stat-label">Étudiants présents</div>
+                    </div>
+                    <div class="stat-icon blue">
+                        <i class="fas fa-users"></i>
+                    </div>
+                </div>
+                <div class="stat-change positive">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>{{ stats.etudiants_change }}</span>
+                </div>
+            </div>
+
+            <div class="stat-card warning">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value">{{ stats.bus_maintenance }}</div>
+                        <div class="stat-label">Bus en Maintenance</div>
+                    </div>
+                    <div class="stat-icon orange">
+                        <i class="fas fa-tools"></i>
+                    </div>
+                </div>
+                <div class="stat-change negative">
+                    <i class="fas fa-arrow-down"></i>
+                    <span>{{ stats.bus_maintenance_info }}</span>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <h2 class="section-title">
+                <i class="fas fa-bolt"></i>
+                Actions Rapides
+            </h2>
+            <div class="actions-grid">
+              <a href="#" id="openPlanifierTrajetModal" class="action-btn">
+                <i class="fas fa-route"></i>
+                <span>Enregistrer un Trajet</span>
+            </a>
+                <a href="{{ url_for('admin.carburation') }}" class="action-btn">
+                    <i class="fas fa-gas-pump"></i>
+                    <span>Carburation</span>
+                </a>
+                <a href="#" id="declare-panne-btn" class="action-btn">
+                    <i class="fas fa-triangle-exclamation"></i>
+                    <span>Déclaration de panne</span>
+                </a>
+                <a href="{{ url_for('responsable.rapports') }}" class="action-btn">
+                    <i class="fas fa-file-alt"></i>
+                    <span>Générer Rapport</span>
+                </a>
+            </div>
+        </div>
+
+         <!-- Trafic Étudiants - Temps Réel -->
+         <div class="trafic-section">
+          <h2 class="section-title"><i class="fas fa-chart-line"></i> Trafic Étudiants - Temps Réel</h2>
+          <div class="trafic-grid">
+              <div class="trafic-card arrived">
+                  <div class="trafic-number">{{ trafic.arrives }}</div>
+                  <div class="trafic-label">Arrivés au Campus</div>
+              </div>
+              <div class="trafic-card present">
+                  <div class="trafic-number">{{ trafic.present }}</div>
+                  <div class="trafic-label">Présents au Campus</div>
+              </div>
+              <div class="trafic-card departed">
+                  <div class="trafic-number">{{ trafic.partis }}</div>
+                  <div class="trafic-label">Partis du Campus</div>
+              </div>
+          </div>
+      </div>
+
+        {% include 'shared/modals/_declaration_panne_modal.html' %}
+
+        <!-- Modal Planifier Trajet -->
+        <div id="planifierTrajetModal" class="modal">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h3><i class="fas fa-route"></i> Planifier un Trajet</h3>
+              <button type="button" id="closePlanifierTrajetModal" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+              <div class="trajet-type-selection">
+                <h4>Choisissez le type de trajet à planifier :</h4>
+                <div class="trajet-buttons">
+                  <a href="#" id="openTrajetInterneBusUdMFromPlan" class="trajet-type-btn aed">
+                    <div class="icon-container">
+                      <i class="fas fa-bus"></i>
+                    </div>
+                    <div class="text-container">
+                      <span>Trajet interne de bus UdM</span>
+                      <small>Bus universitaire entre les sites</small>
+                    </div>
+                  </a>
+                  <a href="#" id="openTrajetPrestataireModerniseFromPlan" class="trajet-type-btn prestataire">
+                    <div class="icon-container">
+                      <i class="fas fa-bus-alt"></i>
+                    </div>
+                    <div class="text-container">
+                      <span>Trajet bus prestataire</span>
+                      <small>Bus externe entre les sites</small>
+                    </div>
+                  </a>
+                  <a href="#" id="openAutresTrajetsFromPlan" class="trajet-type-btn autres">
+                    <div class="icon-container">
+                      <i class="fas fa-route"></i>
+                    </div>
+                    <div class="text-container">
+                      <span>Autres trajets</span>
+                      <small>Trajets spéciaux et missions</small>
+                    </div>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {# Modales Partagées (remplace les anciennes modales dupliquées) #}
+        {% from 'shared/macros/trajet_modals.html' import include_all_trajet_modals %}
+        {{ include_all_trajet_modals(
+            form_trajet_interne=form_trajet_interne,
+            form_bus=form_bus,
+            form_autres_trajets=form_autres_trajets,
+            trajet_interne_url=url_for('admin.trajet_interne_bus_udm'),
+            trajet_prestataire_url=url_for('admin.trajet_prestataire_modernise'),
+            autres_trajets_url=url_for('admin.autres_trajets')
+        ) }}
+
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script>
+// Fonction pour rafraîchir les statistiques du dashboard
+function refreshDashboardStats() {
+  $.ajax({
+    url: '{{ url_for("admin.get_stats") }}',
+    method: 'GET',
+    success: function(data) {
+      // Mettre à jour les statistiques principales
+      $('.stat-card').eq(0).find('.stat-value').text(data.stats.bus_actifs);
+      $('.stat-card').eq(1).find('.stat-value').text(data.stats.trajets_jour_aed);
+      $('.stat-card').eq(2).find('.stat-value').text(data.stats.trajets_jour_bus_agence);
+      $('.stat-card').eq(3).find('.stat-value').text(data.stats.etudiants);
+      $('.stat-card').eq(4).find('.stat-value').text(data.stats.bus_maintenance);
+
+      // Mettre à jour le trafic temps réel
+      $('.trafic-card').eq(0).find('.trafic-number').text(data.trafic.arrives);
+      $('.trafic-card').eq(1).find('.trafic-number').text(data.trafic.present);
+      $('.trafic-card').eq(2).find('.trafic-number').text(data.trafic.partis);
+    },
+    error: function() {
+      console.log('Erreur lors du rafraîchissement des statistiques');
+    }
+  });
+}
+
+$(function() {
+  // Bouton Déclaration de panne
+  $('#declare-panne-btn').on('click', function(e) {
+    e.preventDefault();
+    $('#panneModal').addClass('show');
+  });
+
+  // Fermeture modale panne
+  $('#closePanneModal, #cancelPanneBtn').on('click', function(){
+    $('#panneModal').removeClass('show');
+    $('#panneForm')[0].reset();
+  });
+
+  // Soumission formulaire panne
+  $('#panneForm').on('submit', function(e){
+    e.preventDefault();
+    const formData = {
+      numero_bus_udm: $('#numero_bus_udm_panne').val(),
+      immatriculation: $('#immatriculation_panne').val(),
+      kilometrage: $('#kilometrage_panne').val(),
+      description: $('#description_panne').val(),
+      criticite: $('#criticite_panne').val(),
+      immobilisation: $('#immobilisation_panne').is(':checked')
+    };
+
+    $.ajax({
+      url: '/admin/declarer_panne',
+      method: 'POST',
+      contentType: 'application/json',
+      data: JSON.stringify(formData),
+      success: function(resp){
+        if(resp.success){
+          $('body').append('<div class="flash-message success">' + resp.message + '</div>');
+          $('#panneModal').removeClass('show');
+          $('#panneForm')[0].reset();
+          setTimeout(function() { $('.flash-message.success').fadeOut(500, function() { $(this).remove(); }); }, 3000);
+        } else {
+          $('body').append('<div class="flash-message danger">' + resp.message + '</div>');
+          setTimeout(function() { $('.flash-message.danger').fadeOut(500, function() { $(this).remove(); }); }, 3000);
+        }
+      },
+      error: function(){
+        $('body').append('<div class="flash-message danger">Impossible d\'enregistrer la panne</div>');
+        setTimeout(function() { $('.flash-message.danger').fadeOut(500, function() { $(this).remove(); }); }, 3000);
+      }
+    });
+  });
+
+  // Ouvrir la modale planifier trajet
+  $('#openPlanifierTrajetModal').on('click', function(e) {
+    e.preventDefault();
+    $('#planifierTrajetModal').addClass('show');
+  });
+
+  // Fermer la modale planifier trajet
+  $('#closePlanifierTrajetModal').on('click', function() {
+    $('#planifierTrajetModal').removeClass('show');
+  });
+
+  // Fermer en cliquant en dehors
+  $('#planifierTrajetModal').on('click', function(e) {
+    if (e.target === this) {
+      $(this).removeClass('show');
+    }
+  });
+
+  // Ouvrir les modales internes depuis la modale de planification
+  $('#openDepartAedFromPlan').on('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    $('#planifierTrajetModal').removeClass('show');
+    setTimeout(function(){ $('#departAedModal').addClass('show'); }, 100);
+  });
+
+  $('#openDepartPrestataireFromPlan').on('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    $('#planifierTrajetModal').removeClass('show');
+    setTimeout(function(){ $('#departPrestataireModal').addClass('show'); }, 100);
+  });
+
+  $('#openDepartBanekaneRetourFromPlan').on('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    $('#planifierTrajetModal').removeClass('show');
+    setTimeout(function(){ $('#departBanekaneRetourModal').addClass('show'); }, 100);
+  });
+
+  $('#openDepartSortieHorsVilleFromPlan').on('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    $('#planifierTrajetModal').removeClass('show');
+    setTimeout(function(){
+      $('#departSortieHorsVilleModal').css('display', 'flex').addClass('show');
+    }, 100);
+  });
+
+  // Nouveaux événements pour les modals modernisés
+  $('#openTrajetInterneBusUdMFromPlan').on('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    $('#planifierTrajetModal').removeClass('show');
+    setTimeout(function(){ $('#trajetInterneBusUdMModal').addClass('show'); }, 100);
+  });
+
+  $('#openTrajetPrestataireModerniseFromPlan').on('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    $('#planifierTrajetModal').removeClass('show');
+    setTimeout(function(){ $('#trajetPrestataireModerniseModal').addClass('show'); }, 100);
+  });
+
+  $('#openAutresTrajetsFromPlan').on('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    $('#planifierTrajetModal').removeClass('show');
+    setTimeout(function(){ $('#autresTrajetsModal').addClass('show'); }, 100);
+  });
+
+  // Fermer les modales internes
+  $(document).on('click', '#closeDepartAedModal', function() {
+    $('#departAedModal').removeClass('show');
+  });
+  $(document).on('click', '#closeDepartPrestataireModal', function() {
+    $('#departPrestataireModal').removeClass('show');
+  });
+  $(document).on('click', '#closeDepartBanekaneRetourModal', function() {
+    $('#departBanekaneRetourModal').removeClass('show');
+  });
+  $(document).on('click', '#closeDepartSortieHorsVilleModal', function() {
+    $('#departSortieHorsVilleModal').removeClass('show').css('display', 'none');
+  });
+
+  // Fermer les nouveaux modals modernisés
+  $(document).on('click', '#closeTrajetInterneBusUdMModal', function() {
+    $('#trajetInterneBusUdMModal').removeClass('show');
+  });
+  $(document).on('click', '#closeTrajetPrestataireModerniseModal', function() {
+    $('#trajetPrestataireModerniseModal').removeClass('show');
+  });
+  $(document).on('click', '#closeAutresTrajetsModal', function() {
+    $('#autresTrajetsModal').removeClass('show');
+  });
+
+  // Fermer les modales internes en cliquant en dehors
+  $(document).on('click', '#departAedModal, #departPrestataireModal, #departBanekaneRetourModal, #departSortieHorsVilleModal', function(e) {
+    if (e.target === this) {
+      $(this).removeClass('show');
+      if (this.id === 'departSortieHorsVilleModal') {
+        $(this).css('display', 'none');
+      }
+    }
+  });
+
+  // Fermer les nouveaux modals modernisés en cliquant en dehors
+  $(document).on('click', '#trajetInterneBusUdMModal, #trajetPrestataireModerniseModal, #autresTrajetsModal', function(e) {
+    if (e.target === this) {
+      $(this).removeClass('show');
+    }
+  });
+});
+</script>
+{% endblock %}

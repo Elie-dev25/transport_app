@@ -1,4 +1,10 @@
-{% extends 'roles/superviseur/_base_superviseur.html' if superviseur_mode else "roles/admin/_base_admin.html" %}
+{% if use_responsable_base %}
+{% extends "roles/responsable/_base_responsable.html" %}
+{% elif superviseur_mode %}
+{% extends "roles/superviseur/_base_superviseur.html" %}
+{% else %}
+{% extends "roles/admin/_base_admin.html" %}
+{% endif %}
 {% from 'shared/macros/tableaux_components.html' import table_container, status_badge, icon_cell, date_cell, number_cell %}
 
 {% block title %}Rapports - Gestion Transport{% endblock %}
@@ -32,7 +38,7 @@
 
     <!-- Statistiques Rapides -->
     {% call table_container('Statistiques Rapides', 'chart-bar', search=false, subtitle='Vue d\'ensemble des performances du système de transport', table_id='statsOverview') %}
-        <div class="info-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 20px;">
+        <div class="info-grid">
             <!-- Carte Aujourd'hui -->
             <div class="info-card">
                 <div class="info-card-header">
@@ -166,7 +172,7 @@
     <!-- Section Rapports Détaillés -->
     {% call table_container('Rapports Détaillés', 'file-alt', search=false, subtitle='Accès aux rapports spécialisés et exports', table_id='rapportsDetailles') %}
         {% set base_bp = 'superviseur' if superviseur_mode else 'admin' %}
-        <div class="info-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+        <div class="info-grid">
             <!-- Rapport Noblesse -->
             <div class="info-card">
                 <div class="info-card-header">
@@ -218,7 +224,7 @@
     {% call table_container('Performances Chauffeurs', 'tachometer-alt', search=false, subtitle='Analyse des performances et statistiques des chauffeurs', table_id='performancesSection') %}
 
         <!-- Filtres de période -->
-        <div class="table-filters" style="margin-bottom: 25px;">
+        <div class="table-filters">
             <div class="filter-group">
                 <label class="filter-label">
                     <i class="fas fa-calendar-alt"></i>
@@ -275,7 +281,7 @@
                 </div>
             </div>
             <div class="chart-body">
-                <div class="chart-canvas-wrapper" style="height: 400px; position: relative;">
+                <div class="chart-canvas-wrapper" style="min-height: 400px; position: relative;">
                     <div id="chart-placeholder" class="chart-placeholder">
                         <div class="placeholder-content">
                             <i class="fas fa-chart-bar"></i>
@@ -303,7 +309,7 @@
     {% call table_container('Utilisation des Bus UdM', 'chart-pie', search=false, subtitle='Analyse de l\'utilisation et répartition des trajets par bus', table_id='busUsageSection') %}
 
         <!-- Filtres de période -->
-        <div class="table-filters" style="margin-bottom: 25px;">
+        <div class="table-filters">
             <div class="filter-group">
                 <label class="filter-label">
                     <i class="fas fa-calendar-alt"></i>
@@ -360,7 +366,7 @@
                 </div>
             </div>
             <div class="chart-body">
-                <div class="chart-canvas-wrapper" style="height: 400px; position: relative;">
+                <div class="chart-canvas-wrapper" style="min-height: 400px; position: relative;">
                     <div id="bus-chart-placeholder" class="chart-placeholder">
                         <div class="placeholder-content">
                             <i class="fas fa-chart-pie"></i>

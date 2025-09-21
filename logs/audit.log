@@ -34,3 +34,71 @@
 2025-09-16 22:35:09 | INFO | USER:sam002 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:get_stats | IP:127.0.0.1 | DETAILS:Accès lecture seule
 2025-09-17 14:26:25 | INFO | USER:sam002 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:get_stats | IP:127.0.0.1 | DETAILS:Accès lecture seule
 2025-09-17 14:50:44 | INFO | USER:sam002 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:get_stats | IP:127.0.0.1 | DETAILS:Accès lecture seule
+2025-09-19 20:32:54 | INFO | USER:responsable | ROLE:RESPONSABLE | ACTION:ACTION_ADMIN | FUNCTION:dashboard | IP:127.0.0.1 | DETAILS:Accès admin/responsable
+2025-09-19 20:43:25 | INFO | USER:responsable | ROLE:RESPONSABLE | ACTION:ACTION_ADMIN | FUNCTION:dashboard | IP:127.0.0.1 | DETAILS:Accès admin/responsable
+2025-09-19 20:47:59 | INFO | USER:1 | ROLE:RESPONSABLE | ACTION:ACTION_ADMIN | FUNCTION:dashboard | IP:127.0.0.1 | DETAILS:Accès admin/responsable
+2025-09-19 21:16:48 | INFO | USER:responsable | ROLE:RESPONSABLE | ACTION:ACTION_ADMIN | FUNCTION:dashboard | IP:127.0.0.1 | DETAILS:Accès admin/responsable
+2025-09-19 21:28:05 | INFO | USER:responsable | ROLE:RESPONSABLE | ACTION:ACTION_ADMIN | FUNCTION:dashboard | IP:127.0.0.1 | DETAILS:Accès admin/responsable
+2025-09-19 21:28:19 | INFO | USER:responsable | ROLE:RESPONSABLE | ACTION:ACTION_ADMIN | FUNCTION:bus | IP:127.0.0.1 | DETAILS:Accès admin/responsable
+2025-09-19 21:28:30 | INFO | USER:responsable | ROLE:RESPONSABLE | ACTION:ACTION_ADMIN | FUNCTION:chauffeurs | IP:127.0.0.1 | DETAILS:Accès admin/responsable
+2025-09-19 21:34:24 | INFO | USER:responsable | ROLE:RESPONSABLE | ACTION:ACTION_ADMIN | FUNCTION:dashboard | IP:127.0.0.1 | DETAILS:Accès admin/responsable
+2025-09-19 21:34:29 | INFO | USER:responsable | ROLE:RESPONSABLE | ACTION:ACTION_ADMIN | FUNCTION:bus | IP:127.0.0.1 | DETAILS:Accès admin/responsable
+2025-09-19 21:49:15 | INFO | USER:responsable | ROLE:RESPONSABLE | ACTION:ACTION_ADMIN | FUNCTION:chauffeurs | IP:127.0.0.1 | DETAILS:Accès admin/responsable
+2025-09-19 21:50:02 | INFO | USER:responsable | ROLE:RESPONSABLE | ACTION:ACTION_ADMIN | FUNCTION:bus | IP:127.0.0.1 | DETAILS:Accès admin/responsable
+2025-09-19 21:51:27 | INFO | USER:responsable | ROLE:RESPONSABLE | ACTION:ACTION_ADMIN | FUNCTION:dashboard | IP:127.0.0.1 | DETAILS:Accès admin/responsable
+2025-09-19 21:51:33 | INFO | USER:responsable | ROLE:RESPONSABLE | ACTION:ACTION_ADMIN | FUNCTION:bus | IP:127.0.0.1 | DETAILS:Accès admin/responsable
+2025-09-19 22:14:08 | INFO | USER:responsable | ROLE:RESPONSABLE | ACTION:ACTION_ADMIN | FUNCTION:dashboard | IP:127.0.0.1 | DETAILS:Accès admin/responsable
+2025-09-19 22:14:13 | INFO | USER:responsable | ROLE:RESPONSABLE | ACTION:ACTION_ADMIN | FUNCTION:chauffeurs | IP:127.0.0.1 | DETAILS:Accès admin/responsable
+2025-09-19 22:14:18 | INFO | USER:responsable | ROLE:RESPONSABLE | ACTION:ACTION_ADMIN | FUNCTION:bus | IP:127.0.0.1 | DETAILS:Accès admin/responsable
+2025-09-19 22:15:01 | INFO | USER:responsable | ROLE:RESPONSABLE | ACTION:ACTION_ADMIN | FUNCTION:dashboard | IP:127.0.0.1 | DETAILS:Accès admin/responsable
+2025-09-19 22:23:19 | INFO | USER:responsable | ROLE:RESPONSABLE | ACTION:ACTION_ADMIN | FUNCTION:dashboard | IP:127.0.0.1 | DETAILS:Accès admin/responsable
+2025-09-19 22:41:25 | INFO | USER:responsable | ROLE:RESPONSABLE | ACTION:ACTION_ADMIN | FUNCTION:bus | IP:127.0.0.1 | DETAILS:Accès admin/responsable
+2025-09-19 22:41:42 | INFO | USER:responsable | ROLE:RESPONSABLE | ACTION:ACTION_ADMIN | FUNCTION:chauffeurs | IP:127.0.0.1 | DETAILS:Accès admin/responsable
+2025-09-20 20:46:59 | INFO | USER:responsable | ROLE:RESPONSABLE | ACTION:ACTION_ADMIN | FUNCTION:dashboard | IP:127.0.0.1 | DETAILS:Accès admin/responsable
+2025-09-20 20:47:03 | INFO | USER:responsable | ROLE:RESPONSABLE | ACTION:ACTION_ADMIN | FUNCTION:utilisateurs | IP:127.0.0.1 | DETAILS:Accès admin/responsable
+2025-09-20 20:47:07 | INFO | USER:responsable | ROLE:RESPONSABLE | ACTION:ACTION_ADMIN | FUNCTION:rapports | IP:127.0.0.1 | DETAILS:Accès admin/responsable
+2025-09-20 20:47:14 | INFO | USER:responsable | ROLE:RESPONSABLE | ACTION:ACTION_ADMIN | FUNCTION:parametres | IP:127.0.0.1 | DETAILS:Accès admin/responsable
+2025-09-20 20:47:17 | INFO | USER:responsable | ROLE:RESPONSABLE | ACTION:ACTION_ADMIN | FUNCTION:dashboard | IP:127.0.0.1 | DETAILS:Accès admin/responsable
+2025-09-20 20:47:23 | INFO | USER:responsable | ROLE:RESPONSABLE | ACTION:ACTION_ADMIN | FUNCTION:parametres | IP:127.0.0.1 | DETAILS:Accès admin/responsable
+2025-09-20 20:55:36 | INFO | USER:sam002 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_stats | IP:127.0.0.1 | DETAILS:Consultation statistiques audit
+2025-09-20 20:55:36 | INFO | USER:sam002 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_logs | IP:127.0.0.1 | DETAILS:Consultation logs (limite: 100)
+2025-09-20 20:56:27 | INFO | USER:sam002 | ROLE:ADMIN | ACTION:ACTION_ADMIN | FUNCTION:users_api | IP:127.0.0.1 | DETAILS:Accès admin/responsable
+2025-09-20 20:56:28 | INFO | USER:sam002 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:users_list | IP:127.0.0.1 | DETAILS:Consultation liste utilisateurs (17 utilisateurs)
+2025-09-20 21:30:11 | INFO | USER:sam002 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_stats | IP:127.0.0.1 | DETAILS:Consultation statistiques audit
+2025-09-20 21:30:11 | INFO | USER:sam002 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_logs | IP:127.0.0.1 | DETAILS:Consultation logs (limite: 100)
+2025-09-20 21:30:33 | INFO | USER:sam002 | ROLE:ADMIN | ACTION:ACTION_ADMIN | FUNCTION:users_api | IP:127.0.0.1 | DETAILS:Accès admin/responsable
+2025-09-20 21:30:34 | INFO | USER:sam002 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:users_list | IP:127.0.0.1 | DETAILS:Consultation liste utilisateurs (17 utilisateurs)
+2025-09-20 21:35:58 | INFO | USER:sam002 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_stats | IP:127.0.0.1 | DETAILS:Consultation statistiques audit
+2025-09-20 21:35:58 | INFO | USER:sam002 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_logs | IP:127.0.0.1 | DETAILS:Consultation logs (limite: 100)
+2025-09-20 21:38:16 | INFO | USER:sam002 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_stats | IP:127.0.0.1 | DETAILS:Consultation statistiques audit
+2025-09-20 21:38:17 | INFO | USER:sam002 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_logs | IP:127.0.0.1 | DETAILS:Consultation logs (limite: 50)
+2025-09-20 21:38:24 | INFO | USER:sam002 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_stats | IP:127.0.0.1 | DETAILS:Consultation statistiques audit
+2025-09-20 21:38:25 | INFO | USER:sam002 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_logs | IP:127.0.0.1 | DETAILS:Consultation logs (limite: 50)
+2025-09-20 21:38:33 | INFO | USER:sam002 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_stats | IP:127.0.0.1 | DETAILS:Consultation statistiques audit
+2025-09-20 21:38:33 | INFO | USER:sam002 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_logs | IP:127.0.0.1 | DETAILS:Consultation logs (limite: 50)
+2025-09-20 21:38:38 | INFO | USER:sam002 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_stats | IP:127.0.0.1 | DETAILS:Consultation statistiques audit
+2025-09-20 21:38:38 | INFO | USER:sam002 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_logs | IP:127.0.0.1 | DETAILS:Consultation logs (limite: 50)
+2025-09-20 21:40:45 | INFO | USER:sam002 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_stats | IP:127.0.0.1 | DETAILS:Consultation statistiques audit
+2025-09-20 21:40:45 | INFO | USER:sam002 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_logs | IP:127.0.0.1 | DETAILS:Consultation logs (limite: 100)
+2025-09-21 09:29:09 | INFO | USER:sam002 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_stats | IP:127.0.0.1 | DETAILS:Consultation statistiques audit
+2025-09-21 09:29:09 | INFO | USER:sam002 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_logs | IP:127.0.0.1 | DETAILS:Consultation logs (limite: 100)
+2025-09-21 09:58:33 | INFO | USER:sam002 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_stats | IP:127.0.0.1 | DETAILS:Consultation statistiques audit
+2025-09-21 09:58:33 | INFO | USER:sam002 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_logs | IP:127.0.0.1 | DETAILS:Consultation logs (limite: 100)
+2025-09-21 09:58:47 | INFO | USER:sam002 | ROLE:ADMIN | ACTION:ACTION_ADMIN | FUNCTION:users_api | IP:127.0.0.1 | DETAILS:Accès admin/responsable
+2025-09-21 09:58:47 | INFO | USER:sam002 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:users_list | IP:127.0.0.1 | DETAILS:Consultation liste utilisateurs (17 utilisateurs)
+2025-09-21 10:07:07 | INFO | USER:sam002 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_stats | IP:127.0.0.1 | DETAILS:Consultation statistiques audit
+2025-09-21 10:07:07 | INFO | USER:sam002 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_logs | IP:127.0.0.1 | DETAILS:Consultation logs (limite: 100)
+2025-09-21 10:07:45 | INFO | USER:sam002 | ROLE:ADMIN | ACTION:ACTION_ADMIN | FUNCTION:users_api | IP:127.0.0.1 | DETAILS:Accès admin/responsable
+2025-09-21 10:07:45 | INFO | USER:sam002 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:users_list | IP:127.0.0.1 | DETAILS:Consultation liste utilisateurs (17 utilisateurs)
+2025-09-21 10:08:18 | INFO | USER:sam002 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:search_user | IP:127.0.0.1 | DETAILS:Recherche utilisateur: sam
+2025-09-21 10:14:17 | INFO | USER:sam002 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_stats | IP:127.0.0.1 | DETAILS:Consultation statistiques audit
+2025-09-21 10:14:17 | INFO | USER:sam002 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_logs | IP:127.0.0.1 | DETAILS:Consultation logs (limite: 100)
+2025-09-21 10:14:30 | INFO | USER:sam002 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_stats | IP:127.0.0.1 | DETAILS:Consultation statistiques audit
+2025-09-21 10:14:30 | INFO | USER:sam002 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_logs | IP:127.0.0.1 | DETAILS:Consultation logs (limite: 100)
+2025-09-21 10:42:15 | INFO | USER:responsable | ROLE:RESPONSABLE | ACTION:ACTION_ADMIN | FUNCTION:dashboard | IP:127.0.0.1 | DETAILS:Accès admin/responsable
+2025-09-21 10:45:27 | INFO | USER:responsable | ROLE:RESPONSABLE | ACTION:ACTION_ADMIN | FUNCTION:bus | IP:127.0.0.1 | DETAILS:Accès admin/responsable
+2025-09-21 10:51:08 | INFO | USER:responsable | ROLE:RESPONSABLE | ACTION:ACTION_ADMIN | FUNCTION:rapports | IP:127.0.0.1 | DETAILS:Accès admin/responsable
+2025-09-21 12:28:30 | INFO | USER:responsable | ROLE:RESPONSABLE | ACTION:ACTION_ADMIN | FUNCTION:dashboard | IP:127.0.0.1 | DETAILS:Accès admin/responsable
+2025-09-21 12:29:16 | INFO | USER:responsable | ROLE:RESPONSABLE | ACTION:ACTION_ADMIN | FUNCTION:rapports | IP:127.0.0.1 | DETAILS:Accès admin/responsable
+2025-09-21 14:58:51 | INFO | USER:2 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_stats | IP:127.0.0.1 | DETAILS:Consultation statistiques audit
+2025-09-21 14:58:51 | INFO | USER:2 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_logs | IP:127.0.0.1 | DETAILS:Consultation logs (limite: 100)

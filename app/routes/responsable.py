@@ -4,7 +4,6 @@ Toutes les autres actions utilisent les routes admin existantes
 """
 
 from flask import Blueprint, render_template
-from flask_login import current_user
 
 # Réutilisation des services existants
 from app.services.dashboard_service import DashboardService
@@ -57,13 +56,77 @@ def dashboard():
         form_autres_trajets.chauffeur_id.choices = []
         form_autres_trajets.numero_bus_udm.choices = []
     
-    # RÉUTILISER EXACTEMENT le template admin avec paramètre responsable_mode
+    # UTILISER le template responsable spécifique pour la traçabilité
     return render_template(
-        'roles/admin/dashboard_admin.html',  # Template admin identique
+        'roles/responsable/dashboard_responsable.html',  # Template responsable distinct
         stats=stats,
         trafic=trafic,
         form_trajet_interne=form_trajet_interne,
         form_bus=form_bus,
-        form_autres_trajets=form_autres_trajets,
-        responsable_mode=True  # Flag pour distinguer du mode admin
+        form_autres_trajets=form_autres_trajets
     )
+
+
+# Routes de redirection avec traçabilité pour le responsable
+@bp.route('/bus')
+@admin_or_responsable
+def bus():
+    """Redirection vers gestion des bus avec traçabilité responsable"""
+    from flask import redirect, url_for
+    return redirect(url_for('admin.bus', source='responsable'))
+
+
+@bp.route('/trajets')
+@admin_or_responsable
+def trajets():
+    """Redirection vers gestion des trajets avec traçabilité responsable"""
+    from flask import redirect, url_for
+    return redirect(url_for('admin.trajets', source='responsable'))
+
+
+@bp.route('/chauffeurs')
+@admin_or_responsable
+def chauffeurs():
+    """Redirection vers gestion des chauffeurs avec traçabilité responsable"""
+    from flask import redirect, url_for
+    return redirect(url_for('admin.chauffeurs', source='responsable'))
+
+
+@bp.route('/maintenance')
+@admin_or_responsable
+def maintenance():
+    """Redirection vers maintenance avec traçabilité responsable"""
+    from flask import redirect, url_for
+    return redirect(url_for('admin.maintenance', source='responsable'))
+
+
+@bp.route('/rapports')
+@admin_or_responsable
+def rapports():
+    """Redirection vers rapports avec traçabilité responsable"""
+    from flask import redirect, url_for
+    return redirect(url_for('admin.rapports', source='responsable'))
+
+
+@bp.route('/utilisateurs')
+@admin_or_responsable
+def utilisateurs():
+    """Redirection vers gestion des utilisateurs avec traçabilité responsable"""
+    from flask import redirect, url_for
+    return redirect(url_for('admin.utilisateurs', source='responsable'))
+
+
+@bp.route('/parametres')
+@admin_or_responsable
+def parametres():
+    """Redirection vers paramètres avec traçabilité responsable"""
+    from flask import redirect, url_for
+    return redirect(url_for('admin.parametres', source='responsable'))
+
+
+@bp.route('/bus/details/<int:bus_id>')
+@admin_or_responsable
+def details_bus(bus_id):
+    """Redirection vers détails bus avec traçabilité responsable"""
+    from flask import redirect, url_for
+    return redirect(url_for('admin.details_bus', bus_id=bus_id, source='responsable'))

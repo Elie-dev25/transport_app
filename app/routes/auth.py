@@ -185,11 +185,15 @@ def login():
             # Connexion Flask-Login pour activer current_user et @login_required
             login_user(user)
 
-            # Conserver aussi la compatibilité avec le décorateur role_required basé session
-            session['user_id'] = username
+            # SYNCHRONISATION CRITIQUE : Utiliser l'ID numérique pour la cohérence
+            session['user_id'] = str(user.utilisateur_id)  # ID numérique en string pour cohérence
+            session['user_login'] = username  # Login pour debug
             session['user_groups'] = groups
             if role:
                 session['user_role'] = role
+
+            # Debug pour traçabilité
+            print(f'Session créée - ID: {user.utilisateur_id}, Login: {username}, Rôle: {role}')
 
             # Affiche les groupes AD dans le message flash pour debug
             flash(f"Groupes AD détectés : {groups}", "info")
@@ -219,11 +223,40 @@ def login():
 # Route pour la déconnexion
 @bp.route('/logout')
 def logout():
+    # Debug avant déconnexion
+    if 'user_login' in session:
+        print(f'Déconnexion utilisateur: {session["user_login"]}')
+
     # Déconnexion Flask-Login et nettoyage session custom
     try:
         logout_user()
-    except Exception:
-        pass
-    session.clear()  # Vide aussi la session pour compatibilité décorateur role_required
-    flash('Déconnexion réussie.', 'info')  # Message d'information
-    return redirect(url_for('auth.login'))  # Redirige vers la page de login
+    except Exception as e:
+        print(f'Erreur logout Flask-Login: {e}')
+
+    # Nettoyage complet de la session
+    session.clear()
+
+    flash('Déconnexion réussie.', 'info')
+    return redirect(url_for('auth.login'))
+
+# Route de diagnostic pour les problèmes d'authentification
+@bp.route('/debug-session')
+def debug_session():
+    """Route de diagnostic pour identifier les problèmes d'authentification"""
+    from flask_login import current_user
+    from flask import jsonify
+
+    debug_info = {
+        'flask_login_authenticated': current_user.is_authenticated,
+        'flask_login_user_id': getattr(current_user, 'utilisateur_id', None) if current_user.is_authenticated else None,
+        'flask_login_login': getattr(current_user, 'login', None) if current_user.is_authenticated else None,
+        'flask_login_role': getattr(current_user, 'role', None) if current_user.is_authenticated else None,
+        'session_user_id': session.get('user_id'),
+        'session_user_login': session.get('user_login'),
+        'session_user_role': session.get('user_role'),
+        'session_user_groups': session.get('user_groups'),
+        'session_keys': list(session.keys()),
+        'coherence_check': str(getattr(current_user, 'utilisateur_id', None)) == session.get('user_id') if current_user.is_authenticated else False
+    }
+
+    return jsonify(debug_info)

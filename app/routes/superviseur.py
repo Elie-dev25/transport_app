@@ -9,6 +9,7 @@ from datetime import date, datetime, timedelta
 
 from app.routes.common import superviseur_only, superviseur_access
 from app.services import StatsService, BusService, MaintenanceService, RapportService
+from app.models.prestataire import Prestataire
 
 # Création du blueprint superviseur
 bp = Blueprint('superviseur', __name__, url_prefix='/superviseur')
@@ -581,6 +582,9 @@ def rapport_noblesse():
         mois_actuel = mois_noms[date_actuelle.month - 1]
         periode_formatee = f"{mois_actuel} {date_actuelle.year}"
 
+        # Récupérer les informations du prestataire Noblesse
+        prestataire_info = Prestataire.query.filter_by(nom_prestataire='Noblesse').first()
+
         return render_template(
             'legacy/rapport_entity.html',  # Template admin existant
             trajets=trajets,
@@ -589,6 +593,7 @@ def rapport_noblesse():
             periode=periode,
             entity_name='Noblesse',
             entity_type='prestataire',
+            prestataire_info=prestataire_info,
             total_trajets=total_trajets,
             total_passagers=total_passagers,
             readonly=True,
@@ -663,6 +668,9 @@ def rapport_charter():
         mois_actuel = mois_noms[date_actuelle.month - 1]
         periode_formatee = f"{mois_actuel} {date_actuelle.year}"
 
+        # Récupérer les informations du prestataire Charter
+        prestataire_info = Prestataire.query.filter_by(nom_prestataire='Charter').first()
+
         return render_template(
             'legacy/rapport_entity.html',
             trajets=trajets,
@@ -671,6 +679,7 @@ def rapport_charter():
             periode=periode,
             entity_name='Charter',
             entity_type='prestataire',
+            prestataire_info=prestataire_info,
             total_trajets=total_trajets,
             total_passagers=total_passagers,
             readonly=True,

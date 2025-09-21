@@ -1,14 +1,14 @@
 {% extends "_base_dashboard.html" %}
 
 {% set sidebar_title = "Superviseur Panel" %}
-{% set sidebar_subtitle = "Transport Universitaire" %}
+{% set sidebar_subtitle = "TransportUdM" %}
 
 {# Menu latéral dédié superviseur #}
 {% block nav_menu %}
 <div class="nav-item">
     <a href="{{ url_for('superviseur.dashboard') }}" class="nav-link {% if active_page == 'dashboard' %}active{% endif %}">
         <i class="fas fa-tachometer-alt"></i>
-        <span>Dashboard</span>
+        <span>Tableau de bord</span>
     </a>
 </div>
 <div class="nav-item">

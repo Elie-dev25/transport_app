@@ -5,14 +5,42 @@
     animation: fadeInUp 0.6s ease-out;
 }
 
-/* Suppression des scrolls dans les sections */
+/* Suppression FORCÉE des scrolls dans les sections */
 .rapport-entity-container .table-container,
 .rapport-entity-container .info-grid,
 .rapport-entity-container .info-card,
-.rapport-entity-container .info-card-body {
+.rapport-entity-container .info-card-body,
+.rapport-entity-container .info-card-header,
+.rapport-entity-container .chart-container-modern,
+.rapport-entity-container .chart-body,
+.rapport-entity-container .chart-canvas-wrapper {
     overflow: visible !important;
     max-height: none !important;
     height: auto !important;
+    min-height: auto !important;
+}
+
+/* Correction spécifique pour les sections problématiques */
+#entityHeader,
+#filtersSection,
+#statsSection,
+#trajetsTable {
+    overflow: visible !important;
+}
+
+#entityHeader .table-container,
+#filtersSection .table-container,
+#statsSection .table-container,
+#trajetsTable .table-container {
+    overflow: visible !important;
+    max-height: none !important;
+    height: auto !important;
+}
+
+/* Forcer la visibilité sur tous les éléments enfants */
+.rapport-entity-container * {
+    overflow-x: visible !important;
+    overflow-y: visible !important;
 }
 
 @keyframes fadeInUp {
@@ -126,31 +154,32 @@
     left: 0;
 }
 
-/* Effet de brillance au survol */
+/* Effet de brillance au survol - CORRIGÉ */
 .rapport-entity-container .info-card::after {
     content: '';
     position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    top: -10%;
+    left: -10%;
+    width: 120%;
+    height: 120%;
+    background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.08), transparent);
     transform: rotate(45deg);
-    transition: all 0.6s ease;
+    transition: all 0.4s ease;
     opacity: 0;
+    pointer-events: none;
 }
 
 .rapport-entity-container .info-card:hover::after {
-    animation: shimmer 0.8s ease-in-out;
+    animation: shimmer 0.6s ease-in-out;
     opacity: 1;
 }
 
 @keyframes shimmer {
     0% {
-        transform: translateX(-100%) translateY(-100%) rotate(45deg);
+        transform: translateX(-50%) translateY(-50%) rotate(45deg);
     }
     100% {
-        transform: translateX(100%) translateY(100%) rotate(45deg);
+        transform: translateX(50%) translateY(50%) rotate(45deg);
     }
 }
 
@@ -393,34 +422,397 @@
     opacity: 0.1;
 }
 
-/* ===== RESPONSIVE DESIGN ===== */
+/* ===== RESPONSIVE DESIGN COMPLET ===== */
 
-@media (max-width: 768px) {
-    .rapport-entity-container .table-container {
-        margin-bottom: 16px;
+/* Styles de base pour les grilles */
+.rapport-entity-container .info-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
+    gap: 20px !important;
+    margin-bottom: 20px !important;
+}
+
+/* Styles pour les filtres */
+.rapport-entity-container .table-filters {
+    margin-bottom: 25px;
+    padding: 20px;
+    background: #f8fafc;
+    border-radius: 12px;
+    border-left: 4px solid #10b981;
+}
+
+.rapport-entity-container .filter-group {
+    margin-bottom: 20px;
+}
+
+.rapport-entity-container .filter-group:last-child {
+    margin-bottom: 0;
+}
+
+.rapport-entity-container .filter-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 12px;
+    font-size: 0.95rem;
+}
+
+.rapport-entity-container .filter-label i {
+    color: #10b981;
+}
+
+.rapport-entity-container .filter-buttons {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.rapport-entity-container .filter-btn {
+    padding: 10px 20px;
+    border: 2px solid #d1d5db;
+    background: #ffffff;
+    color: #6b7280;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    text-decoration: none;
+}
+
+.rapport-entity-container .filter-btn:hover {
+    border-color: #10b981;
+    color: #10b981;
+    transform: translateY(-1px);
+    text-decoration: none;
+}
+
+.rapport-entity-container .filter-btn.active {
+    background: #10b981;
+    border-color: #10b981;
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+}
+
+.rapport-entity-container .date-range-inputs {
+    display: flex;
+    gap: 15px;
+    align-items: end;
+    flex-wrap: wrap;
+}
+
+.rapport-entity-container .date-input-group {
+    display: flex;
+    flex-direction: column;
+    min-width: 140px;
+}
+
+.rapport-entity-container .date-input-group label {
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #6b7280;
+    font-size: 0.9rem;
+}
+
+.rapport-entity-container .date-input {
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+.rapport-entity-container .date-input:focus {
+    outline: none;
+    border-color: #10b981;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+/* Tablettes (1024px et moins) */
+@media (max-width: 1024px) {
+    .rapport-entity-container .info-grid {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)) !important;
+        gap: 15px !important;
     }
-    
-    #actionsSection .info-grid {
-        grid-template-columns: 1fr;
-        gap: 16px;
-    }
-    
-    .rapport-entity-container .info-card-header {
-        padding: 16px 20px;
-    }
-    
-    .rapport-entity-container .info-card-body {
-        padding: 20px;
+
+    .rapport-entity-container .table-filters {
+        padding: 15px;
     }
 }
 
+/* Mobile (768px et moins) */
+@media (max-width: 768px) {
+    .rapport-entity-container {
+        padding: 0;
+        overflow-x: hidden;
+    }
+
+    .rapport-entity-container .info-grid {
+        grid-template-columns: 1fr !important;
+        gap: 15px !important;
+    }
+
+    .rapport-entity-container .table-container {
+        margin-bottom: 16px;
+    }
+
+    .rapport-entity-container .info-card-header {
+        padding: 16px 20px;
+    }
+
+    .rapport-entity-container .info-card-body {
+        padding: 20px;
+    }
+
+    .rapport-entity-container .filter-buttons {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .rapport-entity-container .filter-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .rapport-entity-container .date-range-inputs {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .rapport-entity-container .date-input-group {
+        width: 100%;
+    }
+
+    /* Tableau responsive */
+    .rapport-entity-container .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .rapport-entity-container .table {
+        min-width: 600px;
+    }
+}
+
+/* Très petits écrans (480px et moins) */
 @media (max-width: 480px) {
     .rapport-entity-container .info-card-header h4 {
         font-size: 1rem;
     }
-    
+
     .rapport-entity-container .info-card-header i {
         font-size: 1.1rem;
         padding: 6px;
+    }
+
+    .rapport-entity-container .info-card-header {
+        padding: 12px 16px;
+    }
+
+    .rapport-entity-container .info-card-body {
+        padding: 16px;
+    }
+
+    .rapport-entity-container .table-filters {
+        padding: 12px;
+    }
+
+    .rapport-entity-container .filter-btn {
+        padding: 8px 16px;
+        font-size: 0.85rem;
+    }
+
+    /* Boutons d'action responsive */
+    .rapport-entity-container .d-flex.gap-3 {
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+    }
+
+    .rapport-entity-container .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Correction spécifique pour éviter les débordements */
+.rapport-entity-container,
+.rapport-entity-container * {
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* Assurer que les tableaux sont responsifs */
+.rapport-entity-container .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Correction pour les badges et éléments inline */
+.rapport-entity-container .info-value,
+.rapport-entity-container .badge,
+.rapport-entity-container .status-badge {
+    word-break: break-word;
+    max-width: 100%;
+}
+
+/* ===== STYLES BOUTONS D'IMPRESSION ===== */
+.btn-outline-primary {
+    border: 2px solid #3b82f6;
+    color: #3b82f6;
+    background: transparent;
+    padding: 12px 24px;
+    font-weight: 600;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.btn-outline-primary:hover {
+    background: #3b82f6;
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+/* ===== SCROLL TABLEAU TRAJETS ===== */
+/* Appliquer le scroll exactement comme dans la page vidange */
+#trajetsTable .table-responsive {
+    max-height: 800px !important;
+    overflow-y: auto !important;
+    overflow-x: visible !important;
+}
+
+/* En-têtes fixes pendant le scroll */
+#trajetsTable .table thead {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 10 !important;
+    background: linear-gradient(135deg, #10b981, #059669) !important;
+}
+
+/* Style de la scrollbar */
+#trajetsTable .table-responsive::-webkit-scrollbar {
+    width: 8px;
+}
+
+#trajetsTable .table-responsive::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+#trajetsTable .table-responsive::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+#trajetsTable .table-responsive::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* ===== STYLES D'IMPRESSION FORMAT FICHE ===== */
+@media print {
+    /* Configuration de la page A4 */
+    @page {
+        size: A4;
+        margin: 2cm;
+    }
+
+    /* Masquer tout sauf le contenu d'impression */
+    body * {
+        visibility: hidden;
+    }
+
+    /* Créer une zone d'impression dédiée */
+    .print-content {
+        visibility: visible;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        font-family: Arial, sans-serif;
+        color: #000;
+        background: #fff;
+    }
+
+    /* En-tête de la fiche */
+    .print-header {
+        text-align: center;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #000;
+    }
+
+    .print-title {
+        font-size: 18px;
+        font-weight: bold;
+        text-transform: uppercase;
+        margin-bottom: 20px;
+    }
+
+    .print-info {
+        font-size: 14px;
+        line-height: 1.8;
+    }
+
+    .print-subtitle {
+        font-size: 16px;
+        font-weight: bold;
+        text-transform: uppercase;
+        margin-top: 15px;
+    }
+
+    /* Tableau de la fiche */
+    .print-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px 0;
+        font-size: 11px;
+    }
+
+    .print-table th {
+        border: 2px solid #000;
+        padding: 12px 8px;
+        text-align: center;
+        vertical-align: middle;
+        background: #f8f8f8;
+        font-weight: bold;
+        text-transform: uppercase;
+        height: 35px;
+    }
+
+    .print-table td {
+        border: 1px solid #000;
+        padding: 10px 8px;
+        text-align: center;
+        vertical-align: top;
+        height: 50px;
+        background: #fff;
+    }
+
+    /* Largeurs des colonnes selon votre esquisse */
+    .print-table th:nth-child(1), .print-table td:nth-child(1) { width: 18%; }
+    .print-table th:nth-child(2), .print-table td:nth-child(2) { width: 15%; }
+    .print-table th:nth-child(3), .print-table td:nth-child(3) { width: 15%; }
+    .print-table th:nth-child(4), .print-table td:nth-child(4) { width: 17%; }
+    .print-table th:nth-child(5), .print-table td:nth-child(5) { width: 12%; }
+    .print-table th:nth-child(6), .print-table td:nth-child(6) { width: 23%; }
+
+    /* Signature en bas */
+    .print-signature {
+        margin-top: 50px;
+        text-align: right;
+        border-top: 1px solid #ccc;
+        padding-top: 20px;
+        font-size: 12px;
+    }
+
+    /* Masquer les éléments non nécessaires */
+    .navbar, .sidebar, .btn, .table-filters, .info-card {
+        display: none !important;
     }
 }

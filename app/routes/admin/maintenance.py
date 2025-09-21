@@ -53,8 +53,12 @@ def depanage():
         .all()
     )
     
+    # Détecter si appelé par un responsable
+    source = request.args.get('source', '')
+    use_responsable_base = source == 'responsable' or (current_user.is_authenticated and current_user.role == 'RESPONSABLE')
+
     # Passer les pannes et dépannages au template
-    return render_template('pages/depanage.html', pannes=pannes, depannages=depannages, unresolved_counts=unresolved_counts)
+    return render_template('pages/depanage.html', pannes=pannes, depannages=depannages, unresolved_counts=unresolved_counts, use_responsable_base=use_responsable_base)
 
 # Route pour enregistrer une déclaration de panne
 @admin_only

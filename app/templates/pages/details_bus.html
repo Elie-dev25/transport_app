@@ -1,9 +1,17 @@
 {% if base_template is defined %}
 {% extends base_template %}
+{% elif use_responsable_base %}
+{% extends "roles/responsable/_base_responsable.html" %}
+{% elif superviseur_mode %}
+{% extends "roles/superviseur/_base_superviseur.html" %}
+{% elif current_user.role == 'RESPONSABLE' %}
+{% extends "roles/responsable/_base_responsable.html" %}
 {% elif current_user.role == 'MECANICIEN' %}
 {% extends "roles/mecanicien/_base_mecanicien.html" %}
 {% elif current_user.role == 'CHARGE' %}
 {% extends "roles/charge_transport/_base_charge.html" %}
+{% elif current_user.role == 'CHAUFFEUR' %}
+{% extends "roles/chauffeur/_base_chauffeur.html" %}
 {% else %}
 {% extends "roles/admin/_base_admin.html" %}
 {% endif %}

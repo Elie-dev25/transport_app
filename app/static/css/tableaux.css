@@ -8,7 +8,7 @@
     padding: 30px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     margin-bottom: 30px;
-    overflow: hidden;
+    overflow: visible;
     transition: all 0.3s ease;
 }
 
@@ -344,7 +344,7 @@
     background: #ffffff;
     border: 1px solid #e5e7eb;
     border-radius: 16px;
-    overflow: hidden;
+    overflow: visible;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     position: relative;
@@ -417,6 +417,7 @@
 .info-card-body {
     padding: 24px;
     background: linear-gradient(180deg, #ffffff, #fafbfc);
+    overflow: visible;
 }
 
 .info-item {
@@ -833,7 +834,7 @@
     background: #ffffff;
     border-radius: 12px;
     border: 1px solid #e5e7eb;
-    overflow: hidden;
+    overflow: visible;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
@@ -876,6 +877,7 @@
 
 .chart-body {
     padding: 25px;
+    overflow: visible;
 }
 
 .chart-canvas-wrapper {
@@ -883,6 +885,9 @@
     background: #fafafa;
     border-radius: 8px;
     border: 2px dashed #d1d5db;
+    overflow: visible;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .chart-placeholder {

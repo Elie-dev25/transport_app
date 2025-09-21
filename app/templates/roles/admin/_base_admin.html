@@ -1,7 +1,7 @@
 {% extends "_base_dashboard.html" %}
 
 {% set sidebar_title = "Admin Panel" %}
-{% set sidebar_subtitle = "Transport Universitaire" %}
+{% set sidebar_subtitle = "TransportUdM" %}
 
 {% block nav_menu %}
 <div class="nav-item">
@@ -11,7 +11,7 @@
             {% if current_user.role == 'SUPERVISEUR' %}
                 Tableau de Bord <span class="badge bg-info ms-1">Lecture</span>
             {% else %}
-                Accueil
+                Tableau de bord
             {% endif %}
         </span>
     </a>

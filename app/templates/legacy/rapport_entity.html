@@ -14,48 +14,16 @@
 {% block extra_head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/tableaux.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/rapport_entity.css') }}">
-<style>
-/* Styles pour les boutons d'impression */
-.btn-outline-primary {
-    border: 2px solid #3b82f6;
-    color: #3b82f6;
-    background: transparent;
-    padding: 12px 24px;
-    font-weight: 600;
-    border-radius: 0.5rem;
-    transition: all 0.2s ease;
-}
-.btn-outline-primary:hover {
-    background: #3b82f6;
-    color: white;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-}
-/* Styles spécifiques pour l'impression */
-@media print {
-    .table-filters, .navbar, .sidebar, .table-actions {
-        display: none !important;
-    }
+<script src="{{ url_for('static', filename='js/rapport_entity_print.js') }}"></script>
 
-    .table-container {
-        box-shadow: none;
-        border: 1px solid #000;
-    }
-
-    .table-title {
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-    }
-}
-</style>
 {% endblock %}
 
 {# Wrap the main body so we can include it in both base blocks #}
 {% macro rapport_entity_body() %}
-<div class="rapport-entity-container">
+<div class="rapport-entity-container" data-entity="{{ entity_name }}"
     <!-- En-tête de l'entité modernisé -->
     {% call table_container('Rapport ' + entity_name, 'route', search=false, subtitle='Analyse détaillée des trajets pour la période sélectionnée', table_id='entityHeader') %}
-        <div class="info-grid" style="margin-bottom: 0;">
+        <div class="info-grid">
             <!-- Carte Type d'Entité -->
             <div class="info-card">
                 <div class="info-card-header">
@@ -88,6 +56,34 @@
                 </div>
             </div>
 
+            <!-- Carte Contact Prestataire (uniquement pour Charter/Noblesse) -->
+            {% if entity_type == 'prestataire' and prestataire_info %}
+            <div class="info-card">
+                <div class="info-card-header">
+                    <i class="fas fa-address-book"></i>
+                    <h4>Contact Prestataire</h4>
+                </div>
+                <div class="info-card-body">
+                    {% if prestataire_info.telephone %}
+                    <div class="info-item">
+                        <span class="info-label">Téléphone :</span>
+                        <span class="info-value">
+                            {{ icon_cell('phone', prestataire_info.telephone) }}
+                        </span>
+                    </div>
+                    {% endif %}
+                    {% if prestataire_info.email %}
+                    <div class="info-item">
+                        <span class="info-label">Email :</span>
+                        <span class="info-value">
+                            {{ icon_cell('envelope', prestataire_info.email) }}
+                        </span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
             <!-- Carte Période -->
             <div class="info-card">
                 <div class="info-card-header">
@@ -101,14 +97,14 @@
                         <span class="info-label">Type :</span>
                         <span class="info-value">
                             {% if d1 and d2 %}
-                                {{ status_badge('Personnalisée', 'secondary', 'calendar-plus') }}
+                                {{ status_badge('Périodique', 'secondary', 'calendar-plus') }}
                             {% else %}
                                 {% if current_periode == 'jour' %}
-                                    {{ status_badge('Aujourd\'hui', 'success', 'calendar-day') }}
+                                    {{ status_badge('Journalière', 'success', 'calendar-day') }}
                                 {% elif current_periode == 'semaine' %}
-                                    {{ status_badge('Cette semaine', 'info', 'calendar-week') }}
+                                    {{ status_badge('Hebdomadaire', 'info', 'calendar-week') }}
                                 {% else %}
-                                    {{ status_badge(periode_formatee if periode_formatee is defined else 'Décembre 2024', 'primary', 'calendar-alt') }}
+                                    {{ status_badge('Mensuelle', 'primary', 'calendar-alt') }}
                                 {% endif %}
                             {% endif %}
                         </span>
@@ -116,15 +112,39 @@
                     <div class="info-item">
                         <span class="info-label">Dates :</span>
                         <span class="info-value">
+                            {# DEBUG: Afficher les variables disponibles #}
+                            <!-- DEBUG: current_periode={{ current_periode }}, start_date={{ start_date }}, end_date={{ end_date }} -->
                             {% if d1 and d2 %}
-                                {{ icon_cell('calendar', 'Du ' + d1 + ' au ' + d2) }}
+                                {# Périodique: du jj/mm/aaaa au jj/mm/aaaa #}
+                                {% set date_debut = d1.split('-') %}
+                                {% set date_fin = d2.split('-') %}
+                                {{ icon_cell('calendar', 'du ' + date_debut[2] + '/' + date_debut[1] + '/' + date_debut[0] + ' au ' + date_fin[2] + '/' + date_fin[1] + '/' + date_fin[0]) }}
                             {% else %}
                                 {% if current_periode == 'jour' %}
-                                    {{ icon_cell('calendar-day', 'Aujourd\'hui') }}
+                                    {# Journalière: jj/mm/aaaa - toujours afficher la vraie date #}
+                                    {% if start_date %}
+                                        {{ icon_cell('calendar-day', start_date.strftime('%d/%m/%Y')) }}
+                                    {% elif end_date %}
+                                        {{ icon_cell('calendar-day', end_date.strftime('%d/%m/%Y')) }}
+                                    {% else %}
+                                        {{ icon_cell('calendar-day', 'DEBUG: Pas de start_date/end_date') }}
+                                    {% endif %}
                                 {% elif current_periode == 'semaine' %}
-                                    {{ icon_cell('calendar-week', 'Cette semaine') }}
+                                    {# Hebdomadaire: du jj au jj/mm/aaaa - toujours afficher les vraies dates #}
+                                    {% if start_date and end_date %}
+                                        {{ icon_cell('calendar-week', 'du ' + start_date.strftime('%d') + ' au ' + end_date.strftime('%d/%m/%Y')) }}
+                                    {% else %}
+                                        {{ icon_cell('calendar-week', 'DEBUG: Pas de start_date/end_date pour semaine') }}
+                                    {% endif %}
                                 {% else %}
-                                    {{ icon_cell('calendar-alt', periode_formatee if periode_formatee is defined else 'Décembre 2024') }}
+                                    {# Mensuelle: mm/aaaa - toujours afficher le vrai mois/année #}
+                                    {% if start_date %}
+                                        {{ icon_cell('calendar-alt', start_date.strftime('%m/%Y')) }}
+                                    {% elif end_date %}
+                                        {{ icon_cell('calendar-alt', end_date.strftime('%m/%Y')) }}
+                                    {% else %}
+                                        {{ icon_cell('calendar-alt', 'DEBUG: Pas de start_date/end_date pour mois') }}
+                                    {% endif %}
                                 {% endif %}
                             {% endif %}
                         </span>
@@ -138,7 +158,7 @@
     {% call table_container('Filtres de Période', 'filter', search=false, subtitle='Sélectionnez la période d\'analyse des trajets', table_id='filtersSection') %}
 
         <!-- Filtres rapides -->
-        <div class="table-filters" style="margin-bottom: 25px;">
+        <div class="table-filters">
             <div class="filter-group">
                 <label class="filter-label">
                     <i class="fas fa-calendar-alt"></i>
@@ -327,14 +347,14 @@
                             {% endif %}
                         {% else %}
                             {% if trajet.numero_bus_udm %}
-                                {{ icon_cell('bus', 'UDM-' + trajet.numero_bus_udm|string) }}
+                                {{ icon_cell('bus', trajet.numero_bus_udm|string) }}
                             {% else %}
                                 <span class="text-muted">N/A</span>
                             {% endif %}
                         {% endif %}
                     </td>
                     <td>
-                        {{ status_badge((trajet.nombre_places_occupees or 0)|string + ' passagers', 'primary', 'users') }}
+                        {{ status_badge((trajet.nombre_places_occupees or 0)|string, 'primary', 'users') }}
                     </td>
                     <td>
                         {% if entity_name == 'Bus UdM' %}
@@ -431,5 +451,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+
 </script>
 {% endblock %}
+
+
