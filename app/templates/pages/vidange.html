@@ -15,7 +15,10 @@
 
 {% block extra_head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/tableaux.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/print.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/print-header.css') }}">
 <script src="{{ url_for('static', filename='js/tableaux.js') }}"></script>
+<script src="{{ url_for('static', filename='js/print-header.js') }}"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 {% endblock %}
 
@@ -91,6 +94,18 @@
             </tbody>
         </table>
     {% endcall %}
+
+    <!-- Bouton d'impression pour le tableau de gestion des vidanges -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-center align-items-center" style="width: 100%; text-align: center;">
+                <button onclick="printVidangeTable()" class="btn btn-outline-primary d-flex align-items-center gap-2">
+                    <i class="fas fa-print"></i>
+                    <span>Imprimer la liste des vidanges</span>
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 
@@ -256,10 +271,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 </table>
             </div>
         {% endcall %}
+
+        <!-- Bouton d'impression pour l'historique des vidanges -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-center align-items-center" style="width: 100%; text-align: center;">
+                    <button onclick="printHistoriqueTable()" class="btn btn-outline-primary d-flex align-items-center gap-2">
+                        <i class="fas fa-print"></i>
+                        <span>Imprimer l'historique des vidanges</span>
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_scripts %}
 <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+<script src="{{ url_for('static', filename='js/vidange_print.js') }}"></script>
 {% endblock %}

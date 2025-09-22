@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 {# Macro pour une grille de formulaire responsive #}
 {% macro form_grid(columns=2) %}
-<div class="form-grid" style="grid-template-columns: repeat({{ columns }}, 1fr);">
+<div class="form-grid form-grid-{{ columns }}">
     {{ caller() }}
 </div>
 {% endmacro %}

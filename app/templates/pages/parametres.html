@@ -14,11 +14,12 @@
 
 {% block extra_head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/parametres.css') }}?v=20250921">
+<script src="{{ url_for('static', filename='js/main.js') }}?v=20250921" defer></script>
 <script src="{{ url_for('static', filename='js/parametres.js') }}?v=20250921" defer></script>
 {% endblock %}
 
 {% block dashboard_content %}
-<div class="parametres-container">
+<div class="parametres-container" data-user-role="{{ current_user.role }}">
     <!-- Header avec gradient moderne -->
     <div class="parametres-header">
         <div class="header-content">
@@ -51,16 +52,30 @@
                 <div class="nav-indicator"></div>
             </div>
 
-            {% if current_user.role in ['ADMIN', 'RESPONSABLE'] %}
+            {% if current_user.role in ['ADMIN', 'RESPONSABLE', 'SUPERVISEUR'] %}
             <div class="nav-item" data-section="users">
                 <div class="nav-icon">
                     <i class="fas fa-users"></i>
                 </div>
                 <div class="nav-content">
                     <span class="nav-title">Gestion Utilisateurs</span>
-                    <span class="nav-subtitle">Création & modification</span>
+                    <span class="nav-subtitle">{% if current_user.role == 'SUPERVISEUR' %}Consultation{% else %}Création & modification{% endif %}</span>
                 </div>
-                <div class="permission-tag admin-resp">Admin/Resp</div>
+
+                <div class="nav-indicator"></div>
+            </div>
+            {% endif %}
+
+            {% if current_user.role in ['ADMIN', 'RESPONSABLE', 'SUPERVISEUR'] %}
+            <div class="nav-item" data-section="prestataires">
+                <div class="nav-icon">
+                    <i class="fas fa-truck"></i>
+                </div>
+                <div class="nav-content">
+                    <span class="nav-title">Prestataires</span>
+                    <span class="nav-subtitle">{% if current_user.role == 'SUPERVISEUR' %}Consultation{% else %}Gestion des prestataires{% endif %}</span>
+                </div>
+
                 <div class="nav-indicator"></div>
             </div>
             {% endif %}
@@ -74,7 +89,7 @@
                     <span class="nav-title">Identifiants</span>
                     <span class="nav-subtitle">Modification sécurisée</span>
                 </div>
-                <div class="permission-tag admin-only">Admin</div>
+                
                 <div class="nav-indicator"></div>
             </div>
             {% endif %}
@@ -96,18 +111,30 @@
     <div class="settings-content">
         <!-- Section Audit & Traçabilité -->
         <div id="audit-section" class="settings-section active">
-            <!-- Statistiques avec design moderne -->
-            <div class="stats-grid">
+            <!-- En-tête de section amélioré -->
+            <div class="section-header">
+                <div class="section-title">
+                    <i class="fas fa-shield-alt"></i>
+                    <h2>Système d'Audit Intelligent</h2>
+                </div>
+                <div class="section-subtitle">
+                    <p>Traçabilité complète des actions critiques - 6 rôles surveillés</p>
+                </div>
+            </div>
+
+            <!-- Statistiques avec design moderne pour les 6 rôles -->
+            <div class="stats-grid-6">
                 <div class="stat-card admin">
                     <div class="stat-icon">
                         <i class="fas fa-user-shield"></i>
                     </div>
                     <div class="stat-content">
                         <div class="stat-number" id="admin-count">-</div>
-                        <div class="stat-label">Actions Admin</div>
+                        <div class="stat-label">Admin</div>
+                        <div class="stat-success-rate" id="admin-success">100%</div>
                     </div>
-                    <div class="stat-trend">
-                        <i class="fas fa-arrow-up"></i>
+                    <div class="stat-level-indicator">
+                        <div class="level-bar" id="admin-critical-bar"></div>
                     </div>
                 </div>
 
@@ -117,36 +144,89 @@
                     </div>
                     <div class="stat-content">
                         <div class="stat-number" id="responsable-count">-</div>
-                        <div class="stat-label">Actions Responsable</div>
+                        <div class="stat-label">Responsable</div>
+                        <div class="stat-success-rate" id="responsable-success">100%</div>
                     </div>
-                    <div class="stat-trend">
-                        <i class="fas fa-arrow-up"></i>
+                    <div class="stat-level-indicator">
+                        <div class="level-bar" id="responsable-critical-bar"></div>
                     </div>
                 </div>
 
                 <div class="stat-card superviseur">
                     <div class="stat-icon">
-                        <i class="fas fa-user-cog"></i>
+                        <i class="fas fa-user-check"></i>
                     </div>
                     <div class="stat-content">
                         <div class="stat-number" id="superviseur-count">-</div>
-                        <div class="stat-label">Actions Superviseur</div>
+                        <div class="stat-label">Superviseur</div>
+                        <div class="stat-success-rate" id="superviseur-success">100%</div>
                     </div>
-                    <div class="stat-trend">
-                        <i class="fas fa-arrow-up"></i>
+                    <div class="stat-level-indicator">
+                        <div class="level-bar" id="superviseur-critical-bar"></div>
                     </div>
                 </div>
 
-                <div class="stat-card total">
+                <div class="stat-card charge">
                     <div class="stat-icon">
-                        <i class="fas fa-chart-line"></i>
+                        <i class="fas fa-clipboard-list"></i>
                     </div>
                     <div class="stat-content">
-                        <div class="stat-number" id="total-count">-</div>
-                        <div class="stat-label">Total Actions</div>
+                        <div class="stat-number" id="charge-count">-</div>
+                        <div class="stat-label">Chargé Transport</div>
+                        <div class="stat-success-rate" id="charge-success">100%</div>
                     </div>
-                    <div class="stat-trend">
-                        <i class="fas fa-arrow-up"></i>
+                    <div class="stat-level-indicator">
+                        <div class="level-bar" id="charge-critical-bar"></div>
+                    </div>
+                </div>
+
+                <div class="stat-card chauffeur">
+                    <div class="stat-icon">
+                        <i class="fas fa-steering-wheel"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="chauffeur-count">-</div>
+                        <div class="stat-label">Chauffeur</div>
+                        <div class="stat-success-rate" id="chauffeur-success">100%</div>
+                    </div>
+                    <div class="stat-level-indicator">
+                        <div class="level-bar" id="chauffeur-critical-bar"></div>
+                    </div>
+                </div>
+
+                <div class="stat-card mecanicien">
+                    <div class="stat-icon">
+                        <i class="fas fa-wrench"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="mecanicien-count">-</div>
+                        <div class="stat-label">Mécanicien</div>
+                        <div class="stat-success-rate" id="mecanicien-success">100%</div>
+                    </div>
+                    <div class="stat-level-indicator">
+                        <div class="level-bar" id="mecanicien-critical-bar"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alertes critiques -->
+            <div class="modern-card alerts-card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span>Alertes Critiques (24h)</span>
+                        <span id="alerts-count" class="count-badge critical">0</span>
+                    </div>
+                    <button id="refresh-alerts" class="btn-icon">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+                <div class="card-content">
+                    <div id="critical-alerts" class="alerts-container">
+                        <div class="no-alerts">
+                            <i class="fas fa-check-circle"></i>
+                            <p>Aucune alerte critique</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -179,12 +259,30 @@
                                 <label class="filter-label">Type d'action</label>
                                 <select name="action" class="modern-select">
                                     <option value="">Toutes les actions</option>
-                                    <option value="CONSULTATION">Consultation</option>
-                                    <option value="CREATION">Création</option>
-                                    <option value="MODIFICATION">Modification</option>
-                                    <option value="SUPPRESSION">Suppression</option>
-                                    <option value="ACTION_ADMIN">Action Admin</option>
-                                    <option value="ACTION_METIER">Action Métier</option>
+                                    <option value="LOGIN_SUCCESS">Connexion réussie</option>
+                                    <option value="LOGIN_FAILED">Connexion échouée</option>
+                                    <option value="LOGOUT">Déconnexion</option>
+                                    <option value="CREATE">Création</option>
+                                    <option value="UPDATE">Modification</option>
+                                    <option value="DELETE">Suppression</option>
+                                    <option value="USER_CREATED">Utilisateur créé</option>
+                                    <option value="USER_ROLE_CHANGED">Rôle modifié</option>
+                                    <option value="SENSITIVE_ACCESS">Accès sensible</option>
+                                    <option value="UNAUTHORIZED_ACCESS">Accès refusé</option>
+                                    <option value="SYSTEM_ERROR">Erreur système</option>
+                                    <option value="SECURITY_VIOLATION">Violation sécurité</option>
+                                    <option value="CONFIG_CHANGED">Config modifiée</option>
+                                </select>
+                            </div>
+
+                            <div class="filter-group">
+                                <label class="filter-label">Niveau</label>
+                                <select name="level" class="modern-select">
+                                    <option value="">Tous les niveaux</option>
+                                    <option value="CRITICAL">Critique</option>
+                                    <option value="HIGH">Élevé</option>
+                                    <option value="MEDIUM">Moyen</option>
+                                    <option value="LOW">Faible</option>
                                 </select>
                             </div>
 
@@ -237,14 +335,16 @@
         </div>
 
         <!-- Section Gestion Utilisateurs -->
-        {% if current_user.role in ['ADMIN', 'RESPONSABLE'] %}
+        {% if current_user.role in ['ADMIN', 'RESPONSABLE', 'SUPERVISEUR'] %}
         <div id="users-section" class="settings-section">
+            {% if current_user.role in ['ADMIN', 'RESPONSABLE'] %}
             <div class="section-actions">
-                <button type="button" class="btn-modern btn-success" data-bs-toggle="modal" data-bs-target="#createUserModal">
+                <button type="button" class="btn-modern btn-success" onclick="openAddUserModal()">
                     <i class="fas fa-plus"></i>
                     <span>Créer un utilisateur</span>
                 </button>
             </div>
+            {% endif %}
 
             <div class="modern-card users-card">
                 <div class="card-header">
@@ -263,19 +363,76 @@
                             <thead>
                                 <tr>
                                     <th>Login</th>
-                                    <th>Nom Complet</th>
+                                    <th>Nom</th>
+                                    <th>Prénom</th>
                                     <th>Rôle</th>
                                     <th>Statut</th>
                                     <th>Dernière Connexion</th>
+                                    {% if current_user.role in ['ADMIN', 'RESPONSABLE'] %}
                                     <th>Actions</th>
+                                    {% endif %}
                                 </tr>
                             </thead>
                             <tbody id="users-table-body">
                                 <tr>
-                                    <td colspan="6" class="loading-cell">
+                                    <td colspan="{% if current_user.role in ['ADMIN', 'RESPONSABLE'] %}7{% else %}6{% endif %}" class="loading-cell">
                                         <div class="loading-state">
                                             <div class="loading-spinner"></div>
                                             <p>Chargement des utilisateurs...</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Section Gestion Prestataires -->
+        {% if current_user.role in ['ADMIN', 'RESPONSABLE', 'SUPERVISEUR'] %}
+        <div id="prestataires-section" class="settings-section">
+            {% if current_user.role in ['ADMIN', 'RESPONSABLE'] %}
+            <div class="section-actions">
+                <button type="button" class="btn-modern btn-success" onclick="openCreatePrestataireModal()">
+                    <i class="fas fa-plus"></i>
+                    <span>Créer un prestataire</span>
+                </button>
+            </div>
+            {% endif %}
+
+            <div class="modern-card prestataires-card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fas fa-truck"></i>
+                        <span>Liste des Prestataires</span>
+                        <span id="prestataires-count" class="count-badge">0</span>
+                    </div>
+                    <button id="refresh-prestataires" class="btn-icon">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+                <div class="card-content">
+                    <div class="table-container">
+                        <table class="modern-table">
+                            <thead>
+                                <tr>
+                                    <th>Nom du Prestataire</th>
+                                    <th>Téléphone</th>
+                                    <th>Email</th>
+                                    <th>Localisation</th>
+                                    {% if current_user.role in ['ADMIN', 'RESPONSABLE'] %}
+                                    <th>Actions</th>
+                                    {% endif %}
+                                </tr>
+                            </thead>
+                            <tbody id="prestataires-table-body">
+                                <tr>
+                                    <td colspan="{% if current_user.role in ['ADMIN', 'RESPONSABLE'] %}5{% else %}4{% endif %}" class="loading-cell">
+                                        <div class="loading-state">
+                                            <div class="loading-spinner"></div>
+                                            <p>Chargement des prestataires...</p>
                                         </div>
                                     </td>
                                 </tr>
@@ -386,10 +543,7 @@
                                 <span class="detail-label">Connexion:</span>
                                 <span class="detail-value" id="session-time">-</span>
                             </div>
-                            <div class="detail-item">
-                                <span class="detail-label">IP:</span>
-                                <span class="detail-value" id="session-ip">{{ request.remote_addr }}</span>
-                            </div>
+                           
                         </div>
                     </div>
                 </div>
@@ -440,132 +594,10 @@
         </div>
     </div>
 
-    <!-- Modals -->
+    <!-- Include des modals existants -->
     {% if current_user.role in ['ADMIN', 'RESPONSABLE'] %}
-    <!-- Modal Créer Utilisateur -->
-    <div class="modal fade" id="createUserModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content modern-modal">
-                <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i class="fas fa-plus"></i>
-                        <span>Créer un Utilisateur</span>
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <form id="create-user-form">
-                    <div class="modal-body">
-                        <div class="form-grid">
-                            <div class="form-column">
-                                <div class="form-group">
-                                    <label class="form-label">Login *</label>
-                                    <input type="text" name="login" class="modern-input" required>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Mot de passe *</label>
-                                    <input type="password" name="password" class="modern-input" required>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Confirmer mot de passe *</label>
-                                    <input type="password" name="confirm_password" class="modern-input" required>
-                                </div>
-                            </div>
-                            <div class="form-column">
-                                <div class="form-group">
-                                    <label class="form-label">Nom *</label>
-                                    <input type="text" name="nom" class="modern-input" required>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Prénom *</label>
-                                    <input type="text" name="prenom" class="modern-input" required>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Email</label>
-                                    <input type="email" name="email" class="modern-input" placeholder="Optionnel">
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Téléphone</label>
-                                    <input type="tel" name="telephone" class="modern-input" placeholder="Optionnel">
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Rôle *</label>
-                                    <select name="role" class="modern-select" required>
-                                        <option value="">Sélectionner un rôle</option>
-                                        <option value="ADMIN">Administrateur</option>
-                                        <option value="RESPONSABLE">Responsable</option>
-                                        <option value="SUPERVISEUR">Superviseur</option>
-                                        <option value="CHARGE">Chargé de Transport</option>
-                                        <option value="CHAUFFEUR">Chauffeur</option>
-                                        <option value="MECANICIEN">Mécanicien</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn-modern btn-outline" data-bs-dismiss="modal">
-                            <i class="fas fa-times"></i>
-                            <span>Annuler</span>
-                        </button>
-                        <button type="submit" class="btn-modern btn-success">
-                            <i class="fas fa-plus"></i>
-                            <span>Créer l'utilisateur</span>
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Modifier Rôle -->
-    <div class="modal fade" id="editRoleModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content modern-modal">
-                <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i class="fas fa-user-tag"></i>
-                        <span>Modifier le Rôle</span>
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <form id="edit-role-form">
-                    <div class="modal-body">
-                        <input type="hidden" name="user_id" id="edit-role-user-id">
-                        <div class="form-group">
-                            <label class="form-label">Utilisateur</label>
-                            <input type="text" id="edit-role-user-name" class="modern-input" readonly>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Rôle actuel</label>
-                            <input type="text" id="edit-role-current" class="modern-input" readonly>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Nouveau rôle *</label>
-                            <select name="new_role" id="edit-role-new" class="modern-select" required>
-                                <option value="">Sélectionner un rôle</option>
-                                <option value="ADMIN">Administrateur</option>
-                                <option value="RESPONSABLE">Responsable</option>
-                                <option value="SUPERVISEUR">Superviseur</option>
-                                <option value="CHARGE">Chargé de Transport</option>
-                                <option value="CHAUFFEUR">Chauffeur</option>
-                                <option value="MECANICIEN">Mécanicien</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn-modern btn-outline" data-bs-dismiss="modal">
-                            <i class="fas fa-times"></i>
-                            <span>Annuler</span>
-                        </button>
-                        <button type="submit" class="btn-modern btn-warning">
-                            <i class="fas fa-user-tag"></i>
-                            <span>Modifier le rôle</span>
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+    {% include 'shared/modals/_add_user_modal.html' %}
+    {% include 'shared/modals/_create_prestataire_modal.html' %}
     {% endif %}
 </div>
 {% endblock %}

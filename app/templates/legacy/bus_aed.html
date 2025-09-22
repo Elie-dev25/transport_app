@@ -8,42 +8,7 @@
 {% block extra_head %}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <style>
-      /* Styles spécifiques à la page Bus AED */
-      #docFormModal, #addBusModal {
-        z-index: 10000;
-      }
-
-      /* Styles pour les détails de bus */
-      .details-list {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-      }
-      .details-list li {
-        margin: 6px 0;
-      }
-
-      /* Indicateurs colorés */
-      .indicator {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        display: inline-block;
-        margin-right: 6px;
-      }
-      .green { background: #10b981; }
-      .orange { background: #f59e0b; }
-      .red { background: #ef4444; }
-
-      /* Bouton fermeture personnalisé si nécessaire */
-      .close-btn {
-        background: none;
-        border: none;
-        font-size: 24px;
-        cursor: pointer;
-      }
-    </style>
+    <!-- CSS déjà inclus dans dashboard-main.css via bus-aed.css -->
 {% endblock %}
 
 {% block dashboard_content %}

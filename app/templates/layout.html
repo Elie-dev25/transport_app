@@ -2,6 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Tableau de bord{% endblock %} - UDM Transport</title>
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='img/Logo_Université_des_Montagnes.jpg') }}">
 
@@ -29,6 +30,29 @@
             transition: opacity 0.5s;
         }
         .flash-message.danger { background: #d9534f; }
+
+        /* Responsive flash messages */
+        @media (max-width: 768px) {
+            .flash-message {
+                top: 10px;
+                right: 10px;
+                left: 10px;
+                padding: 12px 20px;
+                font-size: 14px;
+                border-radius: 6px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .flash-message {
+                top: 5px;
+                right: 5px;
+                left: 5px;
+                padding: 10px 15px;
+                font-size: 13px;
+                border-radius: 4px;
+            }
+        }
     </style>
     <script>
         // Masquer automatiquement toutes les notifications après 5 secondes (avec fade-out)

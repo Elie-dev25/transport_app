@@ -1,0 +1,216 @@
+/* ================== EN-TÊTE D'IMPRESSION STANDARDISÉ ================== */
+/* En-tête officiel pour toutes les fiches d'impression UDM */
+
+/* ===== EN-TÊTE PRINCIPAL ===== */
+.udm-print-header {
+    width: 100%;
+    padding: 20px 0;
+    margin-bottom: 30px;
+    border-bottom: 3px solid #0056b3;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    page-break-inside: avoid;
+    position: relative;
+}
+
+.udm-print-header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* ===== SECTION LOGO ET UNIVERSITÉ ===== */
+.udm-header-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex: 1;
+}
+
+.udm-logo {
+    width: 80px;
+    height: 80px;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    object-fit: cover;
+}
+
+.udm-university-info {
+    flex: 1;
+}
+
+.udm-university-name {
+    font-size: 24px;
+    font-weight: bold;
+    color: #0056b3;
+    margin: 0 0 5px 0;
+    line-height: 1.2;
+}
+
+.udm-university-subtitle {
+    font-size: 14px;
+    color: #6c757d;
+    margin: 0;
+    font-style: italic;
+}
+
+/* ===== SECTION SERVICE ===== */
+.udm-header-right {
+    text-align: right;
+    flex: 1;
+    border-left: 2px solid #dee2e6;
+    padding-left: 20px;
+}
+
+.udm-service-code {
+    font-size: 18px;
+    font-weight: bold;
+    color: #0056b3;
+    margin: 0 0 5px 0;
+    letter-spacing: 1px;
+}
+
+.udm-service-name {
+    font-size: 12px;
+    color: #6c757d;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ===== INFORMATIONS DU DOCUMENT ===== */
+.udm-document-info {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    color: #6c757d;
+}
+
+.udm-document-title {
+    font-weight: 600;
+    color: #495057;
+}
+
+.udm-document-date {
+    font-style: italic;
+}
+
+/* ===== STYLES D'IMPRESSION ===== */
+@media print {
+    .udm-print-header {
+        background: white !important;
+        -webkit-print-color-adjust: exact !important;
+        color-adjust: exact !important;
+        box-shadow: none !important;
+    }
+    
+    .udm-logo {
+        box-shadow: none !important;
+    }
+    
+    .udm-university-name,
+    .udm-service-code {
+        color: #000 !important;
+    }
+    
+    .udm-university-subtitle,
+    .udm-service-name,
+    .udm-document-info {
+        color: #666 !important;
+    }
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+    .udm-print-header-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 20px;
+    }
+    
+    .udm-header-left {
+        flex-direction: column;
+        text-align: center;
+        gap: 15px;
+    }
+    
+    .udm-header-right {
+        border-left: none;
+        border-top: 2px solid #dee2e6;
+        padding-left: 0;
+        padding-top: 15px;
+        text-align: center;
+    }
+    
+    .udm-logo {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .udm-university-name {
+        font-size: 20px;
+    }
+    
+    .udm-service-code {
+        font-size: 16px;
+    }
+    
+    .udm-document-info {
+        flex-direction: column;
+        gap: 5px;
+        text-align: center;
+    }
+}
+
+/* ===== VARIANTES D'EN-TÊTE ===== */
+.udm-print-header.compact {
+    padding: 15px 0;
+    margin-bottom: 20px;
+}
+
+.udm-print-header.compact .udm-logo {
+    width: 60px;
+    height: 60px;
+}
+
+.udm-print-header.compact .udm-university-name {
+    font-size: 20px;
+}
+
+.udm-print-header.compact .udm-service-code {
+    font-size: 16px;
+}
+
+/* ===== THÈMES DE COULEUR ===== */
+.udm-print-header.theme-transport {
+    border-bottom-color: #28a745;
+}
+
+.udm-print-header.theme-transport .udm-university-name,
+.udm-print-header.theme-transport .udm-service-code {
+    color: #28a745;
+}
+
+.udm-print-header.theme-maintenance {
+    border-bottom-color: #ffc107;
+}
+
+.udm-print-header.theme-maintenance .udm-university-name,
+.udm-print-header.theme-maintenance .udm-service-code {
+    color: #856404;
+}
+
+.udm-print-header.theme-admin {
+    border-bottom-color: #dc3545;
+}
+
+.udm-print-header.theme-admin .udm-university-name,
+.udm-print-header.theme-admin .udm-service-code {
+    color: #dc3545;
+}

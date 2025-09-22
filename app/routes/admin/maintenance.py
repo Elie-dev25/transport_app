@@ -57,8 +57,16 @@ def depanage():
     source = request.args.get('source', '')
     use_responsable_base = source == 'responsable' or (current_user.is_authenticated and current_user.role == 'RESPONSABLE')
 
+    # Détecter si on vient de la route maintenance (pour l'active_page)
+    from_maintenance = request.referrer and 'maintenance' in request.referrer
+
     # Passer les pannes et dépannages au template
-    return render_template('pages/depanage.html', pannes=pannes, depannages=depannages, unresolved_counts=unresolved_counts, use_responsable_base=use_responsable_base)
+    return render_template('pages/depanage.html',
+                         pannes=pannes,
+                         depannages=depannages,
+                         unresolved_counts=unresolved_counts,
+                         use_responsable_base=use_responsable_base,
+                         from_maintenance=from_maintenance)
 
 # Route pour enregistrer une déclaration de panne
 @admin_only
@@ -361,6 +369,19 @@ def enregistrer_carburation():
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
 
+
+# Route pour la page Maintenance (redirection vers dépannage)
+@admin_only
+@bp.route('/maintenance')
+def maintenance():
+    """Redirection vers la page de dépannage"""
+    from flask import redirect, url_for
+    # Préserver les paramètres de source pour la traçabilité
+    source = request.args.get('source', '')
+    if source:
+        return redirect(url_for('admin.depanage', source=source))
+    else:
+        return redirect(url_for('admin.depanage'))
 
 # Route du tableau de bord mécanicien
 @admin_only

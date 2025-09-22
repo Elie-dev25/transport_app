@@ -4,6 +4,9 @@ function printReport() {
     // Récupérer les données de la page
     const entityName = document.querySelector('.rapport-entity-container').getAttribute('data-entity') || 'Noblesse';
 
+    // Créer l'en-tête standardisé UDM
+    const printHeader = createRapportHeader(`Rapport ${entityName}`, 'Analyse détaillée des trajets');
+
     // Récupérer le type et la date depuis la section "Période d'Analyse"
     // Chercher tous les éléments info-item et trouver ceux avec "Type :" et "Dates :"
     const infoItems = document.querySelectorAll('.info-item');
@@ -54,19 +57,15 @@ function printReport() {
     });
     headerContent += '</tr>';
     
-    // Créer le contenu HTML de la fiche
+    // Créer le contenu HTML de la fiche avec l'en-tête standardisé
     const printContent = `
-        <div class="print-content">
-            <div class="print-header">
-                <div class="print-title">RAPPORT ${entityName.toUpperCase()}</div>
-                <div class="print-info">
-                    Type: ${typeText}<br>
-                    Date: ${dateText}
-                </div>
-                <div class="print-subtitle">FICHE D'EMBARQUEMENT</div>
+        ${printHeader}
+        <div class="table-container">
+            <div class="table-container-header">
+                <h3>Rapport ${entityName} - Fiche d'Embarquement</h3>
+                <p class="table-container-subtitle">Type: ${typeText} | Date: ${dateText}</p>
             </div>
-            
-            <table class="print-table">
+            <table class="table">
                 <thead>
                     ${headerContent}
                 </thead>
@@ -74,109 +73,35 @@ function printReport() {
                     ${tableContent}
                 </tbody>
             </table>
-            
-            <div class="print-signature">
+            <div class="print-signature" style="margin-top: 30px; text-align: right; font-size: 12px;">
                 Signature: ________________________&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Date: _______________
             </div>
         </div>
+        <div class="print-footer">
+            <p>Université des Montagnes - Système de Gestion de Transport</p>
+        </div>
     `;
     
-    // Créer une nouvelle fenêtre pour l'impression avec styles intégrés
+    // Créer une nouvelle fenêtre pour l'impression avec les nouveaux styles
     const printWindow = window.open('', '_blank');
     printWindow.document.write(`
         <!DOCTYPE html>
-        <html>
+        <html lang="fr">
         <head>
-            <title>Fiche d'embarquement - ${entityName}</title>
+            <title>Rapport ${entityName} - UDM Transport</title>
+            <link rel="stylesheet" href="${window.location.origin}/static/css/print.css">
+            <link rel="stylesheet" href="${window.location.origin}/static/css/print-header.css">
             <style>
                 @page {
                     size: A4;
                     margin: 2cm;
                 }
-
-                body {
-                    margin: 0;
-                    padding: 20px;
-                    font-family: Arial, sans-serif;
-                    color: #000;
-                    background: #fff;
-                }
-
-                .print-content {
-                    width: 100%;
-                }
-
-                .print-header {
-                    text-align: center;
-                    margin-bottom: 30px;
-                    padding-bottom: 20px;
-                    border-bottom: 2px solid #000;
-                }
-
-                .print-title {
-                    font-size: 18px;
-                    font-weight: bold;
-                    text-transform: uppercase;
-                    margin-bottom: 20px;
-                }
-
-                .print-info {
-                    font-size: 14px;
-                    line-height: 1.8;
-                }
-
-                .print-subtitle {
-                    font-size: 16px;
-                    font-weight: bold;
-                    text-transform: uppercase;
-                    margin-top: 15px;
-                }
-
-                .print-table {
-                    width: 100%;
-                    border-collapse: collapse;
-                    margin: 20px 0;
-                    font-size: 11px;
-                }
-
-                .print-table th {
-                    border: 2px solid #000;
-                    padding: 12px 8px;
-                    text-align: center;
-                    vertical-align: middle;
-                    background: #f8f8f8;
-                    font-weight: bold;
-                    text-transform: uppercase;
-                    height: 35px;
-                }
-
-                .print-table td {
-                    border: 1px solid #000;
-                    padding: 10px 8px;
-                    text-align: center;
-                    vertical-align: top;
-                    height: 50px;
-                    background: #fff;
-                }
-
-                .print-table th:nth-child(1), .print-table td:nth-child(1) { width: 18%; }
-                .print-table th:nth-child(2), .print-table td:nth-child(2) { width: 15%; }
-                .print-table th:nth-child(3), .print-table td:nth-child(3) { width: 15%; }
-                .print-table th:nth-child(4), .print-table td:nth-child(4) { width: 17%; }
-                .print-table th:nth-child(5), .print-table td:nth-child(5) { width: 12%; }
-                .print-table th:nth-child(6), .print-table td:nth-child(6) { width: 23%; }
-
                 .print-signature {
-                    margin-top: 50px;
+                    margin-top: 30px;
                     text-align: right;
-                    border-top: 1px solid #ccc;
-                    padding-top: 20px;
                     font-size: 12px;
-                }
-
-                @media print {
-                    body { padding: 0; }
-                }
+                    border-top: 1px solid #ddd;
+                    padding-top: 15px;
             </style>
         </head>
         <body>
@@ -184,13 +109,16 @@ function printReport() {
         </body>
         </html>
     `);
-    
+
     printWindow.document.close();
-    
+    printWindow.focus();
+
     // Attendre que le contenu soit chargé puis imprimer
     printWindow.onload = function() {
-        printWindow.print();
-        printWindow.close();
+        setTimeout(() => {
+            printWindow.print();
+            printWindow.close();
+        }, 250);
     };
 }
 

@@ -7,13 +7,7 @@
     margin: 0 auto;
 }
 
-/* Optimisation pour grands écrans */
-@media (min-width: 1600px) {
-    .profil-container {
-        max-width: none;
-        padding: 30px 60px;
-    }
-}
+/* Suppression des styles pour très grands écrans - garder les tailles par défaut */
 
 @media (min-width: 2000px) {
     .profil-container {

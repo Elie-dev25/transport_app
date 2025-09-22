@@ -28,14 +28,18 @@
         <span>Chauffeurs {% if current_user.role == 'SUPERVISEUR' %}<span class="badge bg-info ms-1">Lecture</span>{% endif %}</span>
     </a>
 </div>
-{% if current_user.role == 'ADMIN' %}
 <div class="nav-item">
-    <a href="{{ url_for('admin.utilisateurs') }}" class="nav-link {% if active_page == 'utilisateurs' %}active{% endif %}">
-        <i class="fas fa-users"></i>
-        <span>Utilisateurs</span>
+    <a href="{{ url_for('admin.carburation') }}" class="nav-link {% if active_page == 'carburation' %}active{% endif %}">
+        <i class="fas fa-gas-pump"></i>
+        <span>Carburation {% if current_user.role == 'SUPERVISEUR' %}<span class="badge bg-info ms-1">Lecture</span>{% endif %}</span>
     </a>
 </div>
-{% endif %}
+<div class="nav-item">
+    <a href="{{ url_for('admin.depanage') }}" class="nav-link {% if active_page == 'depanage' %}active{% endif %}">
+        <i class="fas fa-wrench"></i>
+        <span>Dépannage {% if current_user.role == 'SUPERVISEUR' %}<span class="badge bg-info ms-1">Lecture</span>{% endif %}</span>
+    </a>
+</div>
 <div class="nav-item">
     <a href="{{ url_for('admin.rapports') }}" class="nav-link {% if active_page == 'rapports' %}active{% endif %}">
         <i class="fas fa-chart-bar"></i>

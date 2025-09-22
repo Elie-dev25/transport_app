@@ -1,0 +1,55 @@
+<!-- Modal for Create Prestataire Form -->
+{% from 'shared/macros/form_macros.html' import error_container %}
+
+<div id="createPrestataireModal" class="modal">
+  <div class="modal-content">
+    <button type="button" id="closeCreatePrestataireModal" class="close-btn"><i class="fas fa-times"></i></button>
+    <div class="modal-header">
+      <h3><i class="fas fa-truck"></i> Créer un prestataire</h3>
+    </div>
+    <div class="modal-body">
+      {{ error_container('createPrestataireError') }}
+      <form id="createPrestataireForm" action="/admin/api/prestataires" method="POST">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Nom du prestataire :</label>
+            <input type="text" name="nom_prestataire" required>
+          </div>
+          <div class="form-group">
+            <label>Téléphone :</label>
+            <input type="tel" name="telephone">
+          </div>
+          <div class="form-group">
+            <label>Email :</label>
+            <input type="email" name="email" >
+          </div>
+          <div class="form-group">
+            <label>Localisation :</label>
+            <input type="text" name="localisation" >
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="submit-btn">
+            <i class="fas fa-plus"></i> Créer le prestataire
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Initialisation du gestionnaire unifié -->
+{% from 'shared/macros/form_macros.html' import init_modal_form %}
+{{ init_modal_form('createPrestataireForm', 'createPrestataireModal', 'createPrestataireError', 'Prestataire créé avec succès.') }}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Gestionnaire pour le bouton de fermeture
+    const closeBtn = document.getElementById('closeCreatePrestataireModal');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', function() {
+            FormModalManager.closeModal('createPrestataireModal');
+        });
+    }
+});
+</script>

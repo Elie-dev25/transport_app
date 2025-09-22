@@ -17,6 +17,28 @@
 <!-- Overlay -->
 <div class="overlay" onclick="toggleSidebar()"></div>
 
+<!-- Mini Sidebar pour tablettes -->
+<div class="mini-sidebar">
+    <a href="{{ url_for('admin.dashboard') }}" class="mini-nav-item" data-tooltip="Dashboard">
+        <i class="fas fa-tachometer-alt"></i>
+    </a>
+    <a href="{{ url_for('admin.bus') }}" class="mini-nav-item" data-tooltip="Bus UdM">
+        <i class="fas fa-bus"></i>
+    </a>
+    <a href="{{ url_for('admin.carburation') }}" class="mini-nav-item" data-tooltip="Carburation">
+        <i class="fas fa-gas-pump"></i>
+    </a>
+    <a href="{{ url_for('admin.depanage') }}" class="mini-nav-item" data-tooltip="Dépannage">
+        <i class="fas fa-wrench"></i>
+    </a>
+    <a href="{{ url_for('admin.rapports') }}" class="mini-nav-item" data-tooltip="Rapports">
+        <i class="fas fa-chart-bar"></i>
+    </a>
+    <a href="{{ url_for('admin.parametres') }}" class="mini-nav-item" data-tooltip="Paramètres">
+        <i class="fas fa-cog"></i>
+    </a>
+</div>
+
 <!-- Sidebar -->
 {% block sidebar %}
 <div class="sidebar" id="sidebar">
@@ -83,8 +105,35 @@
     </div>
 </div>
 
+<!-- Bottom Navigation pour mobile -->
+<div class="bottom-nav">
+    <div class="bottom-nav-container">
+        <a href="{{ url_for('admin.dashboard') }}" class="bottom-nav-item">
+            <i class="fas fa-tachometer-alt"></i>
+            <span>Dashboard</span>
+        </a>
+        <a href="{{ url_for('admin.bus') }}" class="bottom-nav-item">
+            <i class="fas fa-bus"></i>
+            <span>Bus</span>
+        </a>
+        <a href="{{ url_for('admin.utilisateurs') }}" class="bottom-nav-item">
+            <i class="fas fa-users"></i>
+            <span>Users</span>
+        </a>
+        <a href="{{ url_for('admin.rapports') }}" class="bottom-nav-item">
+            <i class="fas fa-chart-bar"></i>
+            <span>Reports</span>
+        </a>
+        <a href="{{ url_for('admin.parametres') }}" class="bottom-nav-item">
+            <i class="fas fa-cog"></i>
+            <span>Settings</span>
+        </a>
+    </div>
+</div>
+
 <!-- Common Scripts -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="{{ url_for('static', filename='js/audit_print.js') }}"></script>
 <script>
 // Common dashboard functions
 function toggleSidebar() {
@@ -113,6 +162,25 @@ $(function() {
     refreshAlerts();
     setInterval(refreshAlerts, 30000);
     {% endif %}
+});
+
+// Gestion des états actifs pour mini-sidebar et bottom-nav
+document.addEventListener('DOMContentLoaded', function() {
+    const currentPath = window.location.pathname;
+
+    // Mini-sidebar
+    document.querySelectorAll('.mini-nav-item').forEach(item => {
+        if (item.getAttribute('href') === currentPath) {
+            item.classList.add('active');
+        }
+    });
+
+    // Bottom navigation
+    document.querySelectorAll('.bottom-nav-item').forEach(item => {
+        if (item.getAttribute('href') === currentPath) {
+            item.classList.add('active');
+        }
+    });
 });
 </script>
 

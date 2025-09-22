@@ -594,6 +594,36 @@
   .chart-card {
     padding: 1rem;
   }
+
+  /* Filtres très petits écrans */
+  .table-filters {
+    padding: 12px;
+    gap: 15px;
+  }
+
+  .filter-label {
+    font-size: 0.85rem;
+    margin-bottom: 10px;
+  }
+
+  .filter-btn {
+    padding: 10px 12px;
+    font-size: 0.85rem;
+  }
+
+  .date-input-group label {
+    font-size: 0.8rem;
+  }
+
+  .date-input {
+    padding: 8px 10px;
+    font-size: 0.85rem;
+  }
+
+  .table-btn.action {
+    padding: 10px 12px;
+    font-size: 0.85rem;
+  }
 }
 
 /* Section Titre pour les rapports */
@@ -660,6 +690,24 @@
   .chart-canvas-wrapper {
     height: 350px !important;
   }
+
+  /* Filtres sur tablettes */
+  .table-filters {
+    gap: 20px;
+  }
+
+  .filter-group {
+    min-width: 250px;
+  }
+
+  .filter-buttons {
+    gap: 8px;
+  }
+
+  .filter-btn {
+    font-size: 0.9rem;
+    padding: 8px 12px;
+  }
 }
 
 /* Amélioration responsive pour mobile */
@@ -693,25 +741,65 @@
   /* Filtres responsive */
   .table-filters {
     padding: 15px;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .filter-group {
+    min-width: auto;
+    width: 100%;
+  }
+
+  .filter-label {
+    margin-bottom: 12px;
+    font-size: 0.9rem;
   }
 
   .filter-buttons {
     flex-direction: column;
     gap: 10px;
+    margin-bottom: 0;
   }
 
   .filter-btn {
     width: 100%;
     justify-content: center;
+    padding: 12px 16px;
+    font-size: 0.9rem;
   }
 
   .date-range-inputs {
     flex-direction: column;
     gap: 15px;
+    align-items: stretch;
   }
 
   .date-input-group {
     width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .date-input-group label {
+    font-size: 0.85rem;
+    color: var(--gray-600);
+    margin-bottom: 5px;
+  }
+
+  .date-input {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 0.9rem;
+    border: 1px solid var(--gray-300);
+    border-radius: 8px;
+  }
+
+  .table-btn.action {
+    width: 100%;
+    margin-top: 10px;
+    padding: 12px 16px;
+    font-size: 0.9rem;
   }
 }
 
@@ -781,10 +869,16 @@ canvas {
   background: var(--gray-50);
   border-radius: 12px;
   border-left: 4px solid var(--primary-green);
+  display: flex;
+  gap: 30px;
+  align-items: flex-start;
+  flex-wrap: wrap;
 }
 
 .filter-group {
-  margin-bottom: 20px;
+  margin-bottom: 0;
+  flex: 1;
+  min-width: 300px;
 }
 
 .filter-group:last-child {

@@ -28,6 +28,12 @@ def role_required(*roles):
 
             # Vérification du rôle
             if session['user_role'] not in roles:
+                # AUDIT : Tentative d'accès non autorisé
+                from app.utils.audit_logger import log_unauthorized_access
+                log_unauthorized_access(
+                    attempted_resource=f.__name__,
+                    attempted_action=f"Required roles: {roles}, User role: {session['user_role']}"
+                )
                 flash("Accès refusé.", "danger")
                 return redirect(url_for('auth.login'))
 
@@ -68,9 +74,13 @@ def admin_or_responsable(view):
             flash("Accès refusé.", "danger")
             return redirect(url_for('auth.login'))
 
-        # Log de l'action avec le rôle exact (pour traçabilité)
-        from app.utils.audit_logger import log_user_action
-        log_user_action('ACTION_ADMIN', view.__name__, f"Accès admin/responsable - Rôle: {session['user_role']}")
+        # AUDIT : Accès ressource sensible
+        from app.utils.audit_logger import log_sensitive_access
+        log_sensitive_access(
+            resource_type='admin_function',
+            resource_id=view.__name__,
+            action_description=f"Admin/Responsable access - Role: {session['user_role']}"
+        )
 
         return view(*args, **kwargs)
     return decorated_function

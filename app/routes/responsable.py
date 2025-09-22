@@ -92,12 +92,20 @@ def chauffeurs():
     return redirect(url_for('admin.chauffeurs', source='responsable'))
 
 
-@bp.route('/maintenance')
+@bp.route('/depanage')
 @admin_or_responsable
-def maintenance():
-    """Redirection vers maintenance avec traçabilité responsable"""
+def depanage():
+    """Redirection vers dépannage avec traçabilité responsable"""
     from flask import redirect, url_for
-    return redirect(url_for('admin.maintenance', source='responsable'))
+    return redirect(url_for('admin.depanage', source='responsable'))
+
+
+@bp.route('/carburation')
+@admin_or_responsable
+def carburation():
+    """Redirection vers carburation avec traçabilité responsable"""
+    from flask import redirect, url_for
+    return redirect(url_for('admin.carburation', source='responsable'))
 
 
 @bp.route('/rapports')

@@ -241,6 +241,15 @@
                 <p>L'historique des trajets de ce véhicule apparaîtra ici.</p>
             </div>
         {% endif %}
+
+        <!-- Bouton d'impression pour les trajets -->
+        {% if trajets %}
+        <div class="d-flex justify-content-end mt-3">
+            <button onclick="printTrajetsTable('{{ bus.numero }}')" class="btn btn-outline-primary" title="Imprimer l'historique des trajets">
+                <i class="fas fa-print"></i>
+            </button>
+        </div>
+        {% endif %}
     {% endcall %}
 
     <!-- Historique des carburations -->
@@ -279,6 +288,15 @@
                 <p>L'historique des carburations de ce véhicule apparaîtra ici.</p>
             </div>
         {% endif %}
+
+        <!-- Bouton d'impression pour les carburations -->
+        {% if carburations %}
+        <div class="d-flex justify-content-end mt-3">
+            <button onclick="printCarburationsTable('{{ bus.numero }}')" class="btn btn-outline-primary" title="Imprimer l'historique des carburations">
+                <i class="fas fa-print"></i>
+            </button>
+        </div>
+        {% endif %}
     {% endcall %}
 
     <!-- Historique des vidanges -->
@@ -312,6 +330,15 @@
                 <h5>Aucune vidange enregistrée</h5>
                 <p>L'historique des vidanges de ce véhicule apparaîtra ici.</p>
             </div>
+        {% endif %}
+
+        <!-- Bouton d'impression pour les vidanges -->
+        {% if vidanges %}
+        <div class="d-flex justify-content-end mt-3">
+            <button onclick="printVidangesTable('{{ bus.numero }}')" class="btn btn-outline-primary" title="Imprimer l'historique des vidanges">
+                <i class="fas fa-print"></i>
+            </button>
+        </div>
         {% endif %}
     {% endcall %}
 
@@ -352,6 +379,15 @@
                 <h5>Aucune panne enregistrée</h5>
                 <p>L'historique des pannes de ce véhicule apparaîtra ici.</p>
             </div>
+        {% endif %}
+
+        <!-- Bouton d'impression pour les pannes -->
+        {% if pannes %}
+        <div class="d-flex justify-content-end mt-3">
+            <button onclick="printPannesTable('{{ bus.numero }}')" class="btn btn-outline-primary" title="Imprimer l'historique des pannes">
+                <i class="fas fa-print"></i>
+            </button>
+        </div>
         {% endif %}
     {% endcall %}
 
@@ -428,6 +464,10 @@
 
 {% block extra_head %}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/print.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/print-header.css') }}">
+  <script src="{{ url_for('static', filename='js/print-header.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/bus_detail_print.js') }}"></script>
 {% endblock %}
 
 

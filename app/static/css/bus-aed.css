@@ -1,0 +1,278 @@
+/* ================== BUS AED MODULE ================== */
+/* Module dédié aux styles spécifiques de la page Bus AED */
+
+/* Modals z-index */
+#docFormModal, 
+#addBusModal {
+    z-index: 10000;
+}
+
+/* Styles pour les détails de bus */
+.details-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.details-list li {
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.details-list li:last-child {
+    border-bottom: none;
+}
+
+.details-list li {
+    margin: 6px 0;
+}
+
+/* Indicateurs colorés */
+.indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 6px;
+}
+
+.green {
+    background: #10b981;
+}
+
+.orange {
+    background: #f59e0b;
+}
+
+.red {
+    background: #ef4444;
+}
+
+/* Bouton fermeture personnalisé */
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+.details-list .label {
+    font-weight: 600;
+    color: #333;
+    min-width: 120px;
+}
+
+.details-list .value {
+    color: #666;
+    text-align: right;
+}
+
+/* Styles pour les badges de statut */
+.status-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8em;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-badge.actif {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.status-badge.inactif {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.status-badge.maintenance {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+/* Styles pour les actions de bus */
+.bus-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.bus-actions .btn {
+    padding: 6px 12px;
+    font-size: 0.85em;
+    border-radius: 6px;
+}
+
+.bus-actions .btn-sm {
+    padding: 4px 8px;
+    font-size: 0.8em;
+}
+
+/* Styles pour les informations de bus */
+.bus-info-card {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.bus-info-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.bus-numero {
+    font-size: 1.2em;
+    font-weight: 700;
+    color: #1e3a8a;
+}
+
+.bus-type {
+    font-size: 0.9em;
+    color: #666;
+    background: #e9ecef;
+    padding: 2px 8px;
+    border-radius: 12px;
+}
+
+/* === RESPONSIVE BUS AED === */
+
+/* Tablet (768px et moins) */
+@media (max-width: 768px) {
+    .details-list li {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+    
+    .details-list .label {
+        min-width: auto;
+        font-size: 0.9em;
+    }
+    
+    .details-list .value {
+        text-align: left;
+        font-size: 0.85em;
+    }
+    
+    .bus-actions {
+        flex-direction: column;
+        gap: 6px;
+        width: 100%;
+    }
+    
+    .bus-actions .btn {
+        width: 100%;
+        padding: 8px 12px;
+        font-size: 0.8em;
+    }
+    
+    .bus-info-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .bus-numero {
+        font-size: 1.1em;
+    }
+    
+    .bus-type {
+        font-size: 0.8em;
+    }
+}
+
+/* Mobile (480px et moins) */
+@media (max-width: 480px) {
+    .details-list li {
+        padding: 6px 0;
+    }
+    
+    .details-list .label {
+        font-size: 0.85em;
+    }
+    
+    .details-list .value {
+        font-size: 0.8em;
+    }
+    
+    .status-badge {
+        padding: 3px 8px;
+        font-size: 0.75em;
+        border-radius: 16px;
+    }
+    
+    .bus-actions .btn {
+        padding: 6px 10px;
+        font-size: 0.75em;
+    }
+    
+    .bus-info-card {
+        padding: 12px;
+        margin-bottom: 12px;
+        border-radius: 6px;
+    }
+    
+    .bus-numero {
+        font-size: 1em;
+    }
+    
+    .bus-type {
+        font-size: 0.75em;
+        padding: 1px 6px;
+    }
+}
+
+/* Large Desktop (1200px et plus) */
+@media (min-width: 1200px) {
+    .details-list li {
+        padding: 10px 0;
+    }
+    
+    .details-list .label {
+        min-width: 140px;
+        font-size: 1em;
+    }
+    
+    .details-list .value {
+        font-size: 0.95em;
+    }
+    
+    .bus-actions {
+        gap: 10px;
+    }
+    
+    .bus-actions .btn {
+        padding: 8px 16px;
+        font-size: 0.9em;
+        border-radius: 8px;
+    }
+    
+    .bus-info-card {
+        padding: 18px;
+        margin-bottom: 18px;
+        border-radius: 10px;
+    }
+    
+    .bus-numero {
+        font-size: 1.3em;
+    }
+    
+    .bus-type {
+        font-size: 0.95em;
+        padding: 3px 10px;
+    }
+}
+
+/* Suppression des styles pour très grands écrans - garder les tailles par défaut */

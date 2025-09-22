@@ -117,3 +117,55 @@
         font-size: 18px;
     }
 }
+
+/* === RESPONSIVE USER STATS COMPLET === */
+
+/* Tablet (769px à 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .stats-overview {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+
+    .stat-card-modern {
+        padding: 22px;
+        border-radius: 14px;
+    }
+
+    .stat-content-modern h3 {
+        font-size: 2rem;
+    }
+
+    .stat-content-modern p {
+        font-size: 0.9rem;
+    }
+}
+
+/* Large Desktop (1200px à 1599px) */
+@media (min-width: 1200px) and (max-width: 1599px) {
+    .stats-overview {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 25px;
+    }
+
+    .stat-card-modern {
+        padding: 25px;
+        border-radius: 16px;
+    }
+
+    .stat-content-modern h3 {
+        font-size: 2.2rem;
+    }
+
+    .stat-content-modern p {
+        font-size: 1rem;
+    }
+
+    .stat-icon-modern {
+        width: 55px;
+        height: 55px;
+        font-size: 1.4rem;
+    }
+}
+
+/* Suppression des styles pour très grands écrans - garder les tailles par défaut */

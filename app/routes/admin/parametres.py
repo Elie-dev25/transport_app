@@ -2,8 +2,9 @@ from flask import render_template, request, jsonify, session, flash, redirect, u
 from flask_login import current_user
 from app.routes.common import admin_or_responsable
 from app.models.utilisateur import Utilisateur
+from app.models.prestataire import Prestataire
 from app.database import db
-from app.utils.audit_logger import log_user_action, get_audit_logs, get_role_statistics
+from app.utils.audit_logger import log_user_action, get_audit_logs, get_role_statistics, log_document_printed
 from werkzeug.security import generate_password_hash
 from functools import wraps
 from . import bp
@@ -86,24 +87,162 @@ def parametres_audit_logs_api():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+# API - Audit d'impression
+@bp.route('/api/audit/print', methods=['POST'])
+@admin_responsable_superviseur_required
+def audit_print_api():
+    """API pour enregistrer l'audit d'impression de documents"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+
+        document_type = data.get('document_type', 'unknown')
+        document_id = data.get('document_id')
+        details = data.get('details')
+        page_url = data.get('page_url', '')
+
+        # Construire les détails complets
+        full_details = f"Page: {page_url}"
+        if details:
+            full_details += f" | {details}"
+
+        # Enregistrer l'audit d'impression
+        log_document_printed(
+            document_type=document_type,
+            document_id=document_id,
+            details=full_details
+        )
+
+        return jsonify({'success': True, 'message': 'Print audit recorded'})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# API - Alertes critiques
+@bp.route('/api/audit/alerts', methods=['GET'])
+@admin_responsable_superviseur_required
+def get_critical_alerts():
+    """API pour récupérer les alertes critiques des dernières 24h"""
+    try:
+        from datetime import datetime, timedelta
+        import os
+        import re
+
+        alerts = []
+        yesterday = datetime.now() - timedelta(days=1)
+
+        # Parcourir tous les fichiers d'audit
+        audit_dir = os.path.join('logs', 'audit')
+        if not os.path.exists(audit_dir):
+            return jsonify([])
+
+        for filename in os.listdir(audit_dir):
+            if filename.startswith('audit_') and filename.endswith('.log'):
+                role = filename.replace('audit_', '').replace('.log', '').upper()
+                filepath = os.path.join(audit_dir, filename)
+
+                try:
+                    with open(filepath, 'r', encoding='utf-8') as f:
+                        lines = f.readlines()
+
+                    # Analyser les dernières lignes pour les alertes critiques
+                    for line in reversed(lines[-100:]):  # Dernières 100 lignes
+                        if 'LEVEL:CRITICAL' in line or 'UNAUTHORIZED_ACCESS' in line or 'SECURITY_VIOLATION' in line:
+                            # Extraire la date
+                            date_match = re.search(r'(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})', line)
+                            if date_match:
+                                log_date = datetime.strptime(date_match.group(1), '%Y-%m-%d %H:%M:%S')
+                                if log_date >= yesterday:
+                                    alerts.append({
+                                        'role': role,
+                                        'timestamp': log_date.strftime('%d/%m %H:%M'),
+                                        'log': line.strip()
+                                    })
+
+                except Exception as e:
+                    continue
+
+        # Trier par date décroissante
+        alerts.sort(key=lambda x: x['timestamp'], reverse=True)
+
+        return jsonify(alerts[:10])  # Limiter à 10 alertes
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 # API - Liste des utilisateurs
 @bp.route('/api/users')
-@admin_or_responsable
+@admin_responsable_superviseur_required
 def users_api():
     """API pour récupérer la liste des utilisateurs"""
     try:
+        from datetime import datetime, timedelta
+        import os
+        import re
+
         users = Utilisateur.query.all()
         users_data = []
 
+        # Fonction pour obtenir la dernière connexion depuis les logs d'audit
+        def get_last_login(user_login):
+            try:
+                audit_dir = os.path.join('logs', 'audit')
+                if not os.path.exists(audit_dir):
+                    return None
+
+                # Chercher dans tous les fichiers d'audit
+                for filename in os.listdir(audit_dir):
+                    if filename.startswith('audit_') and filename.endswith('.log'):
+                        filepath = os.path.join(audit_dir, filename)
+                        try:
+                            with open(filepath, 'r', encoding='utf-8') as f:
+                                lines = f.readlines()
+
+                            # Chercher les connexions de cet utilisateur (en partant de la fin)
+                            for line in reversed(lines):
+                                if 'LOGIN_SUCCESS' in line and user_login in line:
+                                    # Extraire la date
+                                    date_match = re.search(r'(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})', line)
+                                    if date_match:
+                                        return date_match.group(1)
+                        except:
+                            continue
+                return None
+            except:
+                return None
+
         for user in users:
+            # Obtenir la dernière connexion
+            last_login = get_last_login(user.login)
+
+            # Déterminer si l'utilisateur est actif (connecté dans les 30 derniers jours)
+            is_active = False
+            if last_login:
+                try:
+                    last_login_date = datetime.strptime(last_login, '%Y-%m-%d %H:%M:%S')
+                    thirty_days_ago = datetime.now() - timedelta(days=30)
+                    is_active = last_login_date >= thirty_days_ago
+                except:
+                    is_active = False
+
+            # Formater la dernière connexion pour l'affichage
+            formatted_last_login = "Jamais connecté"
+            if last_login:
+                try:
+                    last_login_date = datetime.strptime(last_login, '%Y-%m-%d %H:%M:%S')
+                    formatted_last_login = last_login_date.strftime('%d/%m/%Y %H:%M')
+                except:
+                    formatted_last_login = "Date invalide"
+
             users_data.append({
                 'id': user.utilisateur_id,
                 'login': user.login,
                 'nom': user.nom or '',
                 'prenom': user.prenom or '',
                 'role': user.role,
-                'active': True,  # À adapter selon votre modèle
-                'derniere_connexion': None  # Le modèle n'a pas ce champ
+                'active': is_active,
+                'derniere_connexion': formatted_last_login
             })
 
         log_user_action('CONSULTATION', 'users_list', f'Consultation liste utilisateurs ({len(users_data)} utilisateurs)')
@@ -265,4 +404,145 @@ def search_user_api():
         return jsonify(users_data)
 
     except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# ========================================
+# ROUTES PRESTATAIRES
+# ========================================
+
+# API - Liste des prestataires
+@bp.route('/api/prestataires')
+@admin_responsable_superviseur_required
+def prestataires_api():
+    """API pour récupérer la liste des prestataires"""
+    try:
+        prestataires = Prestataire.query.all()
+        prestataires_data = []
+
+        for prestataire in prestataires:
+            prestataires_data.append({
+                'id': prestataire.id,
+                'nom_prestataire': prestataire.nom_prestataire,
+                'telephone': prestataire.telephone or '',
+                'email': prestataire.email or '',
+                'localisation': prestataire.localisation or ''
+            })
+
+        log_user_action('CONSULTATION', 'prestataires_list', f'Consultation liste prestataires ({len(prestataires_data)} prestataires)')
+
+        return jsonify(prestataires_data)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# API - Créer un prestataire
+@bp.route('/api/prestataires', methods=['POST'])
+@admin_or_responsable
+def create_prestataire_api():
+    """API pour créer un nouveau prestataire"""
+    try:
+        # Récupérer les données du formulaire (pas JSON)
+        nom_prestataire = request.form.get('nom_prestataire', '').strip()
+        telephone = request.form.get('telephone', '').strip()
+        email = request.form.get('email', '').strip()
+        localisation = request.form.get('localisation', '').strip()
+
+        # Validation
+        if not nom_prestataire:
+            return jsonify({'success': False, 'message': 'Le nom du prestataire est requis'}), 400
+
+        # Vérifier si le prestataire existe déjà
+        if Prestataire.query.filter_by(nom_prestataire=nom_prestataire).first():
+            return jsonify({'success': False, 'message': 'Ce nom de prestataire existe déjà'}), 400
+
+        # Créer le prestataire
+        prestataire = Prestataire(
+            nom_prestataire=nom_prestataire,
+            telephone=telephone if telephone else None,
+            email=email if email else None,
+            localisation=localisation if localisation else None
+        )
+
+        db.session.add(prestataire)
+        db.session.commit()
+
+        log_user_action('CREATION', 'create_prestataire', f'Création prestataire: {nom_prestataire}')
+
+        return jsonify({
+            'success': True,
+            'message': 'Prestataire créé avec succès',
+            'prestataire_id': prestataire.id
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+# API - Supprimer un prestataire
+@bp.route('/api/prestataires/<int:prestataire_id>', methods=['DELETE'])
+@admin_or_responsable
+def delete_prestataire_api(prestataire_id):
+    """API pour supprimer un prestataire"""
+    try:
+        prestataire = Prestataire.query.filter_by(id=prestataire_id).first_or_404()
+        nom_prestataire = prestataire.nom_prestataire
+
+        # Vérifier s'il y a des trajets associés
+        from app.models.trajet import Trajet
+        trajets_count = Trajet.query.filter_by(prestataire_id=prestataire_id).count()
+
+        if trajets_count > 0:
+            return jsonify({
+                'error': f'Impossible de supprimer ce prestataire car il a {trajets_count} trajet(s) associé(s)'
+            }), 400
+
+        db.session.delete(prestataire)
+        db.session.commit()
+
+        log_user_action('SUPPRESSION', 'delete_prestataire', f'Suppression prestataire: {nom_prestataire}')
+
+        return jsonify({
+            'success': True,
+            'message': 'Prestataire supprimé avec succès'
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+# API - Supprimer un utilisateur (Admin et Responsable uniquement)
+@bp.route('/api/users/<int:user_id>', methods=['DELETE'])
+@admin_or_responsable
+def delete_user_api(user_id):
+    """API pour supprimer un utilisateur"""
+    try:
+        from app.models import Utilisateur
+
+        # Vérifier que l'utilisateur existe
+        user = Utilisateur.query.filter_by(utilisateur_id=user_id).first_or_404()
+        user_name = f"{user.nom} {user.prenom}"
+        user_login = user.login
+
+        # Empêcher la suppression de son propre compte
+        if str(user.utilisateur_id) == str(session.get('user_id')):
+            return jsonify({
+                'error': 'Vous ne pouvez pas supprimer votre propre compte'
+            }), 400
+
+        # Vérifier s'il y a des données associées (trajets, etc.)
+        # Ici vous pouvez ajouter des vérifications selon vos besoins
+
+        # Supprimer l'utilisateur
+        db.session.delete(user)
+        db.session.commit()
+
+        # Auditer la suppression
+        log_user_action('SUPPRESSION', 'delete_user', f'Suppression utilisateur: {user_name} ({user_login})')
+
+        return jsonify({
+            'success': True,
+            'message': f'Utilisateur {user_name} supprimé avec succès'
+        })
+
+    except Exception as e:
+        db.session.rollback()
         return jsonify({'error': str(e)}), 500

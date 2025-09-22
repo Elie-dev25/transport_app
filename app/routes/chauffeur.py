@@ -10,6 +10,34 @@ from app.routes.common import role_required
 # Création du blueprint pour le chauffeur
 bp = Blueprint('chauffeur', __name__, url_prefix='/chauffeur')
 
+def get_chauffeur_statut_actuel():
+    """
+    Fonction utilitaire pour récupérer le statut actuel du chauffeur connecté
+    Utilisée dans toutes les routes pour afficher le statut dans la topbar
+    """
+    try:
+        from app.models.chauffeur import Chauffeur
+        from app.models.chauffeur_statut import ChauffeurStatut
+
+        # Récupérer les informations du chauffeur depuis la base de données
+        chauffeur_db = Chauffeur.query.filter_by(
+            nom=current_user.nom,
+            prenom=current_user.prenom
+        ).first()
+
+        # Récupérer le statut actuel du chauffeur
+        statut_actuel = "NON_SPECIFIE"
+        if chauffeur_db:
+            statuts_actuels = ChauffeurStatut.get_current_statuts(chauffeur_db.chauffeur_id)
+            if statuts_actuels:
+                statut_actuel = statuts_actuels[0].statut
+
+        return statut_actuel
+
+    except Exception as e:
+        print(f"Erreur récupération statut chauffeur: {str(e)}")
+        return "NON_SPECIFIE"
+
 # Route du tableau de bord chauffeur
 @bp.route('/dashboard')
 @login_required
@@ -35,6 +63,9 @@ def dashboard():
             {'type': 'warning', 'icon': 'fas fa-exclamation-triangle', 'title': 'Maintenance demain', 'time': 'Hier 18:00'}
         ]
 
+        # Récupérer le statut actuel du chauffeur pour la topbar
+        statut_actuel = get_chauffeur_statut_actuel()
+
         return render_template(
             'roles/chauffeur/dashboard_chauffeur.html',
             stats_generales=stats_generales,
@@ -42,17 +73,19 @@ def dashboard():
             trafic=trafic,
             notifications=notifications,
             current_user=current_user,
-            statut_actuel='ACTIF',  # Statut par défaut
+            statut_actuel=statut_actuel,
             active_page='dashboard'
         )
 
     except Exception as e:
         print(f"Erreur dashboard chauffeur: {str(e)}")
         # En cas d'erreur, afficher un dashboard minimal
+        statut_actuel = get_chauffeur_statut_actuel()
         return render_template(
             'roles/chauffeur/dashboard_chauffeur_simple.html',
             current_user=current_user,
             error_message="Erreur lors du chargement du dashboard",
+            statut_actuel=statut_actuel,
             active_page='dashboard'
         )
 
@@ -73,10 +106,12 @@ def trajets():
         ).first()
         
         if not chauffeur_db:
+            statut_actuel = get_chauffeur_statut_actuel()
             return render_template(
                 'roles/chauffeur/mes_trajets.html',
                 current_user=current_user,
                 error_message="Profil chauffeur non trouvé",
+                statut_actuel=statut_actuel,
                 active_page='trajets'
             )
         
@@ -150,6 +185,9 @@ def trajets():
             Trajet.date_heure_depart <= date_fin_filtre
         ).order_by(Trajet.date_heure_depart.desc()).all()
         
+        # Récupérer le statut actuel du chauffeur pour la topbar
+        statut_actuel = get_chauffeur_statut_actuel()
+
         return render_template(
             'roles/chauffeur/mes_trajets.html',
             current_user=current_user,
@@ -159,15 +197,18 @@ def trajets():
             filtre_actuel=filtre,
             date_debut_filtre=date_debut_filtre,
             date_fin_filtre=date_fin_filtre,
+            statut_actuel=statut_actuel,
             active_page='trajets'
         )
         
     except Exception as e:
         print(f"Erreur trajets chauffeur: {str(e)}")
+        statut_actuel = get_chauffeur_statut_actuel()
         return render_template(
             'mes_trajets.html',
             current_user=current_user,
             error_message="Erreur lors du chargement des trajets",
+            statut_actuel=statut_actuel,
             active_page='trajets'
         )
 
@@ -296,10 +337,12 @@ def profil():
         
     except Exception as e:
         print(f"Erreur profil chauffeur: {str(e)}")
+        statut_actuel = get_chauffeur_statut_actuel()
         return render_template(
             'roles/chauffeur/profil_chauffeur.html',
             current_user=current_user,
             error_message="Erreur lors du chargement du profil",
+            statut_actuel=statut_actuel,
             active_page='profil'
         )
 
@@ -314,16 +357,21 @@ def bus_udm():
         # Récupérer tous les bus
         buses = BusUdM.query.all()
         
+        # Récupérer le statut actuel du chauffeur pour la topbar
+        statut_actuel = get_chauffeur_statut_actuel()
+
         return render_template(
             'pages/bus_udm.html',
             bus_list=buses,  # Le template attend bus_list, pas buses
             current_user=current_user,
             active_page='bus_udm',
             readonly=True,  # Mode lecture seule pour les chauffeurs
+            statut_actuel=statut_actuel,
             base_template='roles/chauffeur/_base_chauffeur.html'
         )
     except Exception as e:
         print(f"Erreur lors du chargement des bus: {str(e)}")
+        statut_actuel = get_chauffeur_statut_actuel()
         return render_template(
             'pages/bus_udm.html',
             bus_list=[],  # Le template attend bus_list, pas buses
@@ -331,6 +379,7 @@ def bus_udm():
             active_page='bus_udm',
             readonly=True,
             error_message="Erreur lors du chargement de la liste des bus",
+            statut_actuel=statut_actuel,
             base_template='roles/chauffeur/_base_chauffeur.html'
         )
 
@@ -338,9 +387,13 @@ def bus_udm():
 @login_required
 @role_required('CHAUFFEUR')
 def trafic():
+    # Récupérer le statut actuel du chauffeur pour la topbar
+    statut_actuel = get_chauffeur_statut_actuel()
+
     return render_template(
         'trafic_chauffeur.html',
         current_user=current_user,
+        statut_actuel=statut_actuel,
         active_page='trafic'
     )
 
@@ -377,6 +430,9 @@ def carburation():
         print(f"Numéros AED: {numeros_aed}")
         print("=== FIN DEBUG ===")
         
+        # Récupérer le statut actuel du chauffeur pour la topbar
+        statut_actuel = get_chauffeur_statut_actuel()
+
         return render_template(
             'pages/carburation.html',
             bus_carburation=bus_carburation,
@@ -386,10 +442,12 @@ def carburation():
             current_user=current_user,
             active_page='carburation',
             readonly=True,  # Mode lecture seule pour chauffeur
+            statut_actuel=statut_actuel,
             post_url=None  # Pas d'actions POST pour chauffeur (lecture seule)
         )
     except Exception as e:
         print(f"Erreur affichage carburation chauffeur: {str(e)}")
+        statut_actuel = get_chauffeur_statut_actuel()
         return render_template(
             'pages/carburation.html',
             bus_carburation=[],
@@ -399,5 +457,6 @@ def carburation():
             current_user=current_user,
             active_page='carburation',
             readonly=True,
+            statut_actuel=statut_actuel,
             error_message="Erreur lors du chargement de la page carburation"
         )

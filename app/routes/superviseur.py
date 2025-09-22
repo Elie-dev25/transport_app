@@ -99,78 +99,53 @@ def carburation():
     Gestion des carburations - Supervision
     """
     try:
-        from app.models.carburation import Carburation
-        from sqlalchemy import func, and_
+        from app.services.gestion_carburation import build_bus_carburation_list, get_carburation_history
+        from app.models.bus_udm import BusUdM
+        from app.models.chauffeur import Chauffeur
+        from app.models.utilisateur import Utilisateur
 
-        # Période demandée
-        periode = request.args.get('periode', 'mois')  # jour | semaine | mois | periode
+        # --- Tableau d'état carburation (via service partagé) ---
+        bus_carburation = build_bus_carburation_list()
+        bus_list = BusUdM.query.order_by(BusUdM.numero).all()
+
+        # --- Historique des carburations ---
+        # Récupérer tous les numéros AED distincts pour le filtre
+        numeros_aed = [bus.numero for bus in bus_list]
+        selected_numero = request.args.get('numero_aed')
         date_debut_str = request.args.get('date_debut')
         date_fin_str = request.args.get('date_fin')
+        date_debut = None
+        date_fin = None
 
-        today = date.today()
-        start_date = today.replace(day=1)
-        end_date = today
+        try:
+            if date_debut_str:
+                date_debut = datetime.strptime(date_debut_str, '%Y-%m-%d').date()
+            if date_fin_str:
+                date_fin = datetime.strptime(date_fin_str, '%Y-%m-%d').date()
+        except ValueError:
+            date_debut = None
+            date_fin = None
 
-        # Calcul des bornes de période
-        if periode == 'jour':
-            start_date = today
-            end_date = today
-        elif periode == 'semaine':
-            start_date = today - timedelta(days=today.weekday())
-            end_date = today
-        elif periode == 'annee':
-            start_date = today.replace(month=1, day=1)
-            end_date = today
-        elif periode == 'periode':
-            # Période personnalisée via paramètres
-            if date_debut_str and date_fin_str:
-                try:
-                    start_date = datetime.strptime(date_debut_str, '%Y-%m-%d').date()
-                    end_date = datetime.strptime(date_fin_str, '%Y-%m-%d').date()
-                except ValueError:
-                    # Repli sur le mois en cours si parsing échoue
-                    start_date = today.replace(day=1)
-                    end_date = today
-            else:
-                # Si pas de dates fournies, repli mois
-                start_date = today.replace(day=1)
-                end_date = today
+        if selected_numero:
+            historique_carburation = get_carburation_history(selected_numero, date_debut, date_fin)
+        else:
+            historique_carburation = get_carburation_history(None, date_debut, date_fin)
 
-        # Construction de la requête filtrée
-        query = Carburation.query
-        if start_date:
-            query = query.filter(func.date(Carburation.date_carburation) >= start_date)
-        if end_date:
-            query = query.filter(func.date(Carburation.date_carburation) <= end_date)
-
-        carburations = query.order_by(Carburation.date_carburation.desc()).all()
-
-        # Statistiques côté serveur
-        total_litres = 0.0
-        total_cout = 0.0
-        stations = set()
-        for c in carburations:
-            if c.quantite_litres:
-                total_litres += (c.quantite_litres or 0)
-            if c.quantite_litres and c.prix_unitaire:
-                total_cout += (c.quantite_litres or 0) * (c.prix_unitaire or 0)
-            if getattr(c, 'station_service', None):
-                stations.add(c.station_service)
-
-        stats = {
-            'nb_carburations': len(carburations),
-            'total_litres': round(total_litres, 1),
-            'total_cout': int(round(total_cout)),
-            'nb_stations': len(stations),
-        }
+        # --- Récupérer les chauffeurs et utilisateurs pour les modals ---
+        chauffeurs = Chauffeur.query.all()
+        utilisateurs = Utilisateur.query.filter(Utilisateur.role.in_(['ADMIN', 'RESPONSABLE', 'MECANICIEN'])).all()
 
         return render_template(
             'pages/carburation.html',
-            carburations=carburations,
-            stats=stats,
-            periode=periode,
-            start_date=start_date,
-            end_date=end_date,
+            bus_carburation=bus_carburation,
+            bus_list=bus_list,
+            historique_carburation=historique_carburation,
+            numeros_aed=numeros_aed,
+            selected_numero=selected_numero,
+            date_debut=date_debut,
+            date_fin=date_fin,
+            chauffeurs=chauffeurs,
+            utilisateurs=utilisateurs,
             readonly=True,
             superviseur_mode=True,
             base_template='roles/superviseur/_base_superviseur.html'
@@ -184,7 +159,7 @@ def carburation():
         )
 
 
-@bp.route('/bus-udm')
+@bp.route('/bus_udm')
 @superviseur_only
 def bus_udm():
     """
@@ -198,7 +173,7 @@ def bus_udm():
 
         return render_template(
             'pages/bus_udm.html',
-            buses=buses,
+            bus_list=buses,  # Le template attend bus_list
             readonly=True,
             superviseur_mode=True,
             base_template='roles/superviseur/_base_superviseur.html'
@@ -212,78 +187,53 @@ def bus_udm():
         )
 
 
-@bp.route('/vidanges')
+@bp.route('/vidange')
+@bp.route('/vidanges')  # Alias pour compatibilité
 @superviseur_only
 def vidanges():
     """
     Gestion des vidanges - Supervision
     """
     try:
-        from app.models.vidange import Vidange
-        from sqlalchemy import func
+        from app.services.gestion_vidange import get_vidange_history, build_bus_vidange_list
+        from app.models.bus_udm import BusUdM
 
-        # Paramètres de période
-        periode = request.args.get('periode', 'mois')  # jour | semaine | mois | annee | periode
+        # --- Tableau d'état vidange (via service partagé) ---
+        bus_vidange = build_bus_vidange_list()
+        bus_list = BusUdM.query.order_by(BusUdM.numero).all()
+
+        # --- Historique des vidanges ---
+        # Récupérer tous les numéros AED distincts pour le filtre
+        numeros_bus_udm = [bus.numero for bus in bus_list]
+        selected_numero = request.args.get('numero_aed')
         date_debut_str = request.args.get('date_debut')
         date_fin_str = request.args.get('date_fin')
+        date_debut = None
+        date_fin = None
 
-        today = date.today()
-        start_date = today.replace(day=1)
-        end_date = today
+        try:
+            if date_debut_str:
+                date_debut = datetime.strptime(date_debut_str, '%Y-%m-%d').date()
+            if date_fin_str:
+                date_fin = datetime.strptime(date_fin_str, '%Y-%m-%d').date()
+        except ValueError:
+            date_debut = None
+            date_fin = None
 
-        if periode == 'jour':
-            start_date = today
-            end_date = today
-        elif periode == 'semaine':
-            start_date = today - timedelta(days=today.weekday())
-            end_date = today
-        elif periode == 'annee':
-            start_date = today.replace(month=1, day=1)
-            end_date = today
-        elif periode == 'periode':
-            if date_debut_str and date_fin_str:
-                try:
-                    start_date = datetime.strptime(date_debut_str, '%Y-%m-%d').date()
-                    end_date = datetime.strptime(date_fin_str, '%Y-%m-%d').date()
-                except ValueError:
-                    start_date = today.replace(day=1)
-                    end_date = today
-
-        # Requête filtrée
-        query = Vidange.query
-        if start_date:
-            query = query.filter(func.date(Vidange.date_vidange) >= start_date)
-        if end_date:
-            query = query.filter(func.date(Vidange.date_vidange) <= end_date)
-
-        vidanges = query.order_by(Vidange.date_vidange.desc()).all()
-
-        # Statistiques
-        nb_vidanges = len(vidanges)
-        bus_ids = set()
-        total_km = 0
-        nb_km = 0
-        for v in vidanges:
-            if getattr(v, 'bus_udm_id', None):
-                bus_ids.add(v.bus_udm_id)
-            if getattr(v, 'kilometrage', None):
-                total_km += (v.kilometrage or 0)
-                nb_km += 1
-
-        stats = {
-            'nb_vidanges': nb_vidanges,
-            'nb_bus_concernes': len(bus_ids),
-            'kilometrage_moyen': round(total_km / nb_km, 0) if nb_km else 0,
-            'periode_label': periode,
-        }
+        if selected_numero:
+            historique_vidange = get_vidange_history(selected_numero, date_debut, date_fin)
+        else:
+            historique_vidange = get_vidange_history(None, date_debut, date_fin)
 
         return render_template(
             'pages/vidange.html',
-            vidanges=vidanges,
-            stats=stats,
-            periode=periode,
-            start_date=start_date,
-            end_date=end_date,
+            bus_vidange=bus_vidange,
+            bus_list=bus_list,
+            historique_vidange=historique_vidange,
+            numeros_bus_udm=numeros_bus_udm,
+            selected_numero=selected_numero,
+            date_debut=date_debut,
+            date_fin=date_fin,
             readonly=True,
             superviseur_mode=True,
             base_template='roles/superviseur/_base_superviseur.html'
@@ -291,7 +241,7 @@ def vidanges():
 
     except Exception as e:
         return render_template(
-            'superviseur/error.html',
+            'roles/superviseur/error.html',
             message=f"Erreur lors du chargement: {str(e)}",
             readonly=True
         )
@@ -400,16 +350,16 @@ def maintenance():
         # Vérifier la disponibilité des services
         if not MaintenanceService or not StatsService:
             raise ImportError("Services de maintenance non disponibles")
-            
+
         # Récupérer les données de maintenance
         pannes_recentes = MaintenanceService.get_all_pannes(limit=20, include_resolved=False)
         vidanges_recentes = MaintenanceService.get_all_vidanges(limit=10)
         carburations_recentes = MaintenanceService.get_all_carburations(limit=10)
-        
+
         # Statistiques de maintenance
         today = date.today()
         maintenance_stats = StatsService.get_maintenance_stats(today)
-        
+
         return render_template(
             'superviseur/maintenance.html',
             pannes_recentes=pannes_recentes,
@@ -418,7 +368,48 @@ def maintenance():
             maintenance_stats=maintenance_stats,
             readonly=True
         )
-        
+
+    except Exception as e:
+        return render_template('roles/superviseur/error.html',
+                             message=f"Erreur: {str(e)}", readonly=True)
+
+
+@bp.route('/depanage')
+@superviseur_only
+def depanage():
+    """
+    Vue dépannage en lecture seule pour superviseur
+    """
+    try:
+        from app.models.panne_bus_udm import PanneBusUdM
+        from app.models.depannage import Depannage
+        from app.models.bus_udm import BusUdM
+        from app.database import db
+
+        # Récupérer les pannes non résolues, plus récentes en premier
+        pannes = (
+            db.session.query(PanneBusUdM, BusUdM)
+            .outerjoin(BusUdM, PanneBusUdM.bus_udm_id == BusUdM.id)
+            .filter((PanneBusUdM.resolue == False) | (PanneBusUdM.resolue.is_(None)))
+            .order_by(PanneBusUdM.date_heure.desc())
+            .all()
+        )
+
+        # Récupérer l'historique des dépannages
+        depannages = (
+            db.session.query(Depannage, BusUdM)
+            .outerjoin(BusUdM, Depannage.bus_udm_id == BusUdM.id)
+            .order_by(Depannage.date_heure.desc())
+            .all()
+        )
+
+        # Utiliser le template superviseur dédié
+        return render_template('roles/superviseur/depanage.html',
+                             pannes=pannes,
+                             depannages=depannages,
+                             active_page='depanage',
+                             readonly=True)
+
     except Exception as e:
         return render_template('roles/superviseur/error.html',
                              message=f"Erreur: {str(e)}", readonly=True)

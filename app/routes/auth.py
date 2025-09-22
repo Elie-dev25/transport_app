@@ -3,6 +3,10 @@ from flask_login import login_user, logout_user
 from app.forms.login_form import LoginForm
 from app.models.utilisateur import Utilisateur
 from app.database import db
+from app.utils.audit_logger import (
+    log_login_success, log_login_failed, log_logout,
+    log_unauthorized_access, log_system_error
+)
 
 LDAP_SERVER = '192.168.21.131'
 LDAP_DOMAIN = 'domaine.local'
@@ -195,6 +199,13 @@ def login():
             # Debug pour traçabilité
             print(f'Session créée - ID: {user.utilisateur_id}, Login: {username}, Rôle: {role}')
 
+            # AUDIT : Connexion réussie
+            log_login_success(
+                user_id=str(user.utilisateur_id),
+                user_role=role,
+                details=f"Login: {username} | Groups: {groups}"
+            )
+
             # Affiche les groupes AD dans le message flash pour debug
             flash(f"Groupes AD détectés : {groups}", "info")
             flash('Connexion réussie.', 'success')  # Message de succès
@@ -217,21 +228,39 @@ def login():
             # Si aucun rôle mappé, retourner à la page d'accueil ou login
             return redirect(url_for('auth.login'))
         else:
+            # AUDIT : Connexion échouée
+            log_login_failed(
+                username=username,
+                reason=auth_error or "Invalid credentials"
+            )
             flash(f"Login ou mot de passe incorrect. Erreur: {auth_error}", "danger")  # Message d'erreur
     return render_template('auth/login.html', form=form)  # Affiche la page de login
 
 # Route pour la déconnexion
 @bp.route('/logout')
 def logout():
+    # Capturer les infos avant déconnexion pour l'audit
+    user_id = session.get('user_id', 'UNKNOWN')
+    user_role = session.get('user_role', 'UNKNOWN')
+    user_login = session.get('user_login', 'UNKNOWN')
+
     # Debug avant déconnexion
     if 'user_login' in session:
         print(f'Déconnexion utilisateur: {session["user_login"]}')
+
+    # AUDIT : Déconnexion
+    log_logout(user_id=user_id, user_role=user_role)
 
     # Déconnexion Flask-Login et nettoyage session custom
     try:
         logout_user()
     except Exception as e:
         print(f'Erreur logout Flask-Login: {e}')
+        log_system_error(
+            error_type="Logout Error",
+            error_message=str(e),
+            context=f"User: {user_login}"
+        )
 
     # Nettoyage complet de la session
     session.clear()

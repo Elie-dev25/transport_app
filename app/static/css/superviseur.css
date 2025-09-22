@@ -323,3 +323,160 @@
     font-size: 0.8rem;
     padding: 0.4rem 1rem;
 }
+
+/* === RESPONSIVE SUPERVISEUR COMPLET === */
+
+/* Mobile très petit (480px et moins) */
+@media (max-width: 480px) {
+    .page-header {
+        padding: 1rem;
+    }
+
+    .page-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .page-header p {
+        font-size: 0.8rem;
+    }
+
+    .superviseur-dashboard {
+        padding: 15px;
+        gap: 15px;
+    }
+
+    .dashboard-section {
+        padding: 15px;
+        border-radius: 12px;
+    }
+
+    .section-title {
+        font-size: 1.1rem;
+        margin-bottom: 12px;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .stat-card {
+        padding: 15px;
+        border-radius: 10px;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+    }
+
+    .stat-label {
+        font-size: 0.8rem;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .action-buttons .btn {
+        width: 100%;
+        padding: 0.6rem 1rem;
+        font-size: 0.75rem;
+        border-radius: 8px;
+    }
+
+    .table-responsive {
+        font-size: 12px;
+    }
+
+    .table th,
+    .table td {
+        padding: 6px 4px;
+    }
+}
+
+/* Tablet (769px à 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .page-header {
+        padding: 2rem;
+    }
+
+    .superviseur-dashboard {
+        padding: 25px;
+        gap: 20px;
+    }
+
+    .dashboard-section {
+        padding: 20px;
+        border-radius: 16px;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+
+    .stat-card {
+        padding: 18px;
+        border-radius: 12px;
+    }
+
+    .action-buttons {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .action-buttons .btn {
+        padding: 0.5rem 1.2rem;
+        font-size: 0.85rem;
+        border-radius: 16px;
+    }
+}
+
+/* Large Desktop (1200px à 1599px) */
+@media (min-width: 1200px) and (max-width: 1599px) {
+    .page-header {
+        padding: 2.5rem 3rem;
+    }
+
+    .page-header h1 {
+        font-size: 2.2rem;
+    }
+
+    .superviseur-dashboard {
+        padding: 30px 40px;
+        gap: 25px;
+    }
+
+    .dashboard-section {
+        padding: 25px;
+        border-radius: 18px;
+    }
+
+    .section-title {
+        font-size: 1.4rem;
+        margin-bottom: 18px;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+    }
+
+    .stat-card {
+        padding: 22px;
+        border-radius: 14px;
+    }
+
+    .stat-value {
+        font-size: 2.2rem;
+    }
+
+    .action-buttons .btn {
+        padding: 0.6rem 1.4rem;
+        font-size: 0.9rem;
+        border-radius: 18px;
+    }
+}
+
+/* Suppression des styles pour très grands écrans - garder les tailles par défaut */

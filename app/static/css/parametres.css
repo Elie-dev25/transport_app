@@ -342,7 +342,46 @@
     transform: scale(1.05);
 }
 
+/* ===== EN-TÊTE DE SECTION ===== */
+.section-header {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.section-title i {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+}
+
+.section-title h2 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.section-subtitle p {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    margin: 0;
+}
+
 /* ===== STATISTIQUES ===== */
+.stats-grid-6 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+}
+
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -353,12 +392,15 @@
 .stat-card {
     background: var(--white);
     border-radius: 20px;
-    padding: 2rem;
+    padding: 1.5rem;
     box-shadow: var(--shadow-sm);
     border: 1px solid var(--gray-100);
     position: relative;
     overflow: hidden;
     transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
 }
 
 .stat-card:hover {
@@ -425,6 +467,21 @@
     color: var(--secondary-blue);
 }
 
+.stat-card.charge .stat-icon {
+    background: linear-gradient(135deg, #d1fae5, #ecfdf5);
+    color: #10b981;
+}
+
+.stat-card.chauffeur .stat-icon {
+    background: linear-gradient(135deg, #fef3c7, #fffbeb);
+    color: #f59e0b;
+}
+
+.stat-card.mecanicien .stat-icon {
+    background: linear-gradient(135deg, #e0e7ff, #f0f4ff);
+    color: #6366f1;
+}
+
 .stat-card.total .stat-icon {
     background: linear-gradient(135deg, #d1fae5, #ecfdf5);
     color: var(--success-green);
@@ -446,6 +503,29 @@
     font-size: 0.95rem;
     color: var(--gray-600);
     font-weight: 500;
+}
+
+.stat-success-rate {
+    font-size: 0.85rem;
+    color: var(--success-green);
+    font-weight: 600;
+    margin-top: 0.25rem;
+}
+
+.stat-level-indicator {
+    height: 4px;
+    background: var(--gray-200);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 0.5rem;
+}
+
+.level-bar {
+    height: 100%;
+    background: var(--success-green);
+    border-radius: 2px;
+    transition: all 0.3s ease;
+    width: 0%;
 }
 
 .stat-trend {
@@ -584,6 +664,81 @@
     transform: translateY(-1px);
 }
 
+/* ===== ALERTES CRITIQUES ===== */
+.alerts-card {
+    margin-bottom: 2rem;
+}
+
+.alerts-container {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.no-alerts {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-secondary);
+}
+
+.no-alerts i {
+    font-size: 2rem;
+    color: var(--success-green);
+    margin-bottom: 0.5rem;
+}
+
+.alert-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    background: var(--white);
+    border-radius: 12px;
+    border-left: 4px solid var(--danger-red);
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s ease;
+}
+
+.alert-item:hover {
+    transform: translateX(4px);
+    box-shadow: var(--shadow-md);
+}
+
+.alert-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #fee2e2, #fef2f2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--danger-red);
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.alert-content {
+    flex: 1;
+}
+
+.alert-title {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+}
+
+.alert-message {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+.count-badge.critical {
+    background: var(--danger-red);
+    color: var(--white);
+}
+
 /* ===== LOGS D'AUDIT ===== */
 .logs-container {
     max-height: 600px;
@@ -637,6 +792,21 @@
 .audit-log-item.superviseur {
     border-left-color: var(--secondary-blue);
     background: linear-gradient(135deg, #eff6ff 0%, var(--white) 100%);
+}
+
+.audit-log-item.charge {
+    border-left-color: #10b981;
+    background: linear-gradient(135deg, #f0fdf4 0%, var(--white) 100%);
+}
+
+.audit-log-item.chauffeur {
+    border-left-color: #f59e0b;
+    background: linear-gradient(135deg, #fef3c7 0%, var(--white) 100%);
+}
+
+.audit-log-item.mecanicien {
+    border-left-color: #6366f1;
+    background: linear-gradient(135deg, #e0e7ff 0%, var(--white) 100%);
 }
 
 .log-info {

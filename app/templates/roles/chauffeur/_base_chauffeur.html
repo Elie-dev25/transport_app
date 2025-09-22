@@ -3,6 +3,11 @@
 {% set sidebar_title = "Chauffeur AED Panel" %}
 {% set sidebar_subtitle = "TransportUdM" %}
 
+{% block extra_head %}
+    <!-- CSS spécifique au chauffeur -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/chauffeur-status.css') }}">
+{% endblock %}
+
 {% block topbar %}
 <div class="top-bar">
     <h1 class="page-title">{{ page_title | default('Tableau de Bord Chauffeur') }}</h1>
@@ -79,119 +84,53 @@
     </div>
 </div>
 
-<style>
-.chauffeur-status {
-    margin-right: 30px;
-}
 
-.status-container {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 20px;
-    border-radius: 12px;
-    background: #ffffff;
-}
-
-.status-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    color: white;
-}
-
-.status-text {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.status-label {
-    font-size: 11px;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    opacity: 0.8;
-}
-
-.status-value {
-    font-size: 14px;
-    font-weight: 700;
-    letter-spacing: 0.3px;
-}
-
-/* Styles spécifiques par statut - Fond blanc, seul le nom change de couleur */
-.status-container.conge {
-    background: #ffffff;
-    color: #000000;
-}
-
-.status-container.conge .status-value {
-    color: #1976d2; /* Bleu pour En Congé */
-}
-
-.status-container.conge .status-icon {
-    background: #1976d2;
-}
-
-.status-container.permanence {
-    background: #ffffff;
-    color: #000000;
-}
-
-.status-container.permanence .status-value {
-    color: #1976d2; /* Bleu pour Permanence */
-}
-
-.status-container.permanence .status-icon {
-    background: #1976d2;
-}
-
-.status-container.weekend {
-    background: #ffffff;
-    color: #000000;
-}
-
-.status-container.weekend .status-value {
-    color: #388e3c; /* Vert pour Service Week-end */
-}
-
-.status-container.weekend .status-icon {
-    background: #388e3c;
-}
-
-.status-container.semaine {
-    background: #ffffff;
-    color: #000000;
-}
-
-.status-container.semaine .status-value {
-    color: #388e3c; /* Vert pour Service Semaine (en service) */
-}
-
-.status-container.semaine .status-icon {
-    background: #388e3c;
-}
-
-.status-container.non-specifie {
-    background: #ffffff;
-    color: #000000;
-}
-
-.status-container.non-specifie .status-value {
-    color: #000000; /* Noir pour Non spécifié */
-}
-
-.status-container.non-specifie .status-icon {
-    background: #6c757d;
-}
-
-</style>
 {% endblock %}
+
+<!-- Mini Sidebar pour tablettes -->
+<div class="mini-sidebar">
+    <a href="{{ url_for('chauffeur.dashboard') }}" class="mini-nav-item" data-tooltip="Dashboard">
+        <i class="fas fa-tachometer-alt"></i>
+    </a>
+    <a href="{{ url_for('chauffeur.trajets') }}" class="mini-nav-item" data-tooltip="Mes Trajets">
+        <i class="fas fa-route"></i>
+    </a>
+    <a href="{{ url_for('chauffeur.profil') }}" class="mini-nav-item" data-tooltip="Mon Profil">
+        <i class="fas fa-user"></i>
+    </a>
+    <a href="{{ url_for('chauffeur.bus_udm') }}" class="mini-nav-item" data-tooltip="Bus UdM">
+        <i class="fas fa-bus"></i>
+    </a>
+    <a href="{{ url_for('chauffeur.carburation') }}" class="mini-nav-item" data-tooltip="Carburation">
+        <i class="fas fa-gas-pump"></i>
+    </a>
+</div>
+
+<!-- Bottom Navigation pour mobile -->
+<div class="bottom-nav">
+    <div class="bottom-nav-container">
+        <a href="{{ url_for('chauffeur.dashboard') }}" class="bottom-nav-item">
+            <i class="fas fa-tachometer-alt"></i>
+            <span>Home</span>
+        </a>
+        <a href="{{ url_for('chauffeur.trajets') }}" class="bottom-nav-item">
+            <i class="fas fa-route"></i>
+            <span>Trajets</span>
+        </a>
+        <a href="{{ url_for('chauffeur.profil') }}" class="bottom-nav-item">
+            <i class="fas fa-user"></i>
+            <span>Profil</span>
+        </a>
+        <a href="{{ url_for('chauffeur.bus_udm') }}" class="bottom-nav-item">
+            <i class="fas fa-bus"></i>
+            <span>Bus</span>
+        </a>
+        <a href="{{ url_for('chauffeur.carburation') }}" class="bottom-nav-item">
+            <i class="fas fa-gas-pump"></i>
+            <span>Carburant</span>
+        </a>
+    </div>
+</div>
 
 {% block nav_menu %}
 <div class="nav-item">

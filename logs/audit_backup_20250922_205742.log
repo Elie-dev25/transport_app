@@ -102,3 +102,67 @@
 2025-09-21 12:29:16 | INFO | USER:responsable | ROLE:RESPONSABLE | ACTION:ACTION_ADMIN | FUNCTION:rapports | IP:127.0.0.1 | DETAILS:Accès admin/responsable
 2025-09-21 14:58:51 | INFO | USER:2 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_stats | IP:127.0.0.1 | DETAILS:Consultation statistiques audit
 2025-09-21 14:58:51 | INFO | USER:2 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_logs | IP:127.0.0.1 | DETAILS:Consultation logs (limite: 100)
+2025-09-22 04:04:06 | INFO | USER:2 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_stats | IP:127.0.0.1 | DETAILS:Consultation statistiques audit
+2025-09-22 04:04:06 | INFO | USER:2 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_logs | IP:127.0.0.1 | DETAILS:Consultation logs (limite: 100)
+2025-09-22 04:05:15 | INFO | USER:2 | ROLE:ADMIN | ACTION:ACTION_ADMIN | FUNCTION:users_api | IP:127.0.0.1 | DETAILS:Accès admin/responsable - Rôle: ADMIN
+2025-09-22 04:05:15 | INFO | USER:2 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:users_list | IP:127.0.0.1 | DETAILS:Consultation liste utilisateurs (17 utilisateurs)
+2025-09-22 10:03:26 | INFO | USER:2 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_stats | IP:127.0.0.1 | DETAILS:Consultation statistiques audit
+2025-09-22 10:03:26 | INFO | USER:2 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_logs | IP:127.0.0.1 | DETAILS:Consultation logs (limite: 100)
+2025-09-22 10:04:21 | INFO | USER:2 | ROLE:ADMIN | ACTION:ACTION_ADMIN | FUNCTION:users_api | IP:127.0.0.1 | DETAILS:Accès admin/responsable - Rôle: ADMIN
+2025-09-22 10:04:21 | INFO | USER:2 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:users_list | IP:127.0.0.1 | DETAILS:Consultation liste utilisateurs (17 utilisateurs)
+2025-09-22 10:04:51 | INFO | USER:2 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:search_user | IP:127.0.0.1 | DETAILS:Recherche utilisateur: sam
+2025-09-22 10:24:31 | INFO | USER:2 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_stats | IP:127.0.0.1 | DETAILS:Consultation statistiques audit
+2025-09-22 10:24:31 | INFO | USER:2 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_logs | IP:127.0.0.1 | DETAILS:Consultation logs (limite: 100)
+2025-09-22 10:43:05 | INFO | USER:2 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_stats | IP:127.0.0.1 | DETAILS:Consultation statistiques audit
+2025-09-22 10:43:05 | INFO | USER:2 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_logs | IP:127.0.0.1 | DETAILS:Consultation logs (limite: 100)
+2025-09-22 10:43:30 | INFO | USER:2 | ROLE:ADMIN | ACTION:ACTION_ADMIN | FUNCTION:users_api | IP:127.0.0.1 | DETAILS:Accès admin/responsable - Rôle: ADMIN
+2025-09-22 10:43:31 | INFO | USER:2 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:users_list | IP:127.0.0.1 | DETAILS:Consultation liste utilisateurs (17 utilisateurs)
+2025-09-22 10:49:33 | INFO | USER:2 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_stats | IP:127.0.0.1 | DETAILS:Consultation statistiques audit
+2025-09-22 10:49:33 | INFO | USER:2 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_logs | IP:127.0.0.1 | DETAILS:Consultation logs (limite: 100)
+2025-09-22 10:49:44 | INFO | USER:2 | ROLE:ADMIN | ACTION:ACTION_ADMIN | FUNCTION:prestataires_api | IP:127.0.0.1 | DETAILS:Accès admin/responsable - Rôle: ADMIN
+2025-09-22 10:49:44 | INFO | USER:2 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:prestataires_list | IP:127.0.0.1 | DETAILS:Consultation liste prestataires (2 prestataires)
+2025-09-22 10:51:38 | INFO | USER:2 | ROLE:ADMIN | ACTION:ACTION_ADMIN | FUNCTION:users_api | IP:127.0.0.1 | DETAILS:Accès admin/responsable - Rôle: ADMIN
+2025-09-22 10:51:38 | INFO | USER:2 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:users_list | IP:127.0.0.1 | DETAILS:Consultation liste utilisateurs (17 utilisateurs)
+2025-09-22 11:08:43 | INFO | USER:2 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_stats | IP:127.0.0.1 | DETAILS:Consultation statistiques audit
+2025-09-22 11:08:44 | INFO | USER:2 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_logs | IP:127.0.0.1 | DETAILS:Consultation logs (limite: 100)
+2025-09-22 11:08:48 | INFO | USER:2 | ROLE:ADMIN | ACTION:ACTION_ADMIN | FUNCTION:users_api | IP:127.0.0.1 | DETAILS:Accès admin/responsable - Rôle: ADMIN
+2025-09-22 11:08:48 | INFO | USER:2 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:users_list | IP:127.0.0.1 | DETAILS:Consultation liste utilisateurs (17 utilisateurs)
+2025-09-22 11:09:01 | INFO | USER:2 | ROLE:ADMIN | ACTION:ACTION_ADMIN | FUNCTION:prestataires_api | IP:127.0.0.1 | DETAILS:Accès admin/responsable - Rôle: ADMIN
+2025-09-22 11:09:01 | INFO | USER:2 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:prestataires_list | IP:127.0.0.1 | DETAILS:Consultation liste prestataires (2 prestataires)
+2025-09-22 11:19:18 | INFO | USER:2 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_stats | IP:127.0.0.1 | DETAILS:Consultation statistiques audit
+2025-09-22 11:19:18 | INFO | USER:2 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_logs | IP:127.0.0.1 | DETAILS:Consultation logs (limite: 100)
+2025-09-22 11:19:25 | INFO | USER:2 | ROLE:ADMIN | ACTION:ACTION_ADMIN | FUNCTION:users_api | IP:127.0.0.1 | DETAILS:Accès admin/responsable - Rôle: ADMIN
+2025-09-22 11:19:25 | INFO | USER:2 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:users_list | IP:127.0.0.1 | DETAILS:Consultation liste utilisateurs (17 utilisateurs)
+2025-09-22 11:19:56 | INFO | USER:2 | ROLE:ADMIN | ACTION:ACTION_ADMIN | FUNCTION:prestataires_api | IP:127.0.0.1 | DETAILS:Accès admin/responsable - Rôle: ADMIN
+2025-09-22 11:19:56 | INFO | USER:2 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:prestataires_list | IP:127.0.0.1 | DETAILS:Consultation liste prestataires (2 prestataires)
+2025-09-22 11:25:24 | INFO | USER:2 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_stats | IP:127.0.0.1 | DETAILS:Consultation statistiques audit
+2025-09-22 11:25:24 | INFO | USER:2 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_logs | IP:127.0.0.1 | DETAILS:Consultation logs (limite: 100)
+2025-09-22 11:25:26 | INFO | USER:2 | ROLE:ADMIN | ACTION:ACTION_ADMIN | FUNCTION:users_api | IP:127.0.0.1 | DETAILS:Accès admin/responsable - Rôle: ADMIN
+2025-09-22 11:25:26 | INFO | USER:2 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:users_list | IP:127.0.0.1 | DETAILS:Consultation liste utilisateurs (17 utilisateurs)
+2025-09-22 11:25:44 | INFO | USER:2 | ROLE:ADMIN | ACTION:ACTION_ADMIN | FUNCTION:prestataires_api | IP:127.0.0.1 | DETAILS:Accès admin/responsable - Rôle: ADMIN
+2025-09-22 11:25:44 | INFO | USER:2 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:prestataires_list | IP:127.0.0.1 | DETAILS:Consultation liste prestataires (2 prestataires)
+2025-09-22 11:26:21 | INFO | USER:2 | ROLE:ADMIN | ACTION:ACTION_ADMIN | FUNCTION:create_prestataire_api | IP:127.0.0.1 | DETAILS:Accès admin/responsable - Rôle: ADMIN
+2025-09-22 11:27:55 | INFO | USER:2 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_stats | IP:127.0.0.1 | DETAILS:Consultation statistiques audit
+2025-09-22 11:27:55 | INFO | USER:2 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_logs | IP:127.0.0.1 | DETAILS:Consultation logs (limite: 100)
+2025-09-22 11:27:58 | INFO | USER:2 | ROLE:ADMIN | ACTION:ACTION_ADMIN | FUNCTION:users_api | IP:127.0.0.1 | DETAILS:Accès admin/responsable - Rôle: ADMIN
+2025-09-22 11:27:58 | INFO | USER:2 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:users_list | IP:127.0.0.1 | DETAILS:Consultation liste utilisateurs (18 utilisateurs)
+2025-09-22 11:28:16 | INFO | USER:2 | ROLE:ADMIN | ACTION:ACTION_ADMIN | FUNCTION:prestataires_api | IP:127.0.0.1 | DETAILS:Accès admin/responsable - Rôle: ADMIN
+2025-09-22 11:28:16 | INFO | USER:2 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:prestataires_list | IP:127.0.0.1 | DETAILS:Consultation liste prestataires (2 prestataires)
+2025-09-22 11:32:50 | INFO | USER:2 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_stats | IP:127.0.0.1 | DETAILS:Consultation statistiques audit
+2025-09-22 11:32:50 | INFO | USER:2 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_logs | IP:127.0.0.1 | DETAILS:Consultation logs (limite: 100)
+2025-09-22 11:32:54 | INFO | USER:2 | ROLE:ADMIN | ACTION:ACTION_ADMIN | FUNCTION:prestataires_api | IP:127.0.0.1 | DETAILS:Accès admin/responsable - Rôle: ADMIN
+2025-09-22 11:32:55 | INFO | USER:2 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:prestataires_list | IP:127.0.0.1 | DETAILS:Consultation liste prestataires (2 prestataires)
+2025-09-22 11:33:06 | INFO | USER:2 | ROLE:ADMIN | ACTION:ACTION_ADMIN | FUNCTION:create_prestataire_api | IP:127.0.0.1 | DETAILS:Accès admin/responsable - Rôle: ADMIN
+2025-09-22 11:33:06 | INFO | USER:2 | ROLE:ADMIN | ACTION:CREATION | FUNCTION:create_prestataire | IP:127.0.0.1 | DETAILS:Création prestataire: Nde Airline
+2025-09-22 11:33:10 | INFO | USER:2 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_stats | IP:127.0.0.1 | DETAILS:Consultation statistiques audit
+2025-09-22 11:33:10 | INFO | USER:2 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_logs | IP:127.0.0.1 | DETAILS:Consultation logs (limite: 100)
+2025-09-22 11:33:12 | INFO | USER:2 | ROLE:ADMIN | ACTION:ACTION_ADMIN | FUNCTION:prestataires_api | IP:127.0.0.1 | DETAILS:Accès admin/responsable - Rôle: ADMIN
+2025-09-22 11:33:12 | INFO | USER:2 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:prestataires_list | IP:127.0.0.1 | DETAILS:Consultation liste prestataires (3 prestataires)
+2025-09-22 11:33:18 | INFO | USER:2 | ROLE:ADMIN | ACTION:ACTION_ADMIN | FUNCTION:delete_prestataire_api | IP:127.0.0.1 | DETAILS:Accès admin/responsable - Rôle: ADMIN
+2025-09-22 11:33:18 | INFO | USER:2 | ROLE:ADMIN | ACTION:SUPPRESSION | FUNCTION:delete_prestataire | IP:127.0.0.1 | DETAILS:Suppression prestataire: Nde Airline
+2025-09-22 11:33:18 | INFO | USER:2 | ROLE:ADMIN | ACTION:ACTION_ADMIN | FUNCTION:prestataires_api | IP:127.0.0.1 | DETAILS:Accès admin/responsable - Rôle: ADMIN
+2025-09-22 11:33:18 | INFO | USER:2 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:prestataires_list | IP:127.0.0.1 | DETAILS:Consultation liste prestataires (2 prestataires)
+2025-09-22 11:33:23 | INFO | USER:2 | ROLE:ADMIN | ACTION:ACTION_ADMIN | FUNCTION:users_api | IP:127.0.0.1 | DETAILS:Accès admin/responsable - Rôle: ADMIN
+2025-09-22 11:33:23 | INFO | USER:2 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:users_list | IP:127.0.0.1 | DETAILS:Consultation liste utilisateurs (18 utilisateurs)
+2025-09-22 12:59:42 | INFO | USER:2 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_stats | IP:127.0.0.1 | DETAILS:Consultation statistiques audit
+2025-09-22 12:59:43 | INFO | USER:2 | ROLE:ADMIN | ACTION:CONSULTATION | FUNCTION:audit_logs | IP:127.0.0.1 | DETAILS:Consultation logs (limite: 100)

@@ -31,9 +31,15 @@ Phase 4 - Centralise les menus de navigation répétés
         </a>
     </li>
     <li class="nav-item">
-        <a class="nav-link {{ 'active' if active_page == 'utilisateurs' else '' }}" 
-           href="{{ url_for('admin.utilisateurs') }}">
-            <i class="fas fa-users"></i> Utilisateurs
+        <a class="nav-link {{ 'active' if active_page == 'carburation' else '' }}"
+           href="{{ url_for('admin.carburation') }}">
+            <i class="fas fa-gas-pump"></i> Carburation
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ 'active' if active_page == 'depanage' else '' }}"
+           href="{{ url_for('admin.depanage') }}">
+            <i class="fas fa-wrench"></i> Dépannage
         </a>
     </li>
     <li class="nav-item">

@@ -7,13 +7,7 @@
     margin: 0 auto;
 }
 
-/* Optimisation pour grands écrans */
-@media (min-width: 1600px) {
-    .page-container {
-        max-width: none;
-        padding: 30px 60px;
-    }
-}
+/* Suppression des styles pour très grands écrans - garder les tailles par défaut */
 
 @media (min-width: 2000px) {
     .page-container {
@@ -207,5 +201,171 @@
     .table-modern th,
     .table-modern td {
         padding: 8px 4px;
+    }
+}
+
+/* === RESPONSIVE TRAJETS CHAUFFEUR COMPLET === */
+
+/* Mobile très petit (480px et moins) */
+@media (max-width: 480px) {
+    .page-container {
+        padding: 15px;
+    }
+
+    .section-header-with-filters {
+        gap: 10px;
+    }
+
+    .section-title {
+        font-size: 18px;
+    }
+
+    .filters-row {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .filter-group {
+        width: 100%;
+    }
+
+    .filter-group label {
+        font-size: 12px;
+        margin-bottom: 4px;
+    }
+
+    .filter-group select,
+    .filter-group input {
+        padding: 8px 10px;
+        font-size: 13px;
+        border-radius: 8px;
+    }
+
+    .stats-overview {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .stat-item {
+        padding: 12px;
+        border-radius: 8px;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+    }
+
+    .stat-label {
+        font-size: 0.8rem;
+    }
+
+    .table-modern {
+        font-size: 12px;
+    }
+
+    .table-modern th,
+    .table-modern td {
+        padding: 6px 3px;
+    }
+}
+
+/* Tablet (769px à 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .page-container {
+        padding: 25px;
+    }
+
+    .filters-row {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+
+    .stats-overview {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+
+    .stat-item {
+        padding: 18px;
+    }
+
+    .table-modern th,
+    .table-modern td {
+        padding: 10px 8px;
+    }
+}
+
+/* Large Desktop (1200px à 1599px) */
+@media (min-width: 1200px) and (max-width: 1599px) {
+    .page-container {
+        padding: 30px 40px;
+    }
+
+    .filters-row {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+    }
+
+    .filter-group select,
+    .filter-group input {
+        padding: 12px 14px;
+        font-size: 15px;
+        border-radius: 12px;
+    }
+
+    .stats-overview {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+    }
+
+    .stat-item {
+        padding: 22px;
+        border-radius: 14px;
+    }
+
+    .stat-value {
+        font-size: 2.2rem;
+    }
+
+    .table-modern th,
+    .table-modern td {
+        padding: 12px 10px;
+    }
+}
+
+/* Ultra Wide Screens (2000px et plus) */
+@media (min-width: 2000px) {
+    .filters-row {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 25px;
+    }
+
+    .filter-group select,
+    .filter-group input {
+        padding: 14px 16px;
+        font-size: 16px;
+        border-radius: 14px;
+    }
+
+    .stats-overview {
+        grid-template-columns: repeat(5, 1fr);
+        gap: 25px;
+    }
+
+    .stat-item {
+        padding: 25px;
+        border-radius: 16px;
+    }
+
+    .stat-value {
+        font-size: 2.5rem;
+    }
+
+    .table-modern th,
+    .table-modern td {
+        padding: 14px 12px;
     }
 }

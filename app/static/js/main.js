@@ -78,6 +78,20 @@ class FormModalManager {
     }
 
     /**
+     * Ouvre une modal
+     */
+    static openModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.add('show');
+            modal.style.display = 'flex';
+            modal.setAttribute('aria-hidden', 'false');
+            modal.removeAttribute('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    /**
      * Ferme une modal
      */
     static closeModal(modalId) {

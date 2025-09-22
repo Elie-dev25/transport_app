@@ -1,0 +1,115 @@
+/* ================== CONSULTATION MODULE ================== */
+/* Module dédié aux styles de consultation admin */
+
+.consultation-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem 0;
+    margin-bottom: 2rem;
+    border-radius: 10px;
+}
+
+.readonly-badge {
+    background: linear-gradient(45deg, #ffc107, #fd7e14);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 10px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-left: 4px solid #667eea;
+    transition: transform 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #667eea;
+}
+
+/* === RESPONSIVE CONSULTATION === */
+
+/* Tablet (768px et moins) */
+@media (max-width: 768px) {
+    .consultation-header {
+        padding: 1.5rem 0;
+        margin-bottom: 1.5rem;
+        border-radius: 8px;
+    }
+    
+    .readonly-badge {
+        padding: 0.2rem 0.6rem;
+        font-size: 0.75rem;
+        border-radius: 16px;
+    }
+    
+    .stat-card {
+        padding: 1.2rem;
+        border-radius: 8px;
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+    }
+}
+
+/* Mobile (480px et moins) */
+@media (max-width: 480px) {
+    .consultation-header {
+        padding: 1rem 0;
+        margin-bottom: 1rem;
+        border-radius: 6px;
+    }
+    
+    .readonly-badge {
+        padding: 0.15rem 0.5rem;
+        font-size: 0.7rem;
+        border-radius: 12px;
+    }
+    
+    .stat-card {
+        padding: 1rem;
+        border-radius: 6px;
+    }
+    
+    .stat-number {
+        font-size: 1.8rem;
+    }
+}
+
+/* Large Desktop (1200px et plus) */
+@media (min-width: 1200px) {
+    .consultation-header {
+        padding: 2.5rem 0;
+        margin-bottom: 2.5rem;
+        border-radius: 12px;
+    }
+    
+    .readonly-badge {
+        padding: 0.3rem 0.9rem;
+        font-size: 0.85rem;
+        border-radius: 24px;
+    }
+    
+    .stat-card {
+        padding: 1.8rem;
+        border-radius: 12px;
+    }
+    
+    .stat-number {
+        font-size: 2.8rem;
+    }
+}
+
+/* Suppression des styles pour très grands écrans - garder les tailles par défaut */

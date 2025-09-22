@@ -1,0 +1,403 @@
+/* ================== STYLES CHAUFFEURS ================== */
+/* Styles spécifiques pour la page de gestion des chauffeurs */
+
+/* Styles spécifiques pour les modales chauffeurs */
+.info-box {
+    background: #f8fafc;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border-left: 4px solid #3b82f6;
+}
+
+.info-box h4 {
+    margin: 0 0 5px 0;
+    color: #1e40af;
+    font-size: 16px;
+}
+
+.info-box p {
+    margin: 0;
+    font-weight: 500;
+    color: #374151;
+}
+
+/* Raccourcis de dates */
+.date-shortcuts {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f1f5f9;
+    border-radius: 8px;
+}
+
+.date-shortcuts h5 {
+    margin: 0 0 10px 0;
+    color: #475569;
+    font-size: 14px;
+}
+
+.shortcuts-grid {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.shortcut-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+/* Détails statut */
+.detail-item {
+    margin-bottom: 15px;
+}
+
+.detail-item strong {
+    color: #374151;
+}
+
+/* Styles pour les statuts des chauffeurs */
+.statut-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.statut-disponible {
+    background-color: #d1fae5;
+    color: #065f46;
+    border: 1px solid #10b981;
+}
+
+.statut-en-mission {
+    background-color: #fef3c7;
+    color: #92400e;
+    border: 1px solid #f59e0b;
+}
+
+.statut-repos {
+    background-color: #e0e7ff;
+    color: #3730a3;
+    border: 1px solid #6366f1;
+}
+
+.statut-absent {
+    background-color: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #ef4444;
+}
+
+/* Styles pour les modales de chauffeurs */
+.modal-chauffeur .modal-body {
+    padding: 20px;
+}
+
+.modal-chauffeur .form-group {
+    margin-bottom: 20px;
+}
+
+.modal-chauffeur .form-control {
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    padding: 10px 12px;
+}
+
+.modal-chauffeur .form-control:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Styles pour la planification */
+.planning-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.planning-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.planning-card h5 {
+    margin: 0 0 10px 0;
+    color: #374151;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.planning-item {
+    padding: 8px 0;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.planning-item:last-child {
+    border-bottom: none;
+}
+
+.planning-time {
+    font-weight: 500;
+    color: #6b7280;
+    font-size: 12px;
+}
+
+.planning-mission {
+    color: #374151;
+    font-size: 13px;
+    margin-top: 2px;
+}
+
+/* Styles pour les filtres */
+.filter-section {
+    background: #f9fafb;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.filter-row {
+    display: flex;
+    gap: 15px;
+    align-items: end;
+    flex-wrap: wrap;
+}
+
+.filter-group {
+    flex: 1;
+    min-width: 200px;
+}
+
+.filter-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: #374151;
+    font-size: 14px;
+}
+
+.filter-actions {
+    display: flex;
+    gap: 10px;
+}
+
+/* Styles pour les tableaux de chauffeurs */
+.chauffeurs-table {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.chauffeurs-table .table {
+    margin-bottom: 0;
+}
+
+.chauffeurs-table .table th {
+    background-color: #f8fafc;
+    border-bottom: 2px solid #e5e7eb;
+    font-weight: 600;
+    color: #374151;
+    padding: 15px 12px;
+}
+
+.chauffeurs-table .table td {
+    padding: 12px;
+    vertical-align: middle;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.chauffeurs-table .table tbody tr:hover {
+    background-color: #f9fafb;
+}
+
+/* Actions des chauffeurs */
+.chauffeur-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.chauffeur-actions .btn {
+    padding: 6px 10px;
+    font-size: 12px;
+    border-radius: 4px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .filter-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .filter-group {
+        min-width: auto;
+    }
+    
+    .planning-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .chauffeur-actions {
+        flex-direction: column;
+        gap: 4px;
+    }
+    
+    .chauffeur-actions .btn {
+        width: 100%;
+        font-size: 11px;
+    }
+}
+
+/* Masquer complètement les zones d'impression */
+#printListeArea,
+#printPlanningArea {
+    display: none !important;
+    visibility: hidden !important;
+    position: absolute !important;
+    left: -9999px !important;
+    top: -9999px !important;
+}
+
+/* Styles pour l'impression (spécifiques aux chauffeurs) */
+@media print {
+    .chauffeurs-table {
+        box-shadow: none;
+    }
+
+    .chauffeur-actions {
+        display: none !important;
+    }
+
+    .filter-section {
+        display: none !important;
+    }
+
+    .statut-badge {
+        background: white !important;
+        color: black !important;
+        border: 1px solid black !important;
+    }
+}
+
+/* === RESPONSIVE CHAUFFEURS COMPLET === */
+
+/* Mobile très petit (480px et moins) */
+@media (max-width: 480px) {
+    .chauffeurs-container {
+        padding: 15px;
+    }
+
+    .filter-row {
+        gap: 10px;
+    }
+
+    .filter-group {
+        margin-bottom: 10px;
+    }
+
+    .filter-group label {
+        font-size: 12px;
+        margin-bottom: 4px;
+    }
+
+    .filter-group select,
+    .filter-group input {
+        padding: 8px 10px;
+        font-size: 13px;
+        border-radius: 8px;
+    }
+
+    .shortcut-btn {
+        padding: 4px 8px;
+        font-size: 11px;
+        border-radius: 4px;
+    }
+
+    .detail-item {
+        margin-bottom: 10px;
+    }
+
+    .statut-badge {
+        padding: 3px 6px;
+        font-size: 10px;
+    }
+
+    .chauffeur-actions {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .chauffeur-actions .btn {
+        width: 100%;
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+}
+
+/* Tablet (769px à 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .chauffeurs-container {
+        padding: 25px;
+    }
+
+    .filter-row {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+
+    .filter-group {
+        margin-bottom: 15px;
+    }
+
+    .chauffeur-actions {
+        gap: 10px;
+    }
+
+    .chauffeur-actions .btn {
+        padding: 10px 14px;
+        font-size: 13px;
+    }
+}
+
+/* Large Desktop (1200px à 1599px) */
+@media (min-width: 1200px) and (max-width: 1599px) {
+    .chauffeurs-container {
+        padding: 30px 40px;
+    }
+
+    .filter-row {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+    }
+
+    .filter-group select,
+    .filter-group input {
+        padding: 12px 14px;
+        font-size: 15px;
+        border-radius: 12px;
+    }
+
+    .shortcut-btn {
+        padding: 8px 14px;
+        font-size: 13px;
+        border-radius: 8px;
+    }
+
+    .chauffeur-actions .btn {
+        padding: 12px 18px;
+        font-size: 14px;
+    }
+}
+
+/* Suppression des styles pour très grands écrans - garder les tailles par défaut */

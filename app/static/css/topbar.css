@@ -223,3 +223,76 @@
     color: #e5e7eb;
     margin-bottom: 16px;
 }
+
+/* === RESPONSIVE TOPBAR === */
+/* Tablet et mobile */
+@media (max-width: 768px) {
+    .top-bar {
+        left: 0;
+        width: 100%;
+        padding: 15px 20px;
+        position: fixed;
+        z-index: 1200;
+    }
+
+    .page-title {
+        font-size: 20px;
+    }
+
+    .top-bar-actions {
+        gap: 15px;
+    }
+
+    .notification-bell {
+        width: 40px;
+        height: 40px;
+    }
+
+    .user-avatar {
+        width: 35px;
+        height: 35px;
+        font-size: 14px;
+    }
+
+    .notification-panel {
+        width: calc(100vw - 40px);
+        right: 20px;
+        left: 20px;
+        max-height: 60vh;
+    }
+}
+
+/* Mobile très petit */
+@media (max-width: 480px) {
+    .top-bar {
+        padding: 12px 15px;
+    }
+
+    .page-title {
+        font-size: 18px;
+    }
+
+    .top-bar-actions {
+        gap: 10px;
+    }
+
+    .notification-bell {
+        width: 36px;
+        height: 36px;
+    }
+
+    .user-avatar {
+        width: 32px;
+        height: 32px;
+        font-size: 12px;
+    }
+
+    .notification-panel {
+        width: calc(100vw - 20px);
+        right: 10px;
+        left: 10px;
+        top: 70px;
+    }
+}
+
+/* Suppression des styles pour très grands écrans - garder les tailles par défaut */

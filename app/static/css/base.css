@@ -68,3 +68,73 @@ body {
     align-items: center;
     gap: 12px;
 }
+
+/* === RESPONSIVE BASE === */
+
+/* Tablet (768px et moins) */
+@media (max-width: 768px) {
+    .main-content {
+        margin-left: 0;
+        padding-top: 80px;
+    }
+
+    .dashboard-content {
+        padding: 6px 15px 15px 15px;
+    }
+
+    .section-title {
+        font-size: 18px;
+        margin-bottom: 20px;
+        gap: 10px;
+    }
+
+    .indicator {
+        width: 14px;
+        height: 14px;
+        margin-right: 6px;
+    }
+}
+
+/* Mobile (480px et moins) */
+@media (max-width: 480px) {
+    .main-content {
+        padding-top: 70px;
+    }
+
+    .dashboard-content {
+        padding: 5px 10px 10px 10px;
+    }
+
+    .section-title {
+        font-size: 16px;
+        margin-bottom: 15px;
+        gap: 8px;
+    }
+
+    .indicator {
+        width: 12px;
+        height: 12px;
+        margin-right: 5px;
+    }
+}
+
+/* Large Desktop (1200px et plus) */
+@media (min-width: 1200px) {
+    .dashboard-content {
+        padding: 10px 30px 30px 30px;
+    }
+
+    .section-title {
+        font-size: 24px;
+        margin-bottom: 30px;
+        gap: 14px;
+    }
+
+    .indicator {
+        width: 18px;
+        height: 18px;
+        margin-right: 10px;
+    }
+}
+
+/* Suppression des styles pour très grands écrans - garder les tailles par défaut */
