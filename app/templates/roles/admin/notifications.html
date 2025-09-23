@@ -1,0 +1,385 @@
+{% extends "roles/admin/_base_admin.html" %}
+{% from 'shared/macros/tableaux_components.html' import table_container, status_badge, icon_cell, date_cell %}
+
+{% block title %}Gestion des Notifications{% endblock %}
+
+{% block extra_head %}
+<style>
+.notification-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    background: white;
+}
+
+.test-section {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.alert-info {
+    background-color: #d1ecf1;
+    border-color: #bee5eb;
+    color: #0c5460;
+}
+
+.btn-test {
+    background: #17a2b8;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.btn-test:hover {
+    background: #138496;
+}
+
+.status-indicator {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 8px;
+}
+
+.status-success { background-color: #28a745; }
+.status-error { background-color: #dc3545; }
+.status-warning { background-color: #ffc107; }
+</style>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="dashboard-content">
+    <div class="page-header">
+        <h1><i class="fas fa-envelope"></i> Gestion des Notifications Email</h1>
+        <p class="text-muted">Configuration et test du système de notifications automatiques</p>
+    </div>
+
+    <!-- Configuration Email -->
+    <div class="notification-card">
+        <h3><i class="fas fa-cog"></i> Configuration Email</h3>
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Serveur SMTP:</strong> {{ config.SMTP_HOST or 'Non configuré' }}</p>
+                <p><strong>Port:</strong> {{ config.SMTP_PORT or 'Non configuré' }}</p>
+                <p><strong>Expéditeur:</strong> {{ config.MAIL_FROM or 'Non configuré' }}</p>
+            </div>
+            <div class="col-md-6">
+                <div class="test-section">
+                    <h5>Test de Configuration</h5>
+                    <p class="text-muted">Teste l'envoi d'un email de vérification</p>
+                    <button class="btn-test" onclick="testEmailConfig()">
+                        <i class="fas fa-paper-plane"></i> Tester la Configuration
+                    </button>
+                    <div id="config-test-result" class="mt-2"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tests de Notifications -->
+    <div class="notification-card">
+        <h3><i class="fas fa-vial"></i> Tests de Notifications</h3>
+        
+        <!-- Test Notification Panne -->
+        <div class="test-section">
+            <h5><i class="fas fa-exclamation-triangle"></i> Test Notification Panne</h5>
+            <p class="text-muted">Envoie une notification de test pour une panne simulée</p>
+            <div class="row">
+                <div class="col-md-4">
+                    <select id="test-bus-select" class="form-control">
+                        <option value="">Sélectionner un bus...</option>
+                        <!-- Options chargées dynamiquement -->
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <button class="btn-test" onclick="testPanneNotification()">
+                        <i class="fas fa-tools"></i> Tester Notification Panne
+                    </button>
+                </div>
+            </div>
+            <div id="panne-test-result" class="mt-2"></div>
+        </div>
+
+        <!-- Test Notification Statut -->
+        <div class="test-section">
+            <h5><i class="fas fa-user-clock"></i> Test Notification Statut Chauffeur</h5>
+            <p class="text-muted">Envoie une notification de test pour un statut chauffeur</p>
+            <div class="row">
+                <div class="col-md-4">
+                    <select id="test-chauffeur-select" class="form-control">
+                        <option value="">Sélectionner un chauffeur...</option>
+                        <!-- Options chargées dynamiquement -->
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <button class="btn-test" onclick="testStatutNotification()">
+                        <i class="fas fa-calendar-check"></i> Tester Notification Statut
+                    </button>
+                </div>
+            </div>
+            <div id="statut-test-result" class="mt-2"></div>
+        </div>
+    </div>
+
+    <!-- Vérification des Seuils -->
+    <div class="notification-card">
+        <h3><i class="fas fa-exclamation-circle"></i> Vérification des Seuils Critiques</h3>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="test-section">
+                    <h5>Vérification Automatique</h5>
+                    <p class="text-muted">Lance la vérification de tous les seuils critiques</p>
+                    <button class="btn-test" onclick="checkCriticalThresholds()">
+                        <i class="fas fa-search"></i> Vérifier Tous les Seuils
+                    </button>
+                    <div id="threshold-check-result" class="mt-2"></div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="test-section">
+                    <h5>Bus Nécessitant une Maintenance</h5>
+                    <button class="btn-test" onclick="loadBusesMaintenanceList()">
+                        <i class="fas fa-list"></i> Voir la Liste
+                    </button>
+                    <div id="buses-maintenance-list" class="mt-2"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Historique des Notifications -->
+    <div class="notification-card">
+        <h3><i class="fas fa-history"></i> Historique et Statistiques</h3>
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i>
+            Les notifications sont automatiquement envoyées lors des événements suivants :
+            <ul class="mt-2 mb-0">
+                <li><strong>Déclaration de panne</strong> → Mécanicien, Superviseur, Responsable</li>
+                <li><strong>Véhicule réparé</strong> → Responsable, Superviseur</li>
+                <li><strong>Seuil vidange critique</strong> → Responsable, Superviseur</li>
+                <li><strong>Seuil carburant critique</strong> → Responsable, Chauffeur, Superviseur</li>
+                <li><strong>Affectation statut chauffeur</strong> → Chauffeur concerné</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+// Charger les données au chargement de la page
+document.addEventListener('DOMContentLoaded', function() {
+    loadBusOptions();
+    loadChauffeurOptions();
+});
+
+// Test de configuration email
+function testEmailConfig() {
+    const resultDiv = document.getElementById('config-test-result');
+    resultDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Test en cours...';
+    
+    fetch('/admin/notifications/test_config', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        const status = data.success ? 'success' : 'error';
+        const icon = data.success ? 'check-circle' : 'times-circle';
+        resultDiv.innerHTML = `
+            <div class="alert alert-${data.success ? 'success' : 'danger'}">
+                <i class="fas fa-${icon}"></i> ${data.message}
+                ${data.test_email ? `<br><small>Email envoyé à: ${data.test_email}</small>` : ''}
+            </div>
+        `;
+    })
+    .catch(error => {
+        resultDiv.innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-times-circle"></i> Erreur: ${error.message}
+            </div>
+        `;
+    });
+}
+
+// Test notification panne
+function testPanneNotification() {
+    const busSelect = document.getElementById('test-bus-select');
+    const busId = busSelect.value;
+    
+    if (!busId) {
+        alert('Veuillez sélectionner un bus');
+        return;
+    }
+    
+    const resultDiv = document.getElementById('panne-test-result');
+    resultDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi en cours...';
+    
+    fetch('/admin/notifications/test_panne', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ bus_id: parseInt(busId) })
+    })
+    .then(response => response.json())
+    .then(data => {
+        const icon = data.success ? 'check-circle' : 'times-circle';
+        resultDiv.innerHTML = `
+            <div class="alert alert-${data.success ? 'success' : 'danger'}">
+                <i class="fas fa-${icon}"></i> ${data.message}
+                ${data.bus_numero ? `<br><small>Bus: ${data.bus_numero}</small>` : ''}
+            </div>
+        `;
+    })
+    .catch(error => {
+        resultDiv.innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-times-circle"></i> Erreur: ${error.message}
+            </div>
+        `;
+    });
+}
+
+// Test notification statut
+function testStatutNotification() {
+    const chauffeurSelect = document.getElementById('test-chauffeur-select');
+    const chauffeurId = chauffeurSelect.value;
+    
+    if (!chauffeurId) {
+        alert('Veuillez sélectionner un chauffeur');
+        return;
+    }
+    
+    const resultDiv = document.getElementById('statut-test-result');
+    resultDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi en cours...';
+    
+    fetch('/admin/notifications/test_statut', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ chauffeur_id: parseInt(chauffeurId) })
+    })
+    .then(response => response.json())
+    .then(data => {
+        const icon = data.success ? 'check-circle' : 'times-circle';
+        resultDiv.innerHTML = `
+            <div class="alert alert-${data.success ? 'success' : 'danger'}">
+                <i class="fas fa-${icon}"></i> ${data.message}
+                ${data.chauffeur_email ? `<br><small>Email: ${data.chauffeur_email}</small>` : ''}
+            </div>
+        `;
+    })
+    .catch(error => {
+        resultDiv.innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-times-circle"></i> Erreur: ${error.message}
+            </div>
+        `;
+    });
+}
+
+// Vérification des seuils critiques
+function checkCriticalThresholds() {
+    const resultDiv = document.getElementById('threshold-check-result');
+    resultDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Vérification en cours...';
+    
+    fetch('/admin/notifications/check_thresholds', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        const icon = data.success ? 'check-circle' : 'times-circle';
+        let content = `
+            <div class="alert alert-${data.success ? 'success' : 'danger'}">
+                <i class="fas fa-${icon}"></i> ${data.message}
+        `;
+        
+        if (data.rapport) {
+            content += `
+                <br><small>
+                    Bus vérifiés: ${data.rapport.total_buses_checked} | 
+                    Alertes vidange: ${data.rapport.vidange_alerts.length} | 
+                    Alertes carburant: ${data.rapport.carburant_alerts.length}
+                </small>
+            `;
+        }
+        
+        content += '</div>';
+        resultDiv.innerHTML = content;
+    })
+    .catch(error => {
+        resultDiv.innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-times-circle"></i> Erreur: ${error.message}
+            </div>
+        `;
+    });
+}
+
+// Charger les options de bus
+function loadBusOptions() {
+    // Simuler le chargement des bus - à remplacer par un appel API réel
+    const busSelect = document.getElementById('test-bus-select');
+    // Ici vous pourriez faire un appel AJAX pour récupérer la liste des bus
+    // Pour l'instant, on ajoute quelques options de test
+    busSelect.innerHTML = `
+        <option value="">Sélectionner un bus...</option>
+        <option value="1">Bus 001</option>
+        <option value="2">Bus 002</option>
+        <option value="3">Bus 003</option>
+    `;
+}
+
+// Charger les options de chauffeurs
+function loadChauffeurOptions() {
+    // Simuler le chargement des chauffeurs - à remplacer par un appel API réel
+    const chauffeurSelect = document.getElementById('test-chauffeur-select');
+    chauffeurSelect.innerHTML = `
+        <option value="">Sélectionner un chauffeur...</option>
+        <option value="1">Chauffeur 1</option>
+        <option value="2">Chauffeur 2</option>
+        <option value="3">Chauffeur 3</option>
+    `;
+}
+
+// Charger la liste des bus nécessitant une maintenance
+function loadBusesMaintenanceList() {
+    const resultDiv = document.getElementById('buses-maintenance-list');
+    resultDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Chargement...';
+    
+    fetch('/admin/notifications/buses_maintenance')
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (data.buses.length === 0) {
+                resultDiv.innerHTML = '<div class="alert alert-success"><i class="fas fa-check"></i> Aucun bus ne nécessite de maintenance urgente</div>';
+            } else {
+                let content = '<div class="alert alert-warning"><strong>Bus nécessitant une maintenance:</strong><ul class="mt-2 mb-0">';
+                data.buses.forEach(bus => {
+                    content += `<li>Bus ${bus.numero} (${bus.immatriculation}) - ${bus.alerts.length} alerte(s)</li>`;
+                });
+                content += '</ul></div>';
+                resultDiv.innerHTML = content;
+            }
+        } else {
+            resultDiv.innerHTML = `<div class="alert alert-danger"><i class="fas fa-times"></i> ${data.message}</div>`;
+        }
+    })
+    .catch(error => {
+        resultDiv.innerHTML = `<div class="alert alert-danger"><i class="fas fa-times"></i> Erreur: ${error.message}</div>`;
+    });
+}
+</script>
+{% endblock %}

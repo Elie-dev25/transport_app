@@ -1,0 +1,26 @@
+# Test avec curl pour vérifier la route directement
+
+# Test 1: Données JSON
+curl -X POST http://127.0.0.1:5000/admin/declarer_panne \
+  -H "Content-Type: application/json" \
+  -d '{
+    "numero_bus_udm": "TEST-001",
+    "numero_aed": "TEST-001", 
+    "description": "Test de panne",
+    "criticite": "FAIBLE",
+    "immobilisation": false
+  }'
+
+# Test 2: Données de formulaire
+curl -X POST http://127.0.0.1:5000/admin/declarer_panne \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "numero_bus_udm=TEST-001&description=Test+de+panne&criticite=FAIBLE&immobilisation=false"
+
+# Test 3: Données minimales
+curl -X POST http://127.0.0.1:5000/admin/declarer_panne \
+  -H "Content-Type: application/json" \
+  -d '{
+    "numero_bus_udm": "TEST-001",
+    "description": "Test",
+    "criticite": "FAIBLE"
+  }'

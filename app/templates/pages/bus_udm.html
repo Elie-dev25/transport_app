@@ -257,6 +257,13 @@
 <script>
 // Scripts spécifiques à la page Bus UdM (jQuery déjà chargé dans _base_dashboard.html)
 $(document).ready(function() {
+  // Vérifier que SweetAlert est chargé
+  if (typeof Swal === 'undefined') {
+    console.warn('⚠️ SweetAlert (Swal) n\'est pas chargé. Les popups utiliseront alert() natif.');
+  } else {
+    console.log('✅ SweetAlert est disponible');
+  }
+
   // Ouvrir automatiquement la modale Document si on arrive avec ?open=doc&bus_id=...
   (function(){
     const params = new URLSearchParams(window.location.search);
@@ -315,18 +322,27 @@ $(document).ready(function() {
   // Bouton Déclaration de panne
   $(document).on('click', '#declare-panne-btn', function(e){
     e.preventDefault();
+    console.log('Bouton déclaration cliqué'); // Debug
+
     // Pré-remplir si un bus est sélectionné, sinon vider
     if (window.selectedBusData) {
       $('#numero_bus_udm_panne').val(window.selectedBusData.numero || '');
       $('#immatriculation_panne').val(window.selectedBusData.immatriculation || '');
+      console.log('Bus sélectionné:', window.selectedBusData); // Debug
     } else {
       $('#numero_bus_udm_panne').val('');
       $('#immatriculation_panne').val('');
+      console.log('Aucun bus sélectionné'); // Debug
     }
     // Le kilométrage doit toujours être saisi par l'utilisateur
     $('#kilometrage_panne').val('');
+
     // Ouvrir la modale de déclaration de panne
+    console.log('Ouverture de la modal...'); // Debug
     $('#panneModal').removeAttr('hidden').addClass('show').attr('aria-hidden','false');
+
+    // Forcer l'affichage si nécessaire
+    $('#panneModal').css('display', 'flex');
   });
 
   // Fermeture modale panne
@@ -369,17 +385,44 @@ $(document).ready(function() {
   // Soumission formulaire Déclaration de panne
   $(document).off('submit', '#panneForm').on('submit', '#panneForm', function(e){
     e.preventDefault();
+    e.stopPropagation(); // Empêcher d'autres gestionnaires
+
     const $submitBtn = $(this).find('button[type="submit"], .submit-btn');
     $submitBtn.prop('disabled', true);
+
+    // Récupération des valeurs du formulaire
+    const numeroValue = $('#numero_bus_udm_panne').val();
+    const descriptionValue = $('#description_panne').val();
+    const criticiteValue = $('#criticite_panne').val();
+
     const formData = {
-      numero_bus_udm: $('#numero_bus_udm_panne').val(),
-      numero_aed: ($('#numero_bus_udm_panne').val() || ''),
-      immatriculation: $('#immatriculation_panne').val(),
-      kilometrage: $('#kilometrage_panne').val(),
-      description: $('#description_panne').val(),
-      criticite: $('#criticite_panne').val(),
+      numero_bus_udm: (numeroValue || '').trim(),
+      numero_aed: (numeroValue || '').trim(),
+      immatriculation: ($('#immatriculation_panne').val() || '').trim(),
+      kilometrage: $('#kilometrage_panne').val() || '',
+      description: (descriptionValue || '').trim(),
+      criticite: criticiteValue || '',
       immobilisation: $('#immobilisation_panne').is(':checked')
     };
+
+    // Validation côté client
+    if (!formData.numero_bus_udm) {
+      Swal.fire('Erreur', 'Le numéro de bus est obligatoire.', 'error');
+      $submitBtn.prop('disabled', false);
+      return;
+    }
+
+    if (!formData.description) {
+      Swal.fire('Erreur', 'La description est obligatoire.', 'error');
+      $submitBtn.prop('disabled', false);
+      return;
+    }
+
+    if (!formData.criticite) {
+      Swal.fire('Erreur', 'La criticité est obligatoire.', 'error');
+      $submitBtn.prop('disabled', false);
+      return;
+    }
 
     const numTrim = (formData.numero_bus_udm || '').trim();
     if (!numTrim) {
@@ -412,20 +455,59 @@ $(document).ready(function() {
       contentType: 'application/json',
       data: JSON.stringify(formData),
       success: function(resp){
+        console.log('✅ Réponse serveur:', resp);
         if(resp.success){
-          Swal.fire('Succès', resp.message, 'success');
+          // Fermer la modal d'abord
           $('#panneModal').removeClass('show').attr('aria-hidden','true').attr('hidden','');
           $('#panneForm')[0].reset();
-          setTimeout(() => location.reload(), 1200);
+
+          // Afficher le message de succès
+          if (typeof Swal !== 'undefined') {
+            Swal.fire({
+              title: 'Succès!',
+              text: resp.message || 'Panne déclarée avec succès.',
+              icon: 'success',
+              confirmButtonText: 'OK'
+            }).then(() => {
+              location.reload();
+            });
+          } else {
+            // Fallback si SweetAlert n'est pas disponible
+            alert('✅ ' + (resp.message || 'Panne déclarée avec succès.'));
+            location.reload();
+          }
         } else {
-          Swal.fire('Erreur', resp.message, 'error');
+          console.log('❌ Erreur serveur:', resp.message);
+          if (typeof Swal !== 'undefined') {
+            Swal.fire('Erreur', resp.message, 'error');
+          } else {
+            alert('❌ ' + resp.message);
+          }
         }
         $submitBtn.prop('disabled', false);
       },
       error: function(xhr){
+        console.log('❌ Erreur AJAX:', xhr);
+        console.log('Status:', xhr.status);
+        console.log('Response:', xhr.responseText);
+
         $submitBtn.prop('disabled', false);
         let msg = 'Impossible d\'enregistrer la panne';
-        try { if (xhr && xhr.responseJSON && xhr.responseJSON.message) msg = xhr.responseJSON.message; } catch(e){}
+
+        try {
+          if (xhr && xhr.responseJSON && xhr.responseJSON.message) {
+            msg = xhr.responseJSON.message;
+          } else if (xhr.responseText) {
+            const response = JSON.parse(xhr.responseText);
+            if (response.message) {
+              msg = response.message;
+            }
+          }
+        } catch(e){
+          console.log('Erreur parsing réponse:', e);
+        }
+
+        console.log('Message d\'erreur final:', msg);
         Swal.fire('Erreur', msg, 'error');
       }
     });

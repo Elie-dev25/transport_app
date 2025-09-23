@@ -1,4 +1,4 @@
-from flask import render_template, request, jsonify, url_for
+from flask import render_template, request, jsonify, url_for, current_app
 from flask_login import current_user
 from datetime import datetime
 from app.models.bus_udm import BusUdM
@@ -72,18 +72,31 @@ def depanage():
 @admin_only
 @bp.route('/declarer_panne', methods=['POST'])
 def declarer_panne():
-    data = request.get_json(silent=True) or {}
-    
-    # Accepter les deux noms de champs pour compat compatibilité des templates
+    # Récupérer les données de la requête
+    data = request.get_json(silent=True) or request.form.to_dict() or {}
+
+    # Accepter les deux noms de champs pour compatibilité des templates
     numero_aed = data.get('numero_aed') or data.get('numero_bus_udm')
     immatriculation = data.get('immatriculation')
     kilometrage = data.get('kilometrage')
     description = data.get('description')
     criticite = data.get('criticite')
     immobilisation = data.get('immobilisation', False)
-    
-    if not all([numero_aed, description, criticite]):
-        return jsonify({'success': False, 'message': 'Champs obligatoires manquants.'}), 400
+
+    # Validation détaillée avec debug
+    if not numero_aed:
+        print(f"🔍 DEBUG - numero_aed est None ou vide")
+        return jsonify({'success': False, 'message': 'Le numéro de bus est obligatoire.'}), 400
+
+    if not numero_aed.strip():
+        print(f"🔍 DEBUG - numero_aed est vide après strip(): '{numero_aed}'")
+        return jsonify({'success': False, 'message': 'Le numéro de bus est obligatoire.'}), 400
+
+    if not description or not description.strip():
+        return jsonify({'success': False, 'message': 'La description de la panne est obligatoire.'}), 400
+
+    if not criticite:
+        return jsonify({'success': False, 'message': 'La criticité est obligatoire.'}), 400
     
     if criticite not in ['FAIBLE', 'MOYENNE', 'HAUTE']:
         return jsonify({'success': False, 'message': 'Criticité invalide.'}), 400
@@ -138,8 +151,23 @@ def declarer_panne():
         
         db.session.add(nouvelle_panne)
         db.session.commit()
-        
-        return jsonify({'success': True, 'message': 'Panne déclarée avec succès.'})
+
+        # Envoyer notification email
+        try:
+            from app.services.notification_service import NotificationService
+            # Vérifier si les notifications sont activées
+            if current_app.config.get('ENABLE_EMAIL_NOTIFICATIONS', True):
+                NotificationService.send_panne_notification(nouvelle_panne, enregistre_par)
+                print("📧 Notification de panne envoyée")
+            else:
+                print("ℹ️ Notifications email désactivées")
+        except Exception as e:
+            # Ne pas faire échouer la déclaration si l'email échoue
+            print(f"⚠️ Échec notification panne: {str(e)}")
+
+        response = jsonify({'success': True, 'message': 'Panne déclarée avec succès.'})
+        response.headers['Content-Type'] = 'application/json'
+        return response
         
     except Exception as e:
         db.session.rollback()

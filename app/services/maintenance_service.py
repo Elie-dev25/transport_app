@@ -115,7 +115,22 @@ class MaintenanceService:
                 bus.statut = 'MAINTENANCE'
             
             db.session.commit()
-            
+
+            # Envoyer notification email (import local pour éviter les imports circulaires)
+            try:
+                from app.services.notification_service import NotificationService
+                NotificationService.send_panne_notification(panne, user_name)
+            except ImportError as e:
+                # Import circulaire ou service non disponible
+                print(f"Service de notification non disponible: {str(e)}")
+            except Exception as e:
+                # Ne pas faire échouer la création de panne si l'email échoue
+                try:
+                    from flask import current_app
+                    current_app.logger.warning(f"Échec notification panne: {str(e)}")
+                except:
+                    print(f"Échec notification panne: {str(e)}")
+
             return True, "Panne enregistrée avec succès", panne.id
             
         except Exception as e:
@@ -155,7 +170,22 @@ class MaintenanceService:
                         bus.statut = 'ACTIF'
             
             db.session.commit()
-            
+
+            # Envoyer notification email de réparation (import local pour éviter les imports circulaires)
+            try:
+                from app.services.notification_service import NotificationService
+                NotificationService.send_vehicule_repare_notification(panne, user_name)
+            except ImportError as e:
+                # Import circulaire ou service non disponible
+                print(f"Service de notification non disponible: {str(e)}")
+            except Exception as e:
+                # Ne pas faire échouer la résolution si l'email échoue
+                try:
+                    from flask import current_app
+                    current_app.logger.warning(f"Échec notification réparation: {str(e)}")
+                except:
+                    print(f"Échec notification réparation: {str(e)}")
+
             return True, "Panne résolue avec succès"
             
         except Exception as e:

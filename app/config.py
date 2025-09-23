@@ -51,13 +51,13 @@ class Config:
     MAX_SEARCH_RESULTS = 50
 
     # Configuration SMTP
-    SMTP_HOST = os.environ.get('SMTP_HOST')
+    SMTP_HOST = os.environ.get('SMTP_HOST') or 'smtp.gmail.com'
     SMTP_PORT = int(os.environ.get('SMTP_PORT', '587'))
-    SMTP_USERNAME = os.environ.get('SMTP_USERNAME')
+    SMTP_USERNAME = os.environ.get('SMTP_USERNAME') or 'elienjine15@gmail.com'
     SMTP_PASSWORD = os.environ.get('SMTP_PASSWORD')
     SMTP_USE_TLS = os.environ.get('SMTP_USE_TLS', 'true').lower() in ('1', 'true', 'yes')
     SMTP_USE_SSL = os.environ.get('SMTP_USE_SSL', 'false').lower() in ('1', 'true', 'yes')
-    MAIL_FROM = os.environ.get('MAIL_FROM') or 'noreply@transport-udm.com'
+    MAIL_FROM = os.environ.get('MAIL_FROM') or 'elienjine15@gmail.com'
 
     # Logging
     LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO')

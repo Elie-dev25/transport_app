@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         <div class="modal-body">
             {{ error_container('panneError') }}
-            <form id="panneForm" action="/admin/declarer_panne" method="POST">
+            <form id="panneForm" action="/admin/declarer_panne" method="POST" data-custom-handler="true">
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="numero_bus_udm_panne">Numéro Bus UdM *</label>
@@ -128,9 +128,7 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 </div>
 
-<!-- Initialisation du gestionnaire unifié -->
-{% from 'shared/macros/form_macros.html' import init_modal_form %}
-{{ init_modal_form('panneForm', 'panneModal', 'panneError', 'Panne déclarée avec succès.') }}
+<!-- Gestionnaire spécifique pour la déclaration de panne - pas de gestionnaire générique -->
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -138,7 +136,19 @@ document.addEventListener('DOMContentLoaded', function() {
     const closeBtn = document.getElementById('closePanneModal');
     if (closeBtn) {
         closeBtn.addEventListener('click', function() {
-            FormModalManager.closeModal('panneModal');
+            // Fermeture manuelle de la modal
+            const modal = document.getElementById('panneModal');
+            if (modal) {
+                modal.classList.remove('show');
+                modal.setAttribute('aria-hidden', 'true');
+                modal.setAttribute('hidden', '');
+
+                // Reset du formulaire
+                const form = document.getElementById('panneForm');
+                if (form) {
+                    form.reset();
+                }
+            }
         });
     }
 });

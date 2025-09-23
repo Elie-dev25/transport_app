@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Bouton Déclaration</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
+        .modal.show { display: flex; align-items: center; justify-content: center; }
+        .modal-content { background: white; padding: 20px; border-radius: 5px; max-width: 500px; width: 90%; }
+        .form-group { margin: 10px 0; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 3px; }
+        .form-actions { margin-top: 20px; text-align: right; }
+        .submit-btn { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 3px; }
+        .close-btn { float: right; background: none; border: none; font-size: 20px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Test du Bouton de Déclaration de Panne</h1>
+    
+    <div class="test-section info">
+        <h3>Instructions de Test</h3>
+        <ol>
+            <li>Ouvrez la console JavaScript (F12)</li>
+            <li>Cliquez sur les boutons ci-dessous</li>
+            <li>Vérifiez les messages dans la console</li>
+            <li>Testez la soumission du formulaire</li>
+        </ol>
+    </div>
+
+    <!-- Test du bouton de la section Opérations -->
+    <div class="test-section">
+        <h3>Test 1: Bouton Section Opérations</h3>
+        <p>Ce bouton simule celui de la section "Opérations" de la page Bus UdM</p>
+        <button id="declare-panne-btn" class="action-btn">
+            <i class="fas fa-triangle-exclamation"></i>
+            Déclaration de panne
+        </button>
+        <div id="test1-result"></div>
+    </div>
+
+    <!-- Test du bouton du tableau -->
+    <div class="test-section">
+        <h3>Test 2: Bouton Tableau (Action)</h3>
+        <p>Ce bouton simule celui de la colonne "Actions" du tableau</p>
+        <button onclick="openPanneModal('TEST-001', 'AB-123-CD', 15000)" class="table-btn action">
+            <i class="fas fa-exclamation-triangle"></i>
+            Déclarer panne
+        </button>
+        <div id="test2-result"></div>
+    </div>
+
+    <!-- Test de validation -->
+    <div class="test-section">
+        <h3>Test 3: Validation des Données</h3>
+        <button onclick="testValidation()" class="submit-btn">
+            Tester la Validation
+        </button>
+        <div id="test3-result"></div>
+    </div>
+
+    <!-- Modal de déclaration de panne -->
+    <div id="panneModal" class="modal">
+        <div class="modal-content">
+            <button type="button" id="closePanneModal" class="close-btn">&times;</button>
+            <h3>Déclaration de Panne</h3>
+            
+            <form id="panneForm">
+                <div class="form-group">
+                    <label for="numero_bus_udm_panne">Numéro Bus UdM *</label>
+                    <input type="text" id="numero_bus_udm_panne" name="numero_bus_udm" placeholder="Ex: UDM-1234">
+                </div>
+                <div class="form-group">
+                    <label for="immatriculation_panne">Immatriculation</label>
+                    <input type="text" id="immatriculation_panne" name="immatriculation" placeholder="Ex: AB-123-CD">
+                </div>
+                <div class="form-group">
+                    <label for="kilometrage_panne">Kilométrage actuel</label>
+                    <input type="number" id="kilometrage_panne" name="kilometrage" placeholder="Ex: 152340">
+                </div>
+                <div class="form-group">
+                    <label for="criticite_panne">Criticité *</label>
+                    <select id="criticite_panne" name="criticite">
+                        <option value="">-- Sélectionner --</option>
+                        <option value="FAIBLE">Faible</option>
+                        <option value="MOYENNE">Moyenne</option>
+                        <option value="HAUTE">Haute</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="description_panne">Description de la panne *</label>
+                    <textarea id="description_panne" name="description" rows="4" placeholder="Décrivez la panne observée..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="immobilisation_panne" name="immobilisation">
+                        Bus immobilisé (ne peut plus circuler)
+                    </label>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="submit-btn">
+                        Enregistrer la panne
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Simulation des données globales
+        window.selectedBusData = null;
+
+        $(document).ready(function() {
+            console.log('🧪 Page de test chargée');
+
+            // Test 1: Bouton section Opérations
+            $(document).on('click', '#declare-panne-btn', function(e){
+                e.preventDefault();
+                console.log('✅ Test 1: Bouton déclaration cliqué');
+                
+                $('#test1-result').html('<div class="success">✅ Bouton cliqué - Modal devrait s\'ouvrir</div>');
+                
+                // Pré-remplir si un bus est sélectionné, sinon vider
+                if (window.selectedBusData) {
+                    $('#numero_bus_udm_panne').val(window.selectedBusData.numero || '');
+                    $('#immatriculation_panne').val(window.selectedBusData.immatriculation || '');
+                    console.log('Bus sélectionné:', window.selectedBusData);
+                } else {
+                    $('#numero_bus_udm_panne').val('');
+                    $('#immatriculation_panne').val('');
+                    console.log('Aucun bus sélectionné');
+                }
+                
+                $('#kilometrage_panne').val('');
+                
+                // Ouvrir la modale
+                console.log('Ouverture de la modal...');
+                $('#panneModal').addClass('show');
+            });
+
+            // Fermeture modal
+            $('#closePanneModal').on('click', function(){
+                $('#panneModal').removeClass('show');
+                $('#panneForm')[0].reset();
+                console.log('Modal fermée');
+            });
+
+            // Soumission formulaire
+            $('#panneForm').on('submit', function(e){
+                e.preventDefault();
+                console.log('🚀 Soumission du formulaire');
+                
+                const formData = {
+                    numero_bus_udm: $('#numero_bus_udm_panne').val().trim(),
+                    numero_aed: $('#numero_bus_udm_panne').val().trim(),
+                    immatriculation: $('#immatriculation_panne').val().trim(),
+                    kilometrage: $('#kilometrage_panne').val(),
+                    description: $('#description_panne').val().trim(),
+                    criticite: $('#criticite_panne').val(),
+                    immobilisation: $('#immobilisation_panne').is(':checked')
+                };
+                
+                console.log('📊 Données du formulaire:', formData);
+                
+                // Validation
+                if (!formData.numero_bus_udm) {
+                    alert('Le numéro de bus est obligatoire.');
+                    return;
+                }
+                
+                if (!formData.description) {
+                    alert('La description est obligatoire.');
+                    return;
+                }
+                
+                if (!formData.criticite) {
+                    alert('La criticité est obligatoire.');
+                    return;
+                }
+                
+                console.log('✅ Validation réussie');
+                alert('✅ Formulaire valide ! (En production, ceci serait envoyé au serveur)');
+                
+                // Fermer la modal
+                $('#panneModal').removeClass('show');
+                $('#panneForm')[0].reset();
+            });
+        });
+
+        // Test 2: Fonction pour ouvrir la modal avec données pré-remplies
+        window.openPanneModal = function(numero, immatriculation, kilometrage) {
+            console.log('✅ Test 2: openPanneModal appelée avec:', {numero, immatriculation, kilometrage});
+            
+            $('#test2-result').html('<div class="success">✅ Fonction appelée - Modal devrait s\'ouvrir avec données pré-remplies</div>');
+            
+            $('#numero_bus_udm_panne').val(numero);
+            $('#immatriculation_panne').val(immatriculation || '');
+            $('#kilometrage_panne').val(kilometrage || '');
+            
+            $('#panneModal').addClass('show');
+        };
+
+        // Test 3: Test de validation
+        function testValidation() {
+            console.log('🧪 Test de validation');
+            
+            const testCases = [
+                {
+                    name: 'Formulaire vide',
+                    data: { numero_bus_udm: '', description: '', criticite: '' },
+                    shouldFail: true
+                },
+                {
+                    name: 'Numéro manquant',
+                    data: { numero_bus_udm: '', description: 'Test', criticite: 'FAIBLE' },
+                    shouldFail: true
+                },
+                {
+                    name: 'Description manquante',
+                    data: { numero_bus_udm: 'TEST-001', description: '', criticite: 'FAIBLE' },
+                    shouldFail: true
+                },
+                {
+                    name: 'Criticité manquante',
+                    data: { numero_bus_udm: 'TEST-001', description: 'Test', criticite: '' },
+                    shouldFail: true
+                },
+                {
+                    name: 'Formulaire complet',
+                    data: { numero_bus_udm: 'TEST-001', description: 'Test description', criticite: 'FAIBLE' },
+                    shouldFail: false
+                }
+            ];
+            
+            let results = '<h4>Résultats des tests de validation:</h4>';
+            
+            testCases.forEach(testCase => {
+                const isValid = testCase.data.numero_bus_udm && testCase.data.description && testCase.data.criticite;
+                const testPassed = (isValid && !testCase.shouldFail) || (!isValid && testCase.shouldFail);
+                
+                results += `<div class="${testPassed ? 'success' : 'error'}">
+                    ${testPassed ? '✅' : '❌'} ${testCase.name}: ${testPassed ? 'PASS' : 'FAIL'}
+                </div>`;
+                
+                console.log(`Test "${testCase.name}":`, {
+                    data: testCase.data,
+                    isValid: isValid,
+                    shouldFail: testCase.shouldFail,
+                    result: testPassed ? 'PASS' : 'FAIL'
+                });
+            });
+            
+            $('#test3-result').html(results);
+        }
+
+        // Fermer modal en cliquant à l'extérieur
+        $(document).on('click', '.modal', function(e) {
+            if (e.target === this) {
+                $(this).removeClass('show');
+            }
+        });
+    </script>
+</body>
+</html>

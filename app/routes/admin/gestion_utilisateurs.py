@@ -1,4 +1,4 @@
-from flask import render_template, jsonify, request
+from flask import render_template, jsonify, request, current_app
 from flask_login import current_user
 from app.models.chauffeur import Chauffeur
 from app.models.chauffeur_statut import ChauffeurStatut
@@ -252,6 +252,28 @@ def modifier_statut_chauffeur_ajax():
         )
         db.session.add(new_statut)
         db.session.commit()
+
+        # Envoyer notification email au chauffeur
+        try:
+            from app.models.utilisateur import Utilisateur
+            from app.services.notification_service import NotificationService
+
+            # Récupérer l'email du chauffeur
+            chauffeur_user = Utilisateur.query.filter_by(
+                utilisateur_id=int(chauffeur_id)
+            ).first()
+
+            if chauffeur_user and chauffeur_user.email:
+                NotificationService.send_statut_chauffeur_notification(
+                    new_statut, chauffeur_user.email
+                )
+            else:
+                current_app.logger.warning(f"Email manquant pour chauffeur ID {chauffeur_id}")
+
+        except Exception as e:
+            # Ne pas faire échouer la création du statut si l'email échoue
+            current_app.logger.warning(f"Échec notification statut chauffeur: {str(e)}")
+
         return jsonify({'success': True, 'message': 'Statut enregistré avec succès.'})
     except Exception as e:
         db.session.rollback()
