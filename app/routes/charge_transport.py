@@ -67,7 +67,7 @@ def bus():
         'pages/bus_udm.html',
         bus_list=buses,
         current_user=current_user,
-        active_page='bus_udm',
+        active_page='bus',
         readonly=False,
         base_template='roles/charge_transport/_base_charge.html'
     )
