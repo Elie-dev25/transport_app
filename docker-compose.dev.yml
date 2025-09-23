@@ -1,0 +1,120 @@
+version: '3.8'
+
+services:
+  # Base de données MySQL pour développement
+  db:
+    image: mysql:8.0
+    container_name: transport_udm_db_dev
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-dev_root_password}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-transport_udm_dev}
+      MYSQL_USER: ${MYSQL_USER:-dev_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-dev_password}
+      MYSQL_CHARSET: utf8mb4
+      MYSQL_COLLATION: utf8mb4_unicode_ci
+    ports:
+      - "3307:3306"  # Port différent pour éviter les conflits
+    volumes:
+      - mysql_dev_data:/var/lib/mysql
+      - ./scripts:/docker-entrypoint-initdb.d:ro
+    networks:
+      - transport_dev_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+      interval: 30s
+      start_period: 40s
+
+  # Application Flask pour développement
+  web:
+    build: 
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: transport_udm_web_dev
+    restart: unless-stopped
+    environment:
+      # Configuration Flask pour développement
+      FLASK_ENV: development
+      FLASK_APP: run.py
+      FLASK_DEBUG: 1
+      SECRET_KEY: ${SECRET_KEY:-dev_secret_key_not_for_production}
+      
+      # Configuration base de données
+      DATABASE_URL: mysql+pymysql://${MYSQL_USER:-dev_user}:${MYSQL_PASSWORD:-dev_password}@db:3306/${MYSQL_DATABASE:-transport_udm_dev}
+      
+      # Configuration SMTP (optionnelle en dev)
+      SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_USE_TLS: ${SMTP_USE_TLS:-true}
+      MAIL_FROM: ${MAIL_FROM:-dev@transport-udm.local}
+      
+      # Fonctionnalités pour développement
+      ENABLE_EMAIL_NOTIFICATIONS: ${ENABLE_EMAIL_NOTIFICATIONS:-false}
+      ENABLE_LDAP: ${ENABLE_LDAP:-false}
+      
+      # Logging verbeux pour développement
+      LOG_LEVEL: DEBUG
+      
+    ports:
+      - "5000:5000"
+    volumes:
+      # Montage du code source pour hot reload
+      - .:/app
+      - app_dev_logs:/app/logs
+      - app_dev_uploads:/app/uploads
+    networks:
+      - transport_dev_network
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
+      timeout: 10s
+      retries: 3
+      interval: 30s
+      start_period: 40s
+
+  # Adminer pour gestion de base de données (optionnel)
+  adminer:
+    image: adminer
+    container_name: transport_udm_adminer_dev
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    networks:
+      - transport_dev_network
+    depends_on:
+      - db
+    profiles:
+      - tools
+
+  # MailHog pour tester les emails en développement (optionnel)
+  mailhog:
+    image: mailhog/mailhog
+    container_name: transport_udm_mailhog_dev
+    restart: unless-stopped
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Web UI
+    networks:
+      - transport_dev_network
+    profiles:
+      - tools
+
+# Volumes persistants pour développement
+volumes:
+  mysql_dev_data:
+    driver: local
+  app_dev_logs:
+    driver: local
+  app_dev_uploads:
+    driver: local
+
+# Réseau pour développement
+networks:
+  transport_dev_network:
+    driver: bridge

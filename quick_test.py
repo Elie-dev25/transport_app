@@ -1,20 +1,29 @@
-print("Test simple")
-try:
-    from app.services.dashboard_service import DashboardService
-    print("DashboardService OK")
-except Exception as e:
-    print(f"Erreur DashboardService: {e}")
+print("Test des imports...")
 
 try:
-    from app.forms.constants import FormChoices
-    print("FormChoices OK")
+    import flask
+    print(f"Flask: {flask.__version__}")
 except Exception as e:
-    print(f"Erreur FormChoices: {e}")
+    print(f"Erreur Flask: {e}")
 
 try:
-    from app.constants import AppConstants
-    print("AppConstants OK")
+    import flask_wtf
+    print(f"Flask-WTF: {flask_wtf.__version__}")
 except Exception as e:
-    print(f"Erreur AppConstants: {e}")
+    print(f"Erreur Flask-WTF: {e}")
 
-print("Test terminé")
+try:
+    from app import create_app
+    app = create_app()
+    print("Application creee avec succes")
+except Exception as e:
+    print(f"Erreur app: {e}")
+
+try:
+    from app.forms.login_form import LoginForm
+    form = LoginForm()
+    print("Formulaires OK")
+except Exception as e:
+    print(f"Erreur formulaires: {e}")
+
+print("Test termine")

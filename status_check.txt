@@ -1,0 +1,40 @@
+=== VÉRIFICATION DU STATUT DE L'APPLICATION ===
+
+✅ Flask 3.1.1
+✅ Flask-WTF 1.2.2
+❌ Werkzeug: module 'werkzeug' has no attribute '__version__'
+✅ Application créée avec succès
+❌ Formulaires: Working outside of application context.
+
+This typically means that you attempted to use functionality that needed
+the current application. To solve this, set up an application context
+with app.app_context(). See the documentation for more information.
+Traceback: Traceback (most recent call last):
+  File "D:\transport_app\check_status.py", line 43, in check_status
+    form = LoginForm()
+  File "D:\transport_app\.venv\Lib\site-packages\wtforms\form.py", line 209, in __call__
+    return type.__call__(cls, *args, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\transport_app\.venv\Lib\site-packages\flask_wtf\form.py", line 73, in __init__
+    super().__init__(formdata=formdata, **kwargs)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\transport_app\.venv\Lib\site-packages\wtforms\form.py", line 281, in __init__
+    super().__init__(self._unbound_fields, meta=meta_obj, prefix=prefix)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\transport_app\.venv\Lib\site-packages\wtforms\form.py", line 40, in __init__
+    translations = self.meta.get_translations(self)
+  File "D:\transport_app\.venv\Lib\site-packages\flask_wtf\form.py", line 67, in get_translations
+    if not current_app.config.get("WTF_I18N_ENABLED", True):
+           ^^^^^^^^^^^^^^^^^^
+  File "D:\transport_app\.venv\Lib\site-packages\werkzeug\local.py", line 318, in __get__
+    obj = instance._get_current_object()
+  File "D:\transport_app\.venv\Lib\site-packages\werkzeug\local.py", line 519, in _get_current_object
+    raise RuntimeError(unbound_message) from None
+RuntimeError: Working outside of application context.
+
+This typically means that you attempted to use functionality that needed
+the current application. To solve this, set up an application context
+with app.app_context(). See the documentation for more information.
+
+
+=== FIN DE LA VÉRIFICATION ===

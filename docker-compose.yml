@@ -1,0 +1,109 @@
+version: '3.8'
+
+services:
+  # Base de données MySQL
+  db:
+    image: mysql:8.0
+    container_name: transport_udm_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-transport_udm_root_2024}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-transport_udm}
+      MYSQL_USER: ${MYSQL_USER:-transport_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-transport_pass_2024}
+      MYSQL_CHARSET: utf8mb4
+      MYSQL_COLLATION: utf8mb4_unicode_ci
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./scripts:/docker-entrypoint-initdb.d:ro
+    networks:
+      - transport_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+      interval: 30s
+      start_period: 40s
+
+  # Application Flask
+  web:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: transport_udm_web
+    restart: unless-stopped
+    environment:
+      # Configuration Flask
+      FLASK_ENV: ${FLASK_ENV:-production}
+      FLASK_APP: run.py
+      SECRET_KEY: ${SECRET_KEY:-your_super_secret_key_change_in_production}
+      
+      # Configuration base de données
+      DATABASE_URL: mysql+pymysql://${MYSQL_USER:-transport_user}:${MYSQL_PASSWORD:-transport_pass_2024}@db:3306/${MYSQL_DATABASE:-transport_udm}
+      
+      # Configuration SMTP pour les notifications
+      SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-elienjine15@gmail.com}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_USE_TLS: ${SMTP_USE_TLS:-true}
+      MAIL_FROM: ${MAIL_FROM:-elienjine15@gmail.com}
+      
+      # Fonctionnalités
+      ENABLE_EMAIL_NOTIFICATIONS: ${ENABLE_EMAIL_NOTIFICATIONS:-true}
+      ENABLE_LDAP: ${ENABLE_LDAP:-false}
+      
+      # Logging
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      
+    ports:
+      - "5000:5000"
+    volumes:
+      - app_logs:/app/logs
+      - app_uploads:/app/uploads
+    networks:
+      - transport_network
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
+      timeout: 10s
+      retries: 3
+      interval: 30s
+      start_period: 40s
+
+  # Serveur web Nginx (optionnel, pour la production)
+  nginx:
+    image: nginx:alpine
+    container_name: transport_udm_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - app_uploads:/var/www/uploads:ro
+    networks:
+      - transport_network
+    depends_on:
+      - web
+    profiles:
+      - production
+
+# Volumes persistants
+volumes:
+  mysql_data:
+    driver: local
+  app_logs:
+    driver: local
+  app_uploads:
+    driver: local
+
+# Réseau
+networks:
+  transport_network:
+    driver: bridge
