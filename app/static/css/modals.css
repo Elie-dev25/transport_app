@@ -394,3 +394,35 @@
     box-sizing: border-box;
     max-width: 100%;
 }
+
+/* ===== Spécifique: Modal Planifier un Trajet ===== */
+#planifierTrajetModal .modal-content {
+    max-width: 980px !important; /* plus large pour afficher 3 cartes confortablement */
+    box-shadow:
+        0 30px 70px rgba(0, 0, 0, 0.18),
+        0 2px 0 rgba(255, 255, 255, 0.4) inset;
+}
+
+#planifierTrajetModal .modal-header {
+    background: linear-gradient(135deg, #1e40af 0%, #2563eb 45%, #3b82f6 100%);
+    padding: 28px 36px 24px;
+}
+
+#planifierTrajetModal .modal-body {
+    padding: 28px 36px 36px;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+}
+
+/* Titre secondaire au centre avec soulignement déjà géré côté buttons.css, on renforce juste l'espacement */
+#planifierTrajetModal .trajet-type-selection h4 {
+    margin-top: 4px;
+    margin-bottom: 26px;
+}
+
+/* Responsive spécifique */
+@media (max-width: 1024px) {
+  #planifierTrajetModal .modal-content { max-width: 92vw !important; }
+}
+@media (max-width: 768px) {
+  #planifierTrajetModal .modal-body { padding: 20px 22px 24px; }
+}

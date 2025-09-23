@@ -5,6 +5,9 @@
 {% set page_title = 'Tableau de Bord' %}
 
 {% block extra_head %}
+    <!-- CSS pour les modales et boutons -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}?v=20250923">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/buttons.css') }}?v=20250923">
     <script src="{{ url_for('static', filename='js/dashboard_admin.js') }}?v=20250129"></script>
 {% endblock %}
 
@@ -36,7 +39,7 @@
                 <div class="stat-header">
                     <div>
                         <div class="stat-value">{{ stats.bus_actifs }}</div>
-                        <div class="stat-label">Bus AED Actifs</div>
+                        <div class="stat-label">Bus UdM actifs</div>
                     </div>
                     <div class="stat-icon blue">
                         <i class="fas fa-bus"></i>
@@ -52,7 +55,7 @@
                 <div class="stat-header">
                     <div>
                         <div class="stat-value">{{ stats.trajets_jour_aed }}</div>
-                        <div class="stat-label">Trajets du Jour AED</div>
+                        <div class="stat-label">Trajets du jour (UdM)</div>
                     </div>
                     <div class="stat-icon green">
                         <i class="fas fa-route"></i>
