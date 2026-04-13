@@ -1,0 +1,21 @@
+# Force GitHub to recognize this as a Python project, not HTML
+# Templates are supporting files, not primary code
+
+app/templates/** linguist-documentation
+app/static/** linguist-documentation
+*.html linguist-documentation
+
+# Python is the main language
+*.py linguist-language=Python
+
+# Don't count documentation files
+*.md linguist-documentation
+*.txt linguist-documentation
+*.sql linguist-documentation
+
+# Build and dependency files
+*.bat linguist-vendored
+docker-compose*.yml linguist-vendored
+Dockerfile* linguist-vendored
+requirements.txt linguist-vendored
+nginx.conf linguist-vendored
