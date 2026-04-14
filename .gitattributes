@@ -1,21 +1,34 @@
 # Force GitHub to recognize this as a Python project, not HTML
-# Templates are supporting files, not primary code
+# Templates and static files are supporting files, not primary code
 
+# HTML templates - mark as documentation (not counted in language stats)
 app/templates/** linguist-documentation
-app/static/** linguist-documentation
 *.html linguist-documentation
+
+# Static assets - mark as vendored (not counted)
+app/static/** linguist-vendored
+*.css linguist-vendored
+*.js linguist-vendored
 
 # Python is the main language
 *.py linguist-language=Python
 
-# Don't count documentation files
+# Documentation files
 *.md linguist-documentation
-*.txt linguist-documentation
-*.sql linguist-documentation
+docs/** linguist-documentation
 
-# Build and dependency files
+# Data and config files - not code
+*.sql linguist-documentation
+*.txt linguist-documentation
+*.json linguist-documentation
+
+# Build, config and deployment files
 *.bat linguist-vendored
+*.sh linguist-vendored
+*.ps1 linguist-vendored
 docker-compose*.yml linguist-vendored
 Dockerfile* linguist-vendored
 requirements.txt linguist-vendored
 nginx.conf linguist-vendored
+.dockerignore linguist-vendored
+.env.example linguist-documentation

@@ -1,0 +1,67 @@
+# Environnements virtuels Python
+venv/
+.venv/
+env/
+.env
+
+# Cache Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Logs
+logs/
+*.log
+build.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Tests
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Fichiers temporaires
+*.tmp
+*.temp
+*.bak
+
+# Base de données locale (ne pas commiter les données)
+*.db
+*.sqlite3
+
+# Fichiers de configuration locaux
+.env.local
+.env.*.local
+
+# Uploads utilisateurs
+app/uploads/
+uploads/
