@@ -309,17 +309,11 @@ pytest tests/test_trajets.py -v
 
 ---
 
-## 📄 Licence
+## Contact
 
-Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.
-
----
-
-## 📞 Support
-
-- **Email** : support@transport-udm.com
-- **Documentation** : [Wiki du projet](https://github.com/votre-repo/transport_app/wiki)
+- **Email** : elienjinedev@gmail.com
+- **LinkedIn** : [Elie Njine](https://www.linkedin.com/in/elie-njine-736b04274)
 
 ---
 
-*Développé avec ❤️ pour l'Université des Montagnes* 
+*Développé avec ❤️ pour l'Université des Montagnes*

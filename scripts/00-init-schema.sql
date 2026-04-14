@@ -305,8 +305,8 @@ CREATE TABLE `mecanicien` (
   `date_expiration_permis` date NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- --------------------------------------------------------
-
+--
+-
 --
 -- Structure de la table `notification`
 --
