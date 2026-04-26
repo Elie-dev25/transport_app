@@ -58,12 +58,17 @@ class TestTrajetServiceUtils:
         assert _get_bus_autonomie(setup_data['bus_def']) == AUTONOMIE_KM_PAR_LITRE
     
     def test_get_bus_autonomie_invalid_consommation(self, app, setup_data):
-        from app.services.trajet_service import _get_bus_autonomie, AUTONOMIE_KM_PAR_LITRE
+        from app.services.trajet_service import _get_bus_autonomie
+        from app.extensions import db
         bus = setup_data['bus']
-        bus.consommation_km_par_litre = 'invalid'
-        # Le fallback sur AUTONOMIE_KM_PAR_LITRE
-        result = _get_bus_autonomie(bus)
-        assert result is not None
+        # Set an invalid (non-numeric) value on the ORM attribute. Wrap in
+        # no_autoflush so SQLAlchemy doesn't try to UPDATE the row (which
+        # would fail when casting 'invalid' to float at the DB layer).
+        with db.session.no_autoflush:
+            bus.consommation_km_par_litre = 'invalid'
+            result = _get_bus_autonomie(bus)
+            assert result is not None
+        db.session.rollback()
     
     def test_get_reservoir_capacity_valid(self, setup_data):
         from app.services.trajet_service import _get_reservoir_capacity

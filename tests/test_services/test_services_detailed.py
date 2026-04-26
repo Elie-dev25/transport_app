@@ -179,14 +179,17 @@ class TestNotificationServiceDetailed:
         from app.models.bus_udm import BusUdM
         
         bus = BusUdM.query.first()
-        # Créer une panne minimale
+        # Créer une panne minimale (numero_bus_udm et immatriculation sont NOT NULL)
         panne = PanneBusUdM(
             bus_udm_id=bus.id,
+            numero_bus_udm=bus.numero,
+            immatriculation=bus.immatriculation,
             date_heure=datetime.now(),
             kilometrage=50000,
             description='Test panne',
             criticite='HAUTE',
             immobilisation=True,
+            enregistre_par='tester',
         )
         db.session.add(panne)
         db.session.commit()

@@ -30,7 +30,28 @@ def app():
     
     from app import create_app
     from app.extensions import db
-    
+
+    # Pre-import all model modules so SQLAlchemy registers every table
+    # before db.create_all() runs. Some models (e.g. Mecanicien, Prestataire)
+    # are only imported lazily by specific routes.
+    import app.models.utilisateur  # noqa: F401
+    import app.models.chauffeur  # noqa: F401
+    import app.models.bus_udm  # noqa: F401
+    import app.models.trajet  # noqa: F401
+    import app.models.mecanicien  # noqa: F401
+    import app.models.prestataire  # noqa: F401
+    import app.models.panne_bus_udm  # noqa: F401
+    import app.models.depannage  # noqa: F401
+    import app.models.chauffeur_statut  # noqa: F401
+    import app.models.administrateur  # noqa: F401
+    import app.models.affectation  # noqa: F401
+    import app.models.carburation  # noqa: F401
+    import app.models.chargetransport  # noqa: F401
+    import app.models.demande_huile  # noqa: F401
+    import app.models.document_bus_udm  # noqa: F401
+    import app.models.fuel_alert_state  # noqa: F401
+    import app.models.vidange  # noqa: F401
+
     flask_app = create_app()
     flask_app.config.update({
         'TESTING': True,

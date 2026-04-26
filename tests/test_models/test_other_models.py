@@ -36,9 +36,10 @@ class TestMecanicienModel:
         assert Mecanicien is not None
     
     def test_create(self, app):
+        from datetime import date
         from app.models.mecanicien import Mecanicien
         from app.models.utilisateur import Utilisateur
-        
+
         user = Utilisateur(
             nom='Meca', prenom='Test', login='meca_other',
             email='meca_other@test.com', telephone='001', role='MECANICIEN'
@@ -46,8 +47,13 @@ class TestMecanicienModel:
         user.set_password('Pass!123')
         db.session.add(user)
         db.session.commit()
-        
-        meca = Mecanicien(mecanicien_id=user.utilisateur_id)
+
+        meca = Mecanicien(
+            mecanicien_id=user.utilisateur_id,
+            numero_permis='PERM-MECA-001',
+            date_delivrance_permis=date(2020, 1, 1),
+            date_expiration_permis=date(2030, 1, 1),
+        )
         db.session.add(meca)
         db.session.commit()
         assert meca.mecanicien_id == user.utilisateur_id

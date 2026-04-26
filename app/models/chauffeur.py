@@ -45,4 +45,4 @@ class Chauffeur(db.Model):
     def is_permis_expire(self):
         """Vérifie si le permis est expiré"""
         from datetime import date
-        return self.date_expiration_permis < date.today() if self.date_expiration_permis else True
+        return self.date_expiration_permis <= date.today() if self.date_expiration_permis else True
