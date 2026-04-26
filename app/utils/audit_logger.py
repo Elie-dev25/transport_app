@@ -12,6 +12,12 @@ from flask import session, request
 from functools import wraps
 from enum import Enum
 
+
+
+ACTION_PREFIX = 'ACTION:'
+
+AUDIT_LOG_DIR = 'logs/audit'
+
 class AuditActionType(Enum):
     """Types d'actions critiques à auditer"""
     # Authentification
@@ -57,7 +63,7 @@ def setup_role_audit_loggers():
     """Configure un logger séparé pour chaque rôle"""
 
     # Créer le dossier logs s'il n'existe pas
-    logs_dir = 'logs/audit'
+    logs_dir = AUDIT_LOG_DIR
     if not os.path.exists(logs_dir):
         os.makedirs(logs_dir)
 
@@ -401,7 +407,7 @@ def get_audit_logs(limit=100, role_filter=None, action_filter=None, level_filter
         Liste des logs d'audit triés par date (plus récent en premier)
     """
     try:
-        logs_dir = 'logs/audit'
+        logs_dir = AUDIT_LOG_DIR
         if not os.path.exists(logs_dir):
             return []
 
@@ -433,7 +439,7 @@ def get_audit_logs(limit=100, role_filter=None, action_filter=None, level_filter
                         date_part = line.split(' | ')[0]
                         log_datetime = datetime.strptime(date_part, '%Y-%m-%d %H:%M:%S')
                         all_logs.append((log_datetime, line))
-                    except:
+                    except (ValueError, IndexError):
                         # Si parsing de date échoue, ajouter quand même
                         all_logs.append((datetime.min, line))
 
@@ -463,7 +469,7 @@ def get_role_audit_logs(role, limit=50, action_filter=None, level_filter=None):
         Liste des logs pour ce rôle
     """
     try:
-        logs_dir = 'logs/audit'
+        logs_dir = AUDIT_LOG_DIR
         log_file = os.path.join(logs_dir, f'audit_{role.lower()}.log')
 
         if not os.path.exists(log_file):
@@ -525,8 +531,8 @@ def get_role_statistics():
             for log in logs:
                 try:
                     # Extraire l'action
-                    if 'ACTION:' in log:
-                        action_part = log.split('ACTION:')[1].split('|')[0].strip()
+                    if ACTION_PREFIX in log:
+                        action_part = log.split(ACTION_PREFIX)[1].split('|')[0].strip()
                         if action_part not in role_stats['actions']:
                             role_stats['actions'][action_part] = 0
                         role_stats['actions'][action_part] += 1
@@ -545,15 +551,15 @@ def get_role_statistics():
                     if len(role_stats['recent_activity']) < 5:
                         try:
                             date_part = log.split(' | ')[0]
-                            action_part = log.split('ACTION:')[1].split('|')[0].strip() if 'ACTION:' in log else 'Unknown'
+                            action_part = log.split(ACTION_PREFIX)[1].split('|')[0].strip() if ACTION_PREFIX in log else 'Unknown'
                             role_stats['recent_activity'].append({
                                 'date': date_part,
                                 'action': action_part
                             })
-                        except:
+                        except (IndexError, KeyError, ValueError):
                             pass
 
-                except Exception as e:
+                except (IndexError, KeyError, ValueError):
                     continue
 
             # Calculer le taux de succès
@@ -599,7 +605,7 @@ def get_critical_alerts(hours=24):
                             'log': log,
                             'severity': 'CRITICAL'
                         })
-                except:
+                except (IndexError, ValueError):
                     continue
 
         # Trier par date (plus récent en premier)

@@ -12,26 +12,21 @@
       <form id="addBusForm" action="/admin/ajouter_bus_ajax" method="POST">
         <div class="form-grid">
           <div class="form-group">
-            <label>Numéro du bus :</label>
-            <input type="text" name="numero" placeholder="Ex: AED-01" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
+            <label for="addbus_numero">Numéro du bus :</label> <input id="addbus_numero" type="text" name="numero" placeholder="Ex: AED-01" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
           </div>
           <div class="form-group">
-            <label>Immatriculation :</label>
-            <input type="text" name="immatriculation" placeholder="Ex: DK-1234-AB" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
+            <label for="addbus_immatriculation">Immatriculation :</label> <input id="addbus_immatriculation" type="text" name="immatriculation" placeholder="Ex: DK-1234-AB" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
           </div>
 
           <!-- Nouveaux champs obligatoires -->
           <div class="form-group">
-            <label>Numéro de châssis :</label>
-            <input type="text" name="numero_chassis" placeholder="Ex: VF1234567890123456" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
+            <label for="addbus_numero_chassis">Numéro de châssis :</label> <input id="addbus_numero_chassis" type="text" name="numero_chassis" placeholder="Ex: VF1234567890123456" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
           </div>
           <div class="form-group">
-            <label>Modèle :</label>
-            <input type="text" name="modele" placeholder="Ex: Sprinter 515" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
+            <label for="addbus_modele">Modèle :</label> <input id="addbus_modele" type="text" name="modele" placeholder="Ex: Sprinter 515" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
           </div>
           <div class="form-group">
-            <label>Type de véhicule :</label>
-            <select name="type_vehicule" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
+            <label for="addbus_type_vehicule">Type de véhicule :</label> <select id="addbus_type_vehicule" name="type_vehicule" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
               <option value="">-- Choisir --</option>
               <option value="TOURISME">Tourisme</option>
               <option value="COASTER">Coaster</option>
@@ -41,17 +36,14 @@
             </select>
           </div>
           <div class="form-group">
-            <label>Marque :</label>
-            <input type="text" name="marque" placeholder="Ex: Mercedes, Toyota, Hyundai" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
+            <label for="addbus_marque">Marque :</label> <input id="addbus_marque" type="text" name="marque" placeholder="Ex: Mercedes, Toyota, Hyundai" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
           </div>
 
           <div class="form-group">
-            <label>Niveau de kilométrage (km) :</label>
-            <input type="number" name="kilometrage" placeholder="Ex: 15000" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
+            <label for="addbus_kilometrage">Niveau de kilométrage (km) :</label> <input id="addbus_kilometrage" type="number" name="kilometrage" placeholder="Ex: 15000" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
           </div>
           <div class="form-group">
-            <label>Type d'huile :</label>
-            <select name="type_huile" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
+            <label for="addbus_type_huile">Type d'huile :</label> <select id="addbus_type_huile" name="type_huile" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
               <option value="">-- Choisir --</option>
               <option value="Quartz 5000 20W-50">Quartz 5000 20W-50</option>
               <option value="Quartz 7000 10W-40">Quartz 7000 10W-40</option>
@@ -62,35 +54,28 @@
             </select>
           </div>
           <div class="form-group">
-            <label>Capacité du plein de carburant (km) :</label>
-            <input type="number" name="capacite_plein_carburant" placeholder="Ex: 500" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
+            <label for="addbus_capacite_plein_carburant">Capacité du plein de carburant (km) :</label> <input id="addbus_capacite_plein_carburant" type="number" name="capacite_plein_carburant" placeholder="Ex: 500" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
           </div>
           <div class="form-group">
-            <label>Capacité du réservoir (L) :</label>
-            <input type="number" step="0.1" name="capacite_reservoir_litres" placeholder="Ex: 70.0" style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
+            <label for="addbus_capacite_reservoir_litres">Capacité du réservoir (L) :</label> <input id="addbus_capacite_reservoir_litres" type="number" step="0.1" name="capacite_reservoir_litres" placeholder="Ex: 70.0" style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
           </div>
           <div class="form-group">
-            <label>Niveau carburant (L) :</label>
-            <input type="number" step="0.1" name="niveau_carburant_litres" placeholder="Ex: 30.5" style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
+            <label for="addbus_niveau_carburant_litres">Niveau carburant (L) :</label> <input id="addbus_niveau_carburant_litres" type="number" step="0.1" name="niveau_carburant_litres" placeholder="Ex: 30.5" style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
           </div>
           <div class="form-group">
-            <label>Date de la dernière vidange :</label>
-            <input type="date" name="date_derniere_vidange" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
+            <label for="addbus_date_derniere_vidange">Date de la dernière vidange :</label> <input id="addbus_date_derniere_vidange" type="date" name="date_derniere_vidange" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
           </div>
           <div class="form-group">
-            <label>État actuel du véhicule :</label>
-            <select name="etat_vehicule" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
+            <label for="addbus_etat_vehicule">État actuel du véhicule :</label> <select id="addbus_etat_vehicule" name="etat_vehicule" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
               <option value="BON">Bon</option>
               <option value="DEFAILLANT">Défaillant</option>
             </select>
           </div>
           <div class="form-group">
-            <label>Nombre de places :</label>
-            <input type="number" name="nombre_places" value="30" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
+            <label for="addbus_nombre_places">Nombre de places :</label> <input id="addbus_nombre_places" type="number" name="nombre_places" value="30" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
           </div>
           <div class="form-group" style="grid-column:1/-1;">
-            <label>Date de la dernière maintenance :</label>
-            <input type="date" name="derniere_maintenance" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
+            <label for="addbus_derniere_maintenance">Date de la dernière maintenance :</label> <input id="addbus_derniere_maintenance" type="date" name="derniere_maintenance" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;">
           </div>
         </div>
         <div class="form-actions">
@@ -111,14 +96,14 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Gestionnaire pour le bouton de fermeture (secours si pas défini ailleurs)
     const closeBtn = document.getElementById('closeAddBusModal');
-    if (closeBtn && !closeBtn.hasAttribute('data-listener-added')) {
+    if (closeBtn && !('listenerAdded' in closeBtn.dataset)) {
         closeBtn.addEventListener('click', function() {
             const modal = document.getElementById('addBusModal');
             if (modal) {
                 modal.classList.remove('show');
             }
         });
-        closeBtn.setAttribute('data-listener-added', 'true');
+        closeBtn.dataset.listenerAdded = 'true';
     }
 });
 </script>

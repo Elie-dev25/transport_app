@@ -2,6 +2,7 @@ from app.database import db
 from app.models.bus_udm import BusUdM
 from app.models.vidange import Vidange
 from datetime import datetime
+from app.constants import utc_now_date
 
 # Capacités par type d'huile (km)
 OIL_CAPACITY_KM = {
@@ -92,7 +93,7 @@ def enregistrer_vidange_common(data: dict) -> dict:
     # Persister la vidange
     vidange = Vidange(
         bus_udm_id=bus_udm_id_int,
-        date_vidange=datetime.utcnow().date(),
+        date_vidange=utc_now_date(),
         kilometrage=km_int,
         type_huile=type_clean,
         remarque=remarque
@@ -111,7 +112,7 @@ def enregistrer_vidange_common(data: dict) -> dict:
     bus.type_huile = type_clean
     # Définir le km critique selon la capacité du type d'huile saisi
     bus.km_critique_huile = km_int + OIL_CAPACITY_KM.get(type_clean, 600)
-    bus.date_derniere_vidange = datetime.utcnow().date()
+    bus.date_derniere_vidange = utc_now_date()
 
     db.session.commit()
 

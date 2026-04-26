@@ -1,5 +1,6 @@
 from app.database import db
 from datetime import datetime
+from app.constants import utc_now
 
 
 class Depannage(db.Model):
@@ -15,7 +16,7 @@ class Depannage(db.Model):
     immatriculation = db.Column(db.String(50), nullable=True)
 
     # Données réparation
-    date_heure = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    date_heure = db.Column(db.DateTime, nullable=False, default=utc_now)
     kilometrage = db.Column(db.Float, nullable=True)
     cout_reparation = db.Column(db.Numeric(12, 2), nullable=True)
     description_panne = db.Column(db.Text, nullable=False)

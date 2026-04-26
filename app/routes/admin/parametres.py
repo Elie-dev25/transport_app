@@ -9,18 +9,21 @@ from werkzeug.security import generate_password_hash
 from functools import wraps
 from . import bp
 
+
+AUTH_LOGIN_ENDPOINT = 'auth.login'
+
 # Décorateur personnalisé pour Admin, Responsable, Superviseur
 def admin_responsable_superviseur_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session or 'user_role' not in session:
             flash("Merci de vous connecter.", "warning")
-            return redirect(url_for('auth.login'))
+            return redirect(url_for(AUTH_LOGIN_ENDPOINT))
 
         allowed_roles = ['ADMIN', 'RESPONSABLE', 'SUPERVISEUR']
         if session['user_role'] not in allowed_roles:
             flash("Accès refusé. Cette page est réservée aux administrateurs, responsables et superviseurs.", "danger")
-            return redirect(url_for('auth.login'))
+            return redirect(url_for(AUTH_LOGIN_ENDPOINT))
 
         return f(*args, **kwargs)
     return decorated_function
@@ -31,7 +34,7 @@ def admin_only_required(f):
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session or 'user_role' not in session:
             flash("Merci de vous connecter.", "warning")
-            return redirect(url_for('auth.login'))
+            return redirect(url_for(AUTH_LOGIN_ENDPOINT))
 
         if session['user_role'] != 'ADMIN':
             flash("Accès refusé. Cette fonctionnalité est réservée aux administrateurs.", "danger")
@@ -206,10 +209,10 @@ def users_api():
                                     date_match = re.search(r'(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})', line)
                                     if date_match:
                                         return date_match.group(1)
-                        except:
+                        except (IOError, OSError, UnicodeDecodeError):
                             continue
                 return None
-            except:
+            except (IOError, OSError):
                 return None
 
         for user in users:
@@ -223,7 +226,7 @@ def users_api():
                     last_login_date = datetime.strptime(last_login, '%Y-%m-%d %H:%M:%S')
                     thirty_days_ago = datetime.now() - timedelta(days=30)
                     is_active = last_login_date >= thirty_days_ago
-                except:
+                except (ValueError, TypeError):
                     is_active = False
 
             # Formater la dernière connexion pour l'affichage
@@ -232,7 +235,7 @@ def users_api():
                 try:
                     last_login_date = datetime.strptime(last_login, '%Y-%m-%d %H:%M:%S')
                     formatted_last_login = last_login_date.strftime('%d/%m/%Y %H:%M')
-                except:
+                except (ValueError, TypeError):
                     formatted_last_login = "Date invalide"
 
             users_data.append({

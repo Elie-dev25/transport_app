@@ -243,8 +243,7 @@
                     <form id="audit-filters" class="filters-form">
                         <div class="filter-row">
                             <div class="filter-group">
-                                <label class="filter-label">Rôle</label>
-                                <select name="role" class="modern-select">
+                                <label for="parametres_role" class="filter-label">Rôle</label> <select id="parametres_role" name="role" class="modern-select">
                                     <option value="">Tous les rôles</option>
                                     <option value="ADMIN">Admin</option>
                                     <option value="RESPONSABLE">Responsable</option>
@@ -256,8 +255,7 @@
                             </div>
 
                             <div class="filter-group">
-                                <label class="filter-label">Type d'action</label>
-                                <select name="action" class="modern-select">
+                                <label for="parametres_action" class="filter-label">Type d'action</label> <select id="parametres_action" name="action" class="modern-select">
                                     <option value="">Toutes les actions</option>
                                     <option value="LOGIN_SUCCESS">Connexion réussie</option>
                                     <option value="LOGIN_FAILED">Connexion échouée</option>
@@ -276,8 +274,7 @@
                             </div>
 
                             <div class="filter-group">
-                                <label class="filter-label">Niveau</label>
-                                <select name="level" class="modern-select">
+                                <label for="parametres_level" class="filter-label">Niveau</label> <select id="parametres_level" name="level" class="modern-select">
                                     <option value="">Tous les niveaux</option>
                                     <option value="CRITICAL">Critique</option>
                                     <option value="HIGH">Élevé</option>
@@ -287,8 +284,7 @@
                             </div>
 
                             <div class="filter-group">
-                                <label class="filter-label">Limite</label>
-                                <select name="limit" class="modern-select">
+                                <label for="parametres_limit" class="filter-label">Limite</label> <select id="parametres_limit" name="limit" class="modern-select">
                                     <option value="50">50</option>
                                     <option value="100" selected>100</option>
                                     <option value="200">200</option>
@@ -456,7 +452,7 @@
                 </div>
                 <div class="card-content">
                     <div class="search-section">
-                        <label class="filter-label">Rechercher un utilisateur</label>
+                        <label for="search-user-credentials" class="filter-label">Rechercher un utilisateur</label>
                         <div class="search-input-group">
                             <input type="text" id="search-user-credentials" class="modern-input" placeholder="Login ou nom...">
                             <button class="btn-search" type="button" id="search-credentials-btn">
@@ -478,21 +474,21 @@
                                     <input type="hidden" id="user-id-credentials" name="user_id">
                                     <div class="form-row">
                                         <div class="form-group">
-                                            <label class="form-label">Login actuel</label>
+                                            <label for="current-login" class="form-label">Login actuel</label>
                                             <input type="text" id="current-login" class="modern-input" readonly>
                                         </div>
                                         <div class="form-group">
-                                            <label class="form-label">Nouveau login</label>
+                                            <label for="new-login" class="form-label">Nouveau login</label>
                                             <input type="text" id="new-login" name="new_login" class="modern-input" required>
                                         </div>
                                     </div>
                                     <div class="form-row">
                                         <div class="form-group">
-                                            <label class="form-label">Nouveau mot de passe</label>
+                                            <label for="new-password" class="form-label">Nouveau mot de passe</label>
                                             <input type="password" id="new-password" name="new_password" class="modern-input" required>
                                         </div>
                                         <div class="form-group">
-                                            <label class="form-label">Confirmer mot de passe</label>
+                                            <label for="confirm-password" class="form-label">Confirmer mot de passe</label>
                                             <input type="password" id="confirm-password" name="confirm_password" class="modern-input" required>
                                         </div>
                                     </div>

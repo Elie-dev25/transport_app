@@ -8,6 +8,9 @@ from app.database import db
 from app.routes.common import role_required
 from . import bp
 
+
+MSG_CHAUFFEUR_INTROUVABLE = 'Chauffeur introuvable.'
+
 # Définition du décorateur admin_only (ADMIN et RESPONSABLE avec traçabilité)
 def admin_only(view):
     from app.routes.common import admin_or_responsable
@@ -59,7 +62,7 @@ def supprimer_chauffeur_ajax(chauffeur_id):
     from app.models.chauffeur import Chauffeur
     chauffeur = Chauffeur.query.get(chauffeur_id)
     if not chauffeur:
-        return jsonify({'success': False, 'message': 'Chauffeur introuvable.'}), 404
+        return jsonify({'success': False, 'message': MSG_CHAUFFEUR_INTROUVABLE}), 404
     
     try:
         db.session.delete(chauffeur)
@@ -235,7 +238,7 @@ def modifier_statut_chauffeur_ajax():
         # Vérifier le chauffeur
         ch = Chauffeur.query.get(chauffeur_id)
         if not ch:
-            return jsonify({'success': False, 'message': 'Chauffeur introuvable.'}), 404
+            return jsonify({'success': False, 'message': MSG_CHAUFFEUR_INTROUVABLE}), 404
 
         # Vérifier chevauchements
         overlaps = ChauffeurStatut.check_overlap(int(chauffeur_id), date_debut, date_fin, statut)
@@ -286,7 +289,7 @@ def get_statuts_chauffeur_ajax(chauffeur_id: int):
     try:
         ch = Chauffeur.query.get(chauffeur_id)
         if not ch:
-            return jsonify({'success': False, 'message': 'Chauffeur introuvable.'}), 404
+            return jsonify({'success': False, 'message': MSG_CHAUFFEUR_INTROUVABLE}), 404
         from datetime import datetime
         now = datetime.now()
         # Ne renvoyer que les statuts encore valides: date_fin >= maintenant
@@ -383,7 +386,7 @@ def modifier_statut_individuel_ajax():
         # Vérifier que le chauffeur existe
         chauffeur = Chauffeur.query.get(int(chauffeur_id))
         if not chauffeur:
-            return jsonify({'success': False, 'message': 'Chauffeur introuvable.'}), 404
+            return jsonify({'success': False, 'message': MSG_CHAUFFEUR_INTROUVABLE}), 404
 
         # Parser les dates
         try:

@@ -19,92 +19,94 @@ from app.models.prestataire import Prestataire
 from app.models.chargetransport import Chargetransport
 
 
+
+MSG_KM_INVALIDE = 'Kilométrage invalide.'
+
 # Paramètre global par défaut: autonomie (km par litre). Peut être surchargé par bus.
 AUTONOMIE_KM_PAR_LITRE = 8.0
+
+
+def _get_bus_autonomie(bus_udm: BusUdM) -> float:
+    """Calcule l'autonomie (km/litre) d'un bus selon ses caractéristiques."""
+    # 1) Consommation spécifique si définie
+    if getattr(bus_udm, 'consommation_km_par_litre', None):
+        try:
+            return float(bus_udm.consommation_km_par_litre)
+        except (TypeError, ValueError):
+            pass
+    
+    # 2) Calculer à partir des capacités si disponibles
+    km_plein = getattr(bus_udm, 'capacite_plein_carburant', None)
+    litres = getattr(bus_udm, 'capacite_reservoir_litres', None)
+    if km_plein and litres:
+        try:
+            km_plein_f = float(km_plein)
+            litres_f = float(litres)
+            if km_plein_f > 0 and litres_f > 0:
+                return km_plein_f / litres_f
+        except (TypeError, ValueError, ZeroDivisionError):
+            pass
+    
+    # 3) Repli sur la constante globale
+    return float(AUTONOMIE_KM_PAR_LITRE)
+
+
+def _get_reservoir_capacity(bus_udm: BusUdM) -> Optional[float]:
+    """Retourne la capacité du réservoir en litres, ou None si inconnue."""
+    if not getattr(bus_udm, 'capacite_reservoir_litres', None):
+        return None
+    try:
+        cap = float(bus_udm.capacite_reservoir_litres)
+        return cap if cap > 0 else None
+    except (TypeError, ValueError):
+        return None
+
+
+def _clamp_fuel_level(niveau: float, capacite: Optional[float]) -> float:
+    """Limite le niveau de carburant entre 0 et la capacité max."""
+    if niveau < 0:
+        return 0.0
+    if capacite and capacite > 0:
+        return min(niveau, capacite)
+    return niveau
 
 
 def update_autocontrol_after_km_change(bus_udm: BusUdM, new_km: int, prev_km: Optional[int]) -> None:
     """
     Met à jour automatiquement le niveau de carburant estimé en fonction du delta kilométrique.
-    - Utilise la consommation spécifique du bus (bus_udm.consommation_km_par_litre) si définie,
-      sinon la constante globale AUTONOMIE_KM_PAR_LITRE.
-    - Ne modifie pas les seuils critiques (km_critique_*), qui sont exprimés en km.
     """
-    if new_km is None:
+    # Validation des entrées
+    if new_km is None or prev_km is None:
         return
     try:
-        prev = int(prev_km) if prev_km is not None else None
+        prev = int(prev_km)
         newv = int(new_km)
     except (TypeError, ValueError):
         return
-    if prev is None:
-        return
+    
     delta = newv - prev
     if delta <= 0:
         return
 
-    # Déterminer l'autonomie (km par litre)
-    autonomie = None
-    # 1) Consommation spécifique si définie
-    if getattr(bus_udm, 'consommation_km_par_litre', None):
-        try:
-            autonomie = float(bus_udm.consommation_km_par_litre)
-        except (TypeError, ValueError):
-            autonomie = None
-    # 2) Sinon, calculer à partir des capacités si disponibles: km plein / litres réservoir
-    if autonomie is None and getattr(bus_udm, 'capacite_plein_carburant', None) and getattr(bus_udm, 'capacite_reservoir_litres', None):
-        try:
-            km_plein = float(bus_udm.capacite_plein_carburant)
-            litres = float(bus_udm.capacite_reservoir_litres)
-            if km_plein > 0 and litres and litres > 0:
-                autonomie = km_plein / litres
-        except (TypeError, ValueError, ZeroDivisionError):
-            autonomie = None
-    # 3) Repli sur la constante globale
-    if autonomie is None:
-        autonomie = float(AUTONOMIE_KM_PAR_LITRE)
-
+    autonomie = _get_bus_autonomie(bus_udm)
     if autonomie <= 0:
         return
 
     # Mettre à jour le niveau de carburant (si suivi activé)
-    if hasattr(bus_udm, 'niveau_carburant_litres') and bus_udm.niveau_carburant_litres is not None:
-        consommation_l = float(delta) / autonomie
-        nouveau_niveau = (bus_udm.niveau_carburant_litres or 0.0) - consommation_l
-        # Clamp entre 0 et capacité réservoir si connue
-        try:
-            cap = float(bus_udm.capacite_reservoir_litres) if getattr(bus_udm, 'capacite_reservoir_litres', None) else None
-        except (TypeError, ValueError):
-            cap = None
-        if nouveau_niveau < 0:
-            nouveau_niveau = 0.0
-        if cap and cap > 0:
-            nouveau_niveau = min(nouveau_niveau, cap)
-        bus_udm.niveau_carburant_litres = round(nouveau_niveau, 3)
-        # Recalculer le km critique carburant à partir du niveau courant
-        # Priorité: consommation spécifique -> capacités plein / réservoir -> constante globale
-        km_par_litre = None
-        if getattr(bus_udm, 'consommation_km_par_litre', None):
-            try:
-                km_par_litre = float(bus_udm.consommation_km_par_litre)
-            except (TypeError, ValueError):
-                km_par_litre = None
-        if km_par_litre is None and getattr(bus_udm, 'capacite_plein_carburant', None) and getattr(bus_udm, 'capacite_reservoir_litres', None):
-            try:
-                km_plein = float(bus_udm.capacite_plein_carburant)
-                litres = float(bus_udm.capacite_reservoir_litres)
-                if km_plein > 0 and litres and litres > 0:
-                    km_par_litre = km_plein / litres
-            except (TypeError, ValueError, ZeroDivisionError):
-                km_par_litre = None
-        if km_par_litre is None:
-            km_par_litre = float(AUTONOMIE_KM_PAR_LITRE)
-        # Mettre à jour l'odomètre critique carburant
-        try:
-            bus_udm.km_critique_carburant = round(float(newv) + (bus_udm.niveau_carburant_litres * km_par_litre), 3)
-        except Exception:
-            # En cas d'erreur de conversion, ne pas casser le flux
-            pass
+    if not hasattr(bus_udm, 'niveau_carburant_litres') or bus_udm.niveau_carburant_litres is None:
+        return
+    
+    consommation_l = float(delta) / autonomie
+    nouveau_niveau = (bus_udm.niveau_carburant_litres or 0.0) - consommation_l
+    capacite = _get_reservoir_capacity(bus_udm)
+    bus_udm.niveau_carburant_litres = round(_clamp_fuel_level(nouveau_niveau, capacite), 3)
+    
+    # Recalculer le km critique carburant
+    km_par_litre = _get_bus_autonomie(bus_udm)
+    try:
+        bus_udm.km_critique_carburant = round(float(newv) + (bus_udm.niveau_carburant_litres * km_par_litre), 3)
+    except (TypeError, ValueError):
+        pass
 
 
 def enregistrer_depart_aed(form, user) -> Tuple[bool, str]:
@@ -145,7 +147,7 @@ def enregistrer_depart_aed(form, user) -> Tuple[bool, str]:
                         return False, f"Kilométrage invalide: {new_km} < {prev_km}."
                 except (TypeError, ValueError):
                     db.session.rollback()
-                    return False, "Kilométrage invalide."
+                    return False, MSG_KM_INVALIDE
                 update_autocontrol_after_km_change(bus_udm, new_km, prev_km)
                 bus_udm.kilometrage = new_km
                 db.session.add(bus_udm)
@@ -196,7 +198,7 @@ def enregistrer_depart_sortie_hors_ville(form, user) -> Tuple[bool, str]:
                         return False, f"Kilométrage invalide: {new_km} < {prev_km}."
                 except (TypeError, ValueError):
                     db.session.rollback()
-                    return False, "Kilométrage invalide."
+                    return False, MSG_KM_INVALIDE
                 update_autocontrol_after_km_change(bus_udm, new_km, prev_km)
                 bus_udm.kilometrage = new_km
                 db.session.add(bus_udm)
@@ -322,7 +324,7 @@ def enregistrer_depart_banekane_retour(form, user) -> Tuple[bool, str]:
                             return False, f"Kilométrage invalide: {new_km} < {prev_km}."
                     except (TypeError, ValueError):
                         db.session.rollback()
-                        return False, "Kilométrage invalide."
+                        return False, MSG_KM_INVALIDE
                     update_autocontrol_after_km_change(bus_udm, new_km, prev_km)
                     bus_udm.kilometrage = new_km
                     db.session.add(bus_udm)
@@ -411,7 +413,7 @@ def enregistrer_trajet_interne_bus_udm(form, user) -> Tuple[bool, str]:
                         return False, f"Kilométrage invalide: {new_km} < {prev_km}."
                 except (TypeError, ValueError):
                     db.session.rollback()
-                    return False, "Kilométrage invalide."
+                    return False, MSG_KM_INVALIDE
                 update_autocontrol_after_km_change(bus_udm, new_km, prev_km)
                 bus_udm.kilometrage = new_km
                 db.session.add(bus_udm)
@@ -517,7 +519,7 @@ def enregistrer_autres_trajets(form, user) -> Tuple[bool, str]:
                         return False, f"Kilométrage invalide: {new_km} < {prev_km}."
                 except (TypeError, ValueError):
                     db.session.rollback()
-                    return False, "Kilométrage invalide."
+                    return False, MSG_KM_INVALIDE
                 update_autocontrol_after_km_change(bus_udm, new_km, prev_km)
                 bus_udm.kilometrage = new_km
                 db.session.add(bus_udm)

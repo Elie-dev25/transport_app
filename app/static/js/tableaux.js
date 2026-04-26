@@ -218,10 +218,10 @@ class TableauManager {
             const bText = b.cells[columnIndex].textContent.trim();
 
             // Détecter si c'est un nombre
-            const aNum = parseFloat(aText.replace(/[^\d.-]/g, ''));
-            const bNum = parseFloat(bText.replace(/[^\d.-]/g, ''));
+            const aNum = Number.parseFloat(aText.replaceAll(/[^\d.-]/g, ''));
+            const bNum = Number.parseFloat(bText.replaceAll(/[^\d.-]/g, ''));
 
-            if (!isNaN(aNum) && !isNaN(bNum)) {
+            if (!Number.isNaN(aNum) && !Number.isNaN(bNum)) {
                 return ascending ? aNum - bNum : bNum - aNum;
             }
 

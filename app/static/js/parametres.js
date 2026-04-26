@@ -47,10 +47,10 @@ class ParametresManager {
         console.log('Navigation setup - Found nav items:', navItems.length);
 
         navItems.forEach(item => {
-            console.log('Setting up nav item:', item.getAttribute('data-section'));
+            console.log('Setting up nav item:', item.dataset.section);
             item.addEventListener('click', (e) => {
                 e.preventDefault();
-                const section = item.getAttribute('data-section');
+                const section = item.dataset.section;
                 console.log('Nav item clicked:', section);
                 this.switchSection(section);
             });
@@ -156,7 +156,7 @@ class ParametresManager {
         this.auditData.filters = {
             role: formData.get('role') || '',
             action: formData.get('action') || '',
-            limit: parseInt(formData.get('limit')) || 100
+            limit: Number.parseInt(formData.get('limit')) || 100
         };
 
         this.loadAuditData(true);
@@ -375,7 +375,7 @@ class ParametresManager {
             '"': '&quot;',
             "'": '&#039;'
         };
-        return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        return text.replaceAll(/[&<>"']/g, function(m) { return map[m]; });
     }
 
     showNotification(message, type = 'info') {
@@ -1020,11 +1020,11 @@ function updateLoginFromName() {
     // Fonction pour nettoyer les chaînes (slugify)
     function slugify(str) {
         return (str || '')
-            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .normalize('NFD').replaceAll(/[\u0300-\u036f]/g, '')
             .toLowerCase()
-            .replace(/[^a-z0-9\.]+/g, '')
-            .replace(/\.+/g, '.')
-            .replace(/^\.|\.$/g, '');
+            .replaceAll(/[^a-z0-9\.]+/g, '')
+            .replaceAll(/\.+/g, '.')
+            .replaceAll(/^\.|\.$/g, '');
     }
 
     function generateLogin() {

@@ -244,7 +244,8 @@ def enregistrer_depannage():
             panne_obj = PanneBusUdM.query.get(int(panne_id))
             if panne_obj:
                 panne_obj.resolue = True
-                panne_obj.date_resolution = datetime.utcnow()
+                from app.constants import utc_now
+                panne_obj.date_resolution = utc_now()
                 db.session.add(panne_obj)
 
                 # Déterminer le bus concerné par la panne si non trouvé plus haut

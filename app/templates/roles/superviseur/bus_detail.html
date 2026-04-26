@@ -36,52 +36,36 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6">
-                            <table class="table table-borderless">
-                                <tr>
-                                    <td><strong>Numéro:</strong></td>
-                                    <td>{{ bus.numero }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Immatriculation:</strong></td>
-                                    <td>{{ bus.immatriculation }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Marque:</strong></td>
-                                    <td>{{ bus.marque or 'Non renseigné' }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Modèle:</strong></td>
-                                    <td>{{ bus.modele or 'Non renseigné' }}</td>
-                                </tr>
-                            </table>
+                            <dl class="row mb-0">
+                                <dt class="col-5">Numéro:</dt>
+                                <dd class="col-7">{{ bus.numero }}</dd>
+                                <dt class="col-5">Immatriculation:</dt>
+                                <dd class="col-7">{{ bus.immatriculation }}</dd>
+                                <dt class="col-5">Marque:</dt>
+                                <dd class="col-7">{{ bus.marque or 'Non renseigné' }}</dd>
+                                <dt class="col-5">Modèle:</dt>
+                                <dd class="col-7">{{ bus.modele or 'Non renseigné' }}</dd>
+                            </dl>
                         </div>
                         <div class="col-md-6">
-                            <table class="table table-borderless">
-                                <tr>
-                                    <td><strong>Année:</strong></td>
-                                    <td>{{ bus.annee or 'Non renseigné' }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Capacité:</strong></td>
-                                    <td>{{ bus.capacite or 'Non renseigné' }} places</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>État:</strong></td>
-                                    <td>
-                                        {% if bus.etat_vehicule == 'DEFAILLANT' %}
-                                            <span class="badge bg-danger">HORS SERVICE</span>
-                                        {% elif bus.etat_vehicule == 'ACTIF' %}
-                                            <span class="badge bg-success">ACTIF</span>
-                                        {% else %}
-                                            <span class="badge bg-secondary">{{ bus.etat_vehicule }}</span>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Kilométrage:</strong></td>
-                                    <td>{{ "{:,}".format(bus.kilometrage) if bus.kilometrage else 'Non renseigné' }} km</td>
-                                </tr>
-                            </table>
+                            <dl class="row mb-0">
+                                <dt class="col-5">Année:</dt>
+                                <dd class="col-7">{{ bus.annee or 'Non renseigné' }}</dd>
+                                <dt class="col-5">Capacité:</dt>
+                                <dd class="col-7">{{ bus.capacite or 'Non renseigné' }} places</dd>
+                                <dt class="col-5">État:</dt>
+                                <dd class="col-7">
+                                    {% if bus.etat_vehicule == 'DEFAILLANT' %}
+                                        <span class="badge bg-danger">HORS SERVICE</span>
+                                    {% elif bus.etat_vehicule == 'ACTIF' %}
+                                        <span class="badge bg-success">ACTIF</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ bus.etat_vehicule }}</span>
+                                    {% endif %}
+                                </dd>
+                                <dt class="col-5">Kilométrage:</dt>
+                                <dd class="col-7">{{ "{:,}".format(bus.kilometrage) if bus.kilometrage else 'Non renseigné' }} km</dd>
+                            </dl>
                         </div>
                     </div>
                 </div>

@@ -1,5 +1,6 @@
 from app.database import db
 from datetime import datetime
+from app.constants import utc_now, DATE_FORMAT_FR
 
 class ChauffeurStatut(db.Model):
     __tablename__ = 'chauffeur_statut'
@@ -10,7 +11,7 @@ class ChauffeurStatut(db.Model):
     lieu = db.Column(db.Enum('CUM', 'CAMPUS', 'CONJOINTEMENT', name='lieu_chauffeur_statut'), nullable=False, default='CUM')
     date_debut = db.Column(db.DateTime, nullable=False)
     date_fin = db.Column(db.DateTime, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)  # Colonne présente en base
+    created_at = db.Column(db.DateTime, default=utc_now)  # Colonne présente en base
 
     # Relation avec Chauffeur
     chauffeur = db.relationship('Chauffeur', backref=db.backref('statuts', lazy=True, cascade='all, delete-orphan'))
@@ -31,9 +32,9 @@ class ChauffeurStatut(db.Model):
         # Formats lisibles (jj/mm/aaaa)
         try:
             if self.date_debut:
-                result['date_debut_formatted'] = self.date_debut.strftime('%d/%m/%Y')
+                result['date_debut_formatted'] = self.date_debut.strftime(DATE_FORMAT_FR)
             if self.date_fin:
-                result['date_fin_formatted'] = self.date_fin.strftime('%d/%m/%Y')
+                result['date_fin_formatted'] = self.date_fin.strftime(DATE_FORMAT_FR)
         except Exception:
             # En cas de problème de strftime (valeur None, etc.), ignorer sans casser l'API
             pass
@@ -41,7 +42,7 @@ class ChauffeurStatut(db.Model):
         if hasattr(self, 'created_at') and self.created_at:
             result['created_at'] = self.created_at.isoformat()
             try:
-                result['created_at_formatted'] = self.created_at.strftime('%d/%m/%Y')
+                result['created_at_formatted'] = self.created_at.strftime(DATE_FORMAT_FR)
             except Exception:
                 pass
         return result

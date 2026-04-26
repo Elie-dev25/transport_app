@@ -16,13 +16,21 @@ class Config:
     APP_VERSION = AppConstants.APP_VERSION
     APP_DESCRIPTION = AppConstants.APP_DESCRIPTION
 
-    # Sécurité
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev_secret_key_change_in_production'
+    # Sécurité - SECRET_KEY DOIT être défini via variable d'environnement en production
+    SECRET_KEY = os.environ.get('SECRET_KEY')
+    if not SECRET_KEY:
+        import warnings
+        warnings.warn("SECRET_KEY non défini! Utilisation d'une clé de développement.", RuntimeWarning)
+        SECRET_KEY = 'dev_secret_key_change_in_production_' + os.urandom(16).hex()
     WTF_CSRF_ENABLED = True
     WTF_CSRF_TIME_LIMIT = 3600  # 1 heure
 
-    # Base de données
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'mysql+pymysql://root:@localhost/transport_udm'
+    # Base de données - DOIT être définie via variable d'environnement
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
+    if not SQLALCHEMY_DATABASE_URI:
+        import warnings
+        warnings.warn("DATABASE_URL non défini! Utilisation de SQLite pour le développement.", RuntimeWarning)
+        SQLALCHEMY_DATABASE_URI = 'sqlite:///transport_dev.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ENGINE_OPTIONS = {
         'pool_pre_ping': True,
@@ -104,12 +112,13 @@ class DevelopmentConfig(Config):
     DEBUG = True
     ENV = "development"
 
-    # Base de données de développement (utilise la même DB que production pour l'instant)
+    # Base de données de développement - DOIT être définie via variable d'environnement
     SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL') or \
-        'mysql+pymysql://root:@localhost/transport_udm'
+        os.environ.get('DATABASE_URL') or \
+        'sqlite:///dev_transport.db'  # Fallback SQLite pour développement local
 
-    # Sécurité relâchée pour le développement
-    WTF_CSRF_ENABLED = False  # Désactivé pour faciliter les tests
+    # CSRF activé même en développement pour éviter les failles de sécurité
+    WTF_CSRF_ENABLED = True
     SESSION_COOKIE_SECURE = False
 
     # Logging verbeux
@@ -168,9 +177,8 @@ class ProductionConfig(Config):
     SESSION_COOKIE_SECURE = True  # HTTPS requis
     WTF_CSRF_ENABLED = True
 
-    # Base de données de production
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
-        'mysql+pymysql://root:@localhost/transport_udm'
+    # Base de données de production - OBLIGATOIRE via variable d'environnement
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', '')
 
     # Logging en production
     LOG_LEVEL = 'WARNING'
@@ -185,6 +193,10 @@ class ProductionConfig(Config):
     @staticmethod
     def init_app(app):
         Config.init_app(app)
+
+        # Vérifier que DATABASE_URL est défini en production
+        if not app.config.get('SQLALCHEMY_DATABASE_URI'):
+            raise ValueError("DATABASE_URL doit être défini en production")
 
         # Configuration spécifique à la production
         import logging

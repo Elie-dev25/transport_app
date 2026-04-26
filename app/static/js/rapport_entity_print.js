@@ -2,7 +2,7 @@
 
 function printReport() {
     // Récupérer les données de la page
-    const entityName = document.querySelector('.rapport-entity-container').getAttribute('data-entity') || 'Noblesse';
+    const entityName = document.querySelector('.rapport-entity-container').dataset.entity || 'Noblesse';
 
     // Créer l'en-tête standardisé UDM
     const printHeader = createRapportHeader(`Rapport ${entityName}`, 'Analyse détaillée des trajets');

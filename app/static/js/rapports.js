@@ -261,10 +261,10 @@ function loadInitialData() {
 
     if (tasks.length === 0) {
         hideLoading();
-        return;
+        return Promise.resolve();
     }
 
-    Promise.all(tasks)
+    return Promise.all(tasks)
         .then(() => hideLoading())
         .catch(error => {
             console.error('Erreur lors du chargement des données:', error);

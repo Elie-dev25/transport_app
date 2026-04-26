@@ -16,6 +16,12 @@ from app.models.panne_bus_udm import PanneBusUdM
 from app.models.vidange import Vidange
 from app.models.carburation import Carburation
 
+
+
+COL_BUS_NUMERO = 'Bus N°'
+
+COL_DATE_HEURE = 'Date/Heure'
+
 # Import optionnel de reportlab pour l'export PDF
 try:
     from reportlab.pdfgen import canvas
@@ -167,9 +173,9 @@ class RapportService:
         
         # En-têtes
         headers = [
-            'Date/Heure', 'Point Départ', 'Point Arrivée', 'Type Trajet',
+            COL_DATE_HEURE, 'Point Départ', 'Point Arrivée', 'Type Trajet',
             'Type Passagers', 'Places Occupées', 'Distance (km)',
-            'Bus N°', 'Immatriculation', 'Chauffeur'
+            COL_BUS_NUMERO, 'Immatriculation', 'Chauffeur'
         ]
         writer.writerow(headers)
         
@@ -206,7 +212,7 @@ class RapportService:
         # Section Pannes
         writer.writerow(['=== PANNES ==='])
         headers_pannes = [
-            'Date/Heure', 'Bus N°', 'Immatriculation', 'Description',
+            COL_DATE_HEURE, COL_BUS_NUMERO, 'Immatriculation', 'Description',
             'Criticité', 'Immobilisation', 'Résolue', 'Enregistré par'
         ]
         writer.writerow(headers_pannes)
@@ -228,7 +234,7 @@ class RapportService:
         # Section Vidanges
         writer.writerow(['=== VIDANGES ==='])
         headers_vidanges = [
-            'Date', 'Bus N°', 'Immatriculation', 'Kilométrage', 'Type Huile', 'Remarque'
+            'Date', COL_BUS_NUMERO, 'Immatriculation', 'Kilométrage', 'Type Huile', 'Remarque'
         ]
         writer.writerow(headers_vidanges)
         
@@ -274,7 +280,7 @@ class RapportService:
         
         # Tableau des trajets
         if trajets_data:
-            data = [['Date/Heure', 'Départ', 'Arrivée', 'Type', 'Places', 'Distance']]
+            data = [[COL_DATE_HEURE, 'Départ', 'Arrivée', 'Type', 'Places', 'Distance']]
             
             for trajet in trajets_data[:50]:  # Limiter à 50 pour éviter les pages trop longues
                 data.append([

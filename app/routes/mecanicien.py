@@ -8,6 +8,9 @@ from app.services.gestion_vidange import (
     build_bus_vidange_list,
     enregistrer_vidange_common,
 )
+
+MSG_BUS_INTROUVABLE = 'Bus introuvable.'
+
 import unicodedata
 
 # Création du blueprint pour le mécanicien
@@ -298,7 +301,7 @@ def depannage():
 def marquer_defaillant(bus_udm_id):
     bus_udm = BusUdM.query.get(bus_udm_id)
     if not bus_udm:
-        return jsonify({'success': False, 'message': 'Bus introuvable.'}), 404
+        return jsonify({'success': False, 'message': MSG_BUS_INTROUVABLE}), 404
     bus_udm.etat_vehicule = 'Défaillant'
     db.session.commit()
     return jsonify({'success': True, 'etat': bus_udm.etat_vehicule})
@@ -354,7 +357,7 @@ def enregistrer_vidange():
 def marquer_repare(bus_udm_id):
     bus_udm = BusUdM.query.get(bus_udm_id)
     if not bus_udm:
-        return jsonify({'success': False, 'message': 'Bus introuvable.'}), 404
+        return jsonify({'success': False, 'message': MSG_BUS_INTROUVABLE}), 404
     bus_udm.etat_vehicule = 'En service'
     db.session.commit()
     return jsonify({'success': True, 'etat': bus_udm.etat_vehicule})
@@ -369,7 +372,7 @@ def normalize_etat(etat):
 def toggle_etat_bus_udm(bus_udm_id):
     bus_udm = BusUdM.query.get(bus_udm_id)
     if not bus_udm:
-        return jsonify({'success': False, 'message': 'Bus introuvable.'}), 404
+        return jsonify({'success': False, 'message': MSG_BUS_INTROUVABLE}), 404
     etat_normalise = normalize_etat(bus_udm.etat_vehicule)
     if 'defaillant' in etat_normalise:
         bus_udm.etat_vehicule = 'BON'

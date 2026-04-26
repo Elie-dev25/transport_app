@@ -223,11 +223,11 @@
 
         <!-- Filtres de période -->
         <div class="table-filters">
-            <div class="filter-group">
-                <label class="filter-label">
+            <fieldset class="filter-group">
+                <legend class="filter-label">
                     <i class="fas fa-calendar-alt"></i>
                     Période d'analyse
-                </label>
+                </legend>
                 <div class="filter-buttons">
                     <button class="filter-btn active" data-periode="jour" onclick="changePerformancePeriod('jour', this)">
                         <i class="fas fa-calendar-day"></i>
@@ -242,14 +242,14 @@
                         Ce mois
                     </button>
                 </div>
-            </div>
+            </fieldset>
 
             <!-- Filtre personnalisé -->
-            <div class="filter-group">
-                <label class="filter-label">
+            <fieldset class="filter-group">
+                <legend class="filter-label">
                     <i class="fas fa-calendar-range"></i>
                     Période personnalisée
-                </label>
+                </legend>
                 <div class="date-range-inputs">
                     <div class="date-input-group">
                         <label for="perf_date_debut">Du :</label>
@@ -264,7 +264,7 @@
                         Filtrer
                     </button>
                 </div>
-            </div>
+            </fieldset>
         </div>
 
         <!-- Graphique des performances -->
@@ -308,11 +308,11 @@
 
         <!-- Filtres de période -->
         <div class="table-filters">
-            <div class="filter-group">
-                <label class="filter-label">
+            <fieldset class="filter-group">
+                <legend class="filter-label">
                     <i class="fas fa-calendar-alt"></i>
                     Période d'analyse
-                </label>
+                </legend>
                 <div class="filter-buttons">
                     <button class="filter-btn active" data-periode="jour" onclick="changeBusUsagePeriod('jour', this)">
                         <i class="fas fa-calendar-day"></i>
@@ -327,19 +327,19 @@
                         Ce mois
                     </button>
                 </div>
-            </div>
+            </fieldset>
 
             <!-- Filtre personnalisé -->
-            <div class="filter-group">
-                <label class="filter-label">
+            <fieldset class="filter-group">
+                <legend class="filter-label">
                     <i class="fas fa-calendar-range"></i>
                     Période personnalisée
-                </label>
+                </legend>
                 <div class="date-range-inputs">
                     <div class="date-input-group">
                         <label for="bus_date_debut">Du :</label>
                         <input type="date" id="bus_date_debut" class="date-input">
-                    </div>
+                    </div> 
                     <div class="date-input-group">
                         <label for="bus_date_fin">Au :</label>
                         <input type="date" id="bus_date_fin" class="date-input">
@@ -349,7 +349,7 @@
                         Filtrer
                     </button>
                 </div>
-            </div>
+            </fieldset>
         </div>
 
         <!-- Graphique d'utilisation des bus -->
@@ -399,7 +399,7 @@
 {% block dashboard_content %}{{ rapports_body() }}{% endblock %}
 {% block superviseur_content %}{{ rapports_body() }}{% endblock %}
 {% block extra_scripts %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="/static/vendor/js/chart.js"></script>
 <script>
 // Variables globales pour les graphiques
 let performanceChart = null;

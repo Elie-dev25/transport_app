@@ -166,7 +166,7 @@
         </h6>
     </div>
     <div class="card-body">
-        {{ content|safe }}
+        {{ content|trusted_html }}
     </div>
 </div>
 {% endmacro %}
@@ -271,7 +271,7 @@
         </h5>
     </div>
     <div class="info-card-body">
-        {{ content|safe }}
+        {{ content|trusted_html }}
     </div>
 </div>
 {% endmacro %}

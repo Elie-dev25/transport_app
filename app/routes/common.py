@@ -3,6 +3,21 @@ from functools import wraps
 from flask import session, redirect, url_for, flash
 from flask_login import current_user
 
+
+
+
+
+
+MSG_ACCES_REFUSE = 'Accès refusé.'
+
+MSG_VEUILLEZ_CONNECTER = 'Merci de vous connecter.'
+
+MSG_INCOHERENCE_SESSION = 'Incohérence de session détectée. Merci de vous reconnecter.'
+
+MSG_SESSION_EXPIREE = 'Session expirée. Merci de vous reconnecter.'
+
+AUTH_LOGIN_ENDPOINT = 'auth.login'
+
 def role_required(*roles):
     """
     Décorateur unifié utilisant Flask-Login ET session pour double vérification
@@ -12,19 +27,19 @@ def role_required(*roles):
         def decorated_function(*args, **kwargs):
             # Vérification Flask-Login
             if not current_user.is_authenticated:
-                flash("Merci de vous connecter.", "warning")
-                return redirect(url_for('auth.login'))
+                flash(MSG_VEUILLEZ_CONNECTER, "warning")
+                return redirect(url_for(AUTH_LOGIN_ENDPOINT))
 
             # Vérification session (sécurité supplémentaire)
             if 'user_id' not in session or 'user_role' not in session:
-                flash("Session expirée. Merci de vous reconnecter.", "warning")
-                return redirect(url_for('auth.login'))
+                flash(MSG_SESSION_EXPIREE, "warning")
+                return redirect(url_for(AUTH_LOGIN_ENDPOINT))
 
             # Vérification cohérence Flask-Login vs Session
             if str(current_user.utilisateur_id) != session['user_id']:
-                flash("Incohérence de session détectée. Merci de vous reconnecter.", "warning")
+                flash(MSG_INCOHERENCE_SESSION, "warning")
                 session.clear()
-                return redirect(url_for('auth.login'))
+                return redirect(url_for(AUTH_LOGIN_ENDPOINT))
 
             # Vérification du rôle
             if session['user_role'] not in roles:
@@ -34,8 +49,8 @@ def role_required(*roles):
                     attempted_resource=f.__name__,
                     attempted_action=f"Required roles: {roles}, User role: {session['user_role']}"
                 )
-                flash("Accès refusé.", "danger")
-                return redirect(url_for('auth.login'))
+                flash(MSG_ACCES_REFUSE, "danger")
+                return redirect(url_for(AUTH_LOGIN_ENDPOINT))
 
             return f(*args, **kwargs)
         return decorated_function
@@ -55,24 +70,24 @@ def admin_or_responsable(view):
     def decorated_function(*args, **kwargs):
         # Vérification Flask-Login
         if not current_user.is_authenticated:
-            flash("Merci de vous connecter.", "warning")
-            return redirect(url_for('auth.login'))
+            flash(MSG_VEUILLEZ_CONNECTER, "warning")
+            return redirect(url_for(AUTH_LOGIN_ENDPOINT))
 
         # Vérification session
         if 'user_id' not in session or 'user_role' not in session:
-            flash("Session expirée. Merci de vous reconnecter.", "warning")
-            return redirect(url_for('auth.login'))
+            flash(MSG_SESSION_EXPIREE, "warning")
+            return redirect(url_for(AUTH_LOGIN_ENDPOINT))
 
         # Vérification cohérence
         if str(current_user.utilisateur_id) != session['user_id']:
-            flash("Incohérence de session détectée. Merci de vous reconnecter.", "warning")
+            flash(MSG_INCOHERENCE_SESSION, "warning")
             session.clear()
-            return redirect(url_for('auth.login'))
+            return redirect(url_for(AUTH_LOGIN_ENDPOINT))
 
         # Vérifier les permissions
         if session['user_role'] not in ['ADMIN', 'RESPONSABLE']:
-            flash("Accès refusé.", "danger")
-            return redirect(url_for('auth.login'))
+            flash(MSG_ACCES_REFUSE, "danger")
+            return redirect(url_for(AUTH_LOGIN_ENDPOINT))
 
         # AUDIT : Accès ressource sensible
         from app.utils.audit_logger import log_sensitive_access
@@ -95,11 +110,11 @@ def read_only_access(*roles):
         @wraps(f)
         def decorated_function(*args, **kwargs):
             if 'user_id' not in session or 'user_role' not in session:
-                flash("Merci de vous connecter.", "warning")
-                return redirect(url_for('auth.login'))
+                flash(MSG_VEUILLEZ_CONNECTER, "warning")
+                return redirect(url_for(AUTH_LOGIN_ENDPOINT))
             if session['user_role'] not in roles:
-                flash("Accès refusé.", "danger")
-                return redirect(url_for('auth.login'))
+                flash(MSG_ACCES_REFUSE, "danger")
+                return redirect(url_for(AUTH_LOGIN_ENDPOINT))
             return f(*args, **kwargs)
         return decorated_function
     return decorator
@@ -114,24 +129,24 @@ def superviseur_access(view):
     def decorated_function(*args, **kwargs):
         # Vérification Flask-Login
         if not current_user.is_authenticated:
-            flash("Merci de vous connecter.", "warning")
-            return redirect(url_for('auth.login'))
+            flash(MSG_VEUILLEZ_CONNECTER, "warning")
+            return redirect(url_for(AUTH_LOGIN_ENDPOINT))
 
         # Vérification session
         if 'user_id' not in session or 'user_role' not in session:
-            flash("Session expirée. Merci de vous reconnecter.", "warning")
-            return redirect(url_for('auth.login'))
+            flash(MSG_SESSION_EXPIREE, "warning")
+            return redirect(url_for(AUTH_LOGIN_ENDPOINT))
 
         # Vérification cohérence
         if str(current_user.utilisateur_id) != session['user_id']:
-            flash("Incohérence de session détectée. Merci de vous reconnecter.", "warning")
+            flash(MSG_INCOHERENCE_SESSION, "warning")
             session.clear()
-            return redirect(url_for('auth.login'))
+            return redirect(url_for(AUTH_LOGIN_ENDPOINT))
 
         # Vérifier les permissions
         if session['user_role'] not in ['ADMIN', 'RESPONSABLE', 'SUPERVISEUR']:
-            flash("Accès refusé.", "danger")
-            return redirect(url_for('auth.login'))
+            flash(MSG_ACCES_REFUSE, "danger")
+            return redirect(url_for(AUTH_LOGIN_ENDPOINT))
 
         # Log de l'action avec le rôle exact
         from app.utils.audit_logger import log_user_action
@@ -154,17 +169,17 @@ def business_action_required(*roles):
         @wraps(f)
         def decorated_function(*args, **kwargs):
             if 'user_id' not in session or 'user_role' not in session:
-                flash("Merci de vous connecter.", "warning")
-                return redirect(url_for('auth.login'))
+                flash(MSG_VEUILLEZ_CONNECTER, "warning")
+                return redirect(url_for(AUTH_LOGIN_ENDPOINT))
 
             # Vérifier que l'utilisateur a un rôle autorisé ET n'est pas superviseur
             if session['user_role'] not in roles:
                 flash("Accès refusé. Permissions insuffisantes.", "danger")
-                return redirect(url_for('auth.login'))
+                return redirect(url_for(AUTH_LOGIN_ENDPOINT))
 
             if session['user_role'] == 'SUPERVISEUR':
                 flash("Action non autorisée. Les superviseurs ont un accès en lecture seule.", "warning")
-                return redirect(url_for('auth.login'))
+                return redirect(url_for(AUTH_LOGIN_ENDPOINT))
 
             return f(*args, **kwargs)
         return decorated_function
@@ -179,18 +194,18 @@ def admin_business_action(view):
     def decorated_function(*args, **kwargs):
         # Vérifier l'authentification
         if 'user_id' not in session or 'user_role' not in session:
-            flash("Merci de vous connecter.", "warning")
-            return redirect(url_for('auth.login'))
+            flash(MSG_VEUILLEZ_CONNECTER, "warning")
+            return redirect(url_for(AUTH_LOGIN_ENDPOINT))
 
         # Vérifier que l'utilisateur a un rôle autorisé
         if session['user_role'] not in ['ADMIN', 'RESPONSABLE']:
             flash("Accès refusé. Permissions insuffisantes.", "danger")
-            return redirect(url_for('auth.login'))
+            return redirect(url_for(AUTH_LOGIN_ENDPOINT))
 
         # Exclure explicitement les superviseurs (même si déjà filtré)
         if session['user_role'] == 'SUPERVISEUR':
             flash("Action non autorisée. Les superviseurs ont un accès en lecture seule.", "warning")
-            return redirect(url_for('auth.login'))
+            return redirect(url_for(AUTH_LOGIN_ENDPOINT))
 
         # Log détaillé de l'action métier
         from app.utils.audit_logger import log_user_action

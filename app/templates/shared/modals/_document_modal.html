@@ -12,8 +12,7 @@
       <form id="docForm" method="POST">
         <div class="form-grid">
           <div class="form-group full-width">
-            <label>Type de document</label>
-            <select name="type_document" required>
+            <label for="docmod_type_document">Type de document</label> <select id="docmod_type_document" name="type_document" required>
               <option value="">-- Choisir --</option>
               <option value="VISITE_TECHNIQUE">Visite technique</option>
               <option value="ASSURANCE_VIGNETTE">Assurance/Vignette</option>
@@ -23,12 +22,10 @@
             </select>
           </div>
           <div class="form-group">
-            <label>Date de production</label>
-            <input type="date" name="date_debut" required>
+            <label for="docmod_date_debut">Date de production</label> <input id="docmod_date_debut" type="date" name="date_debut" required>
           </div>
           <div class="form-group" id="dateExpGroup">
-            <label>Date expiration *</label>
-            <input type="date" name="date_expiration" required>
+            <label for="docmod_date_expiration">Date expiration *</label> <input id="docmod_date_expiration" type="date" name="date_expiration" required>
           </div>
         </div>
         <div class="form-actions">

@@ -5,6 +5,7 @@ Phase 3 - Classes de base et mixins pour les modèles
 
 from datetime import datetime
 from app.database import db
+from app.constants import utc_now
 
 
 class BaseModel(db.Model):
@@ -18,15 +19,15 @@ class BaseModel(db.Model):
     created_at = db.Column(
         db.DateTime, 
         nullable=False, 
-        default=datetime.utcnow,
+        default=utc_now,
         comment='Date de création de l\'enregistrement'
     )
     
     updated_at = db.Column(
         db.DateTime, 
         nullable=False, 
-        default=datetime.utcnow, 
-        onupdate=datetime.utcnow,
+        default=utc_now, 
+        onupdate=utc_now,
         comment='Date de dernière modification'
     )
     

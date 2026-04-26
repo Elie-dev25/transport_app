@@ -20,7 +20,7 @@ from app.forms.autres_trajets_form import AutresTrajetsForm
 # Création du blueprint responsable (juste pour le dashboard)
 bp = Blueprint('responsable', __name__, url_prefix='/responsable')
 
-@bp.route('/dashboard', methods=['GET', 'POST'])
+@bp.route('/dashboard', methods=['GET'])
 @admin_or_responsable
 def dashboard():
     """

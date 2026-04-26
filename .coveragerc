@@ -1,0 +1,20 @@
+[run]
+source = app
+relative_files = True
+branch = True
+
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    raise AssertionError
+    raise NotImplementedError
+    if __name__ == .__main__.:
+omit =
+    */tests/*
+    */migrations/*
+    */__pycache__/*
+    */venv/*
+
+[xml]
+output = coverage.xml

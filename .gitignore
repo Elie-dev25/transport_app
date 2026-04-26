@@ -65,3 +65,12 @@ htmlcov/
 # Uploads utilisateurs
 app/uploads/
 uploads/
+
+# Sonar / coverage artifacts
+sonar_issues*.json
+sonar_hotspots.json
+coverage.xml
+.scannerwork/
+
+# Misc
+get-pip.py

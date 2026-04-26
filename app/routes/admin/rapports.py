@@ -18,6 +18,18 @@ from app.routes.common import admin_only, superviseur_access
 
 from . import bp
 
+
+
+
+
+DATE_FORMAT_FR = '%d/%m/%Y'
+
+RAPPORT_ENTITY_TEMPLATE = 'legacy/rapport_entity.html'
+
+MOIS_DECEMBRE = 'Décembre'
+
+MOIS_FEVRIER = 'Février'
+
 # Routes pour les rapports détaillés
 @superviseur_access
 @bp.route('/rapport-noblesse')
@@ -70,8 +82,8 @@ def rapport_noblesse():
 
         # Formatage de la date pour l'affichage
         from datetime import datetime
-        mois_noms = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-                     'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']
+        mois_noms = ['Janvier', MOIS_FEVRIER, 'Mars', 'Avril', 'Mai', 'Juin',
+                     'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', MOIS_DECEMBRE]
         date_actuelle = datetime.now()
         mois_actuel = mois_noms[date_actuelle.month - 1]
         periode_formatee = f"{mois_actuel} {date_actuelle.year}"
@@ -80,7 +92,7 @@ def rapport_noblesse():
         prestataire_info = Prestataire.query.filter_by(nom_prestataire='Noblesse').first()
 
         return render_template(
-            'legacy/rapport_entity.html',
+            RAPPORT_ENTITY_TEMPLATE,
             entity_name='Noblesse',
             trajets=trajets,
             total_trajets=total_trajets,
@@ -143,8 +155,8 @@ def rapport_charter():
         total_passagers = sum([t.nombre_places_occupees or 0 for t in trajets])
 
         # Formatage de la date pour l'affichage
-        mois_noms = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-                     'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']
+        mois_noms = ['Janvier', MOIS_FEVRIER, 'Mars', 'Avril', 'Mai', 'Juin',
+                     'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', MOIS_DECEMBRE]
         date_actuelle = datetime.now()
         mois_actuel = mois_noms[date_actuelle.month - 1]
         periode_formatee = f"{mois_actuel} {date_actuelle.year}"
@@ -153,7 +165,7 @@ def rapport_charter():
         prestataire_info = Prestataire.query.filter_by(nom_prestataire='Charter').first()
 
         return render_template(
-            'legacy/rapport_entity.html',
+            RAPPORT_ENTITY_TEMPLATE,
             entity_name='Charter',
             trajets=trajets,
             total_trajets=total_trajets,
@@ -220,8 +232,8 @@ def rapport_bus_udm():
         malades = sum([t.nombre_places_occupees or 0 for t in trajets if t.type_passagers == 'MALADE'])
 
         # Formatage de la date pour l'affichage
-        mois_noms = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-                     'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']
+        mois_noms = ['Janvier', MOIS_FEVRIER, 'Mars', 'Avril', 'Mai', 'Juin',
+                     'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', MOIS_DECEMBRE]
         date_actuelle = datetime.now()
         mois_actuel = mois_noms[date_actuelle.month - 1]
         periode_formatee = f"{mois_actuel} {date_actuelle.year}"
@@ -230,7 +242,7 @@ def rapport_bus_udm():
         print(f"DEBUG rapport_bus_udm: periode={periode}, start_date={start_date}, end_date={end_date}")
 
         return render_template(
-            'legacy/rapport_entity.html',
+            RAPPORT_ENTITY_TEMPLATE,
             entity_name='Bus UdM',
             trajets=trajets,
             total_trajets=total_trajets,
@@ -640,8 +652,8 @@ def api_performances_chauffeurs():
                 'borderWidth': 2
             }],
             'periode_info': {
-                'start_date': start_date.strftime('%d/%m/%Y'),
-                'end_date': end_date.strftime('%d/%m/%Y'),
+                'start_date': start_date.strftime(DATE_FORMAT_FR),
+                'end_date': end_date.strftime(DATE_FORMAT_FR),
                 'total_trajets': sum(nombre_trajets),
                 'total_chauffeurs': len(chauffeurs)
             }
@@ -659,8 +671,8 @@ def api_performances_chauffeurs():
                 'borderWidth': 2
             }],
             'periode_info': {
-                'start_date': _today.strftime('%d/%m/%Y'),
-                'end_date': _today.strftime('%d/%m/%Y'),
+                'start_date': _today.strftime(DATE_FORMAT_FR),
+                'end_date': _today.strftime(DATE_FORMAT_FR),
                 'total_trajets': 0,
                 'total_chauffeurs': 0
             }

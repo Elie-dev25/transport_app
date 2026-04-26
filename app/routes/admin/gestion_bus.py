@@ -13,6 +13,12 @@ from app.services.gestion_vidange import OIL_CAPACITY_KM
 from app.routes.common import role_required
 from . import bp
 
+
+
+ADMIN_BUS_ENDPOINT = 'admin.bus'
+
+MSG_BUS_INTROUVABLE = 'Bus introuvable.'
+
 # Définition du décorateur admin_only (ADMIN et RESPONSABLE avec traçabilité)
 def admin_only(view):
     from app.routes.common import admin_or_responsable
@@ -24,7 +30,7 @@ def ajouter_document_udm_ajax(bus_id):
     try:
         bus = BusUdM.query.get(bus_id)
         if not bus:
-            return jsonify({'success': False, 'message': 'Bus introuvable.'}), 404
+            return jsonify({'success': False, 'message': MSG_BUS_INTROUVABLE}), 404
 
         type_document = request.form.get('type_document')
         date_debut = request.form.get('date_debut')
@@ -129,8 +135,16 @@ def bus():
     return render_template('roles/admin/bus_udm.html', **template_vars)
 
 @admin_only
-@bp.route('/bus/ajouter', methods=['GET', 'POST'])
+@bp.route('/bus/ajouter', methods=['GET'])
+def ajouter_bus_form():
+    """Affiche le formulaire d'ajout de bus (GET uniquement)."""
+    return render_template('ajouter_bus.html')
+
+
+@admin_only
+@bp.route('/bus/ajouter', methods=['POST'])
 def ajouter_bus():
+    """Traite l'ajout d'un nouveau bus (POST uniquement)."""
     if request.method == 'POST':
         numero = request.form['numero']
         marque = request.form['marque']
@@ -160,18 +174,27 @@ def ajouter_bus():
             db.session.add(nouveau_bus)
             db.session.commit()
             flash('Bus ajouté avec succès!', 'success')
-            return redirect(url_for('admin.bus'))
+            return redirect(url_for(ADMIN_BUS_ENDPOINT))
         except Exception as e:
             db.session.rollback()
             flash(f"Erreur lors de l'ajout du bus: {str(e)}", 'error')
     
-    return render_template('ajouter_bus.html')
+    return redirect(url_for('admin.ajouter_bus_form'))
+
 
 @admin_only
-@bp.route('/bus/modifier/<int:bus_id>', methods=['GET', 'POST'])
-def modifier_bus(bus_id):
+@bp.route('/bus/modifier/<int:bus_id>', methods=['GET'])
+def modifier_bus_form(bus_id):
+    """Affiche le formulaire de modification de bus (GET uniquement)."""
     bus = BusUdM.query.get_or_404(bus_id)
-    
+    return render_template('modifier_bus.html', bus=bus)
+
+
+@admin_only
+@bp.route('/bus/modifier/<int:bus_id>', methods=['POST'])
+def modifier_bus(bus_id):
+    """Traite la modification d'un bus (POST uniquement)."""
+    bus = BusUdM.query.get_or_404(bus_id)
     if request.method == 'POST':
         bus.numero = request.form['numero']
         bus.marque = request.form['marque']
@@ -184,7 +207,7 @@ def modifier_bus(bus_id):
         try:
             db.session.commit()
             flash('Bus modifié avec succès!', 'success')
-            return redirect(url_for('admin.bus'))
+            return redirect(url_for(ADMIN_BUS_ENDPOINT))
         except Exception as e:
             db.session.rollback()
             flash(f'Erreur lors de la modification: {str(e)}', 'error')
@@ -201,7 +224,7 @@ def supprimer_bus(bus_id):
         trajets_associes = Trajet.query.filter_by(numero_bus_udm=bus.numero).count()
         if trajets_associes > 0:
             flash(f"Impossible de supprimer ce bus. Il y a {trajets_associes} trajets associés.", 'error')
-            return redirect(url_for('admin.bus'))
+            return redirect(url_for(ADMIN_BUS_ENDPOINT))
         
         db.session.delete(bus)
         db.session.commit()
@@ -210,7 +233,7 @@ def supprimer_bus(bus_id):
         db.session.rollback()
         flash(f'Erreur lors de la suppression: {str(e)}', 'error')
     
-    return redirect(url_for('admin.bus'))
+    return redirect(url_for(ADMIN_BUS_ENDPOINT))
 
 @admin_only
 @bp.route('/bus/details/<int:bus_id>')
@@ -471,7 +494,7 @@ def mettre_a_jour_niveau_carburant_ajax(bus_id):
     
     bus = BusUdM.query.get(bus_id)
     if not bus:
-        return jsonify({'success': False, 'message': 'Bus introuvable.'}), 404
+        return jsonify({'success': False, 'message': MSG_BUS_INTROUVABLE}), 404
     
     # Accepte JSON ou formulaire
     if request.is_json:
@@ -545,7 +568,7 @@ def mettre_a_jour_niveau_carburant_ajax(bus_id):
 def supprimer_bus_ajax(bus_id):
     bus = BusUdM.query.get(bus_id)
     if not bus:
-        return jsonify({'success': False, 'message': 'Bus introuvable.'}), 404
+        return jsonify({'success': False, 'message': MSG_BUS_INTROUVABLE}), 404
 
     # Détacher ce bus de tous les trajets avant suppression
     from app.models.trajet import Trajet

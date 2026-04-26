@@ -11,6 +11,30 @@ from app.routes.common import superviseur_only, superviseur_access
 from app.services import StatsService, BusService, MaintenanceService, RapportService
 from app.models.prestataire import Prestataire
 
+
+
+
+
+
+
+
+
+ERR_FORMAT_NON_SUPPORTE = 'Format non supporté'
+
+CSV_MIMETYPE = 'text/csv; charset=utf-8'
+
+RAPPORT_ENTITY_TEMPLATE = 'legacy/rapport_entity.html'
+
+MOIS_DECEMBRE = 'Décembre'
+
+MOIS_FEVRIER = 'Février'
+
+SUPERVISEUR_BASE_TEMPLATE = 'roles/superviseur/_base_superviseur.html'
+
+LEGACY_SUPERVISEUR_ERROR_TEMPLATE = 'superviseur/error.html'
+
+SUPERVISEUR_ERROR_TEMPLATE = 'roles/superviseur/error.html'
+
 # Création du blueprint superviseur
 bp = Blueprint('superviseur', __name__, url_prefix='/superviseur')
 
@@ -80,13 +104,13 @@ def dashboard():
 
     except ImportError as e:
         return render_template(
-            'superviseur/error.html',
+            LEGACY_SUPERVISEUR_ERROR_TEMPLATE,
             message="Services non disponibles. Contactez l'administrateur.",
             readonly=True
         )
     except Exception as e:
         return render_template(
-            'superviseur/error.html',
+            LEGACY_SUPERVISEUR_ERROR_TEMPLATE,
             message=f"Erreur lors du chargement du dashboard: {str(e)}",
             readonly=True
         )
@@ -148,12 +172,12 @@ def carburation():
             utilisateurs=utilisateurs,
             readonly=True,
             superviseur_mode=True,
-            base_template='roles/superviseur/_base_superviseur.html'
+            base_template=SUPERVISEUR_BASE_TEMPLATE
         )
 
     except Exception as e:
         return render_template(
-            'roles/superviseur/error.html',
+            SUPERVISEUR_ERROR_TEMPLATE,
             message=f"Erreur lors du chargement: {str(e)}",
             readonly=True
         )
@@ -176,12 +200,12 @@ def bus_udm():
             bus_list=buses,  # Le template attend bus_list
             readonly=True,
             superviseur_mode=True,
-            base_template='roles/superviseur/_base_superviseur.html'
+            base_template=SUPERVISEUR_BASE_TEMPLATE
         )
 
     except Exception as e:
         return render_template(
-            'superviseur/error.html',
+            LEGACY_SUPERVISEUR_ERROR_TEMPLATE,
             message=f"Erreur lors du chargement: {str(e)}",
             readonly=True
         )
@@ -236,12 +260,12 @@ def vidanges():
             date_fin=date_fin,
             readonly=True,
             superviseur_mode=True,
-            base_template='roles/superviseur/_base_superviseur.html'
+            base_template=SUPERVISEUR_BASE_TEMPLATE
         )
 
     except Exception as e:
         return render_template(
-            'roles/superviseur/error.html',
+            SUPERVISEUR_ERROR_TEMPLATE,
             message=f"Erreur lors du chargement: {str(e)}",
             readonly=True
         )
@@ -264,12 +288,12 @@ def chauffeurs():
             chauffeur_list=chauffeurs,
             readonly=True,
             superviseur_mode=True,
-            base_template='roles/superviseur/_base_superviseur.html'
+            base_template=SUPERVISEUR_BASE_TEMPLATE
         )
 
     except Exception as e:
         return render_template(
-            'superviseur/error.html',
+            LEGACY_SUPERVISEUR_ERROR_TEMPLATE,
             message=f"Erreur lors du chargement: {str(e)}",
             readonly=True
         )
@@ -292,12 +316,12 @@ def utilisateurs():
             utilisateurs=utilisateurs,
             readonly=True,
             superviseur_mode=True,
-            base_template='roles/superviseur/_base_superviseur.html'
+            base_template=SUPERVISEUR_BASE_TEMPLATE
         )
 
     except Exception as e:
         return render_template(
-            'superviseur/error.html',
+            LEGACY_SUPERVISEUR_ERROR_TEMPLATE,
             message=f"Erreur lors du chargement: {str(e)}",
             readonly=True
         )
@@ -313,13 +337,13 @@ def bus_detail(bus_id):
     try:
         # Vérifier la disponibilité des services
         if not BusService or not MaintenanceService:
-            return render_template('roles/superviseur/error.html',
+            return render_template(SUPERVISEUR_ERROR_TEMPLATE,
                                  message="Services non disponibles", readonly=True)
         
         # Récupérer les détails du bus
         bus = BusService.get_bus_by_id(bus_id, include_stats=True)
         if not bus:
-            return render_template('roles/superviseur/error.html',
+            return render_template(SUPERVISEUR_ERROR_TEMPLATE,
                                  message="Bus non trouvé", readonly=True)
         
         # Récupérer l'historique de maintenance
@@ -335,7 +359,7 @@ def bus_detail(bus_id):
         )
         
     except Exception as e:
-        return render_template('roles/superviseur/error.html',
+        return render_template(SUPERVISEUR_ERROR_TEMPLATE,
                              message=f"Erreur: {str(e)}", readonly=True)
 
 
@@ -370,7 +394,7 @@ def maintenance():
         )
 
     except Exception as e:
-        return render_template('roles/superviseur/error.html',
+        return render_template(SUPERVISEUR_ERROR_TEMPLATE,
                              message=f"Erreur: {str(e)}", readonly=True)
 
 
@@ -411,7 +435,7 @@ def depanage():
                              readonly=True)
 
     except Exception as e:
-        return render_template('roles/superviseur/error.html',
+        return render_template(SUPERVISEUR_ERROR_TEMPLATE,
                              message=f"Erreur: {str(e)}", readonly=True)
 
 
@@ -501,7 +525,7 @@ def rapports():
         )
 
     except Exception as e:
-        return render_template('roles/superviseur/error.html',
+        return render_template(SUPERVISEUR_ERROR_TEMPLATE,
                              message=f"Erreur lors du chargement des rapports: {str(e)}", readonly=True)
 
 
@@ -567,8 +591,8 @@ def rapport_noblesse():
 
         # Formatage de la date pour l'affichage
         from datetime import datetime
-        mois_noms = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-                     'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']
+        mois_noms = ['Janvier', MOIS_FEVRIER, 'Mars', 'Avril', 'Mai', 'Juin',
+                     'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', MOIS_DECEMBRE]
         date_actuelle = datetime.now()
         mois_actuel = mois_noms[date_actuelle.month - 1]
         periode_formatee = f"{mois_actuel} {date_actuelle.year}"
@@ -577,7 +601,7 @@ def rapport_noblesse():
         prestataire_info = Prestataire.query.filter_by(nom_prestataire='Noblesse').first()
 
         return render_template(
-            'legacy/rapport_entity.html',  # Template admin existant
+            RAPPORT_ENTITY_TEMPLATE,  # Template admin existant
             trajets=trajets,
             start_date=start_date,
             end_date=end_date,
@@ -593,7 +617,7 @@ def rapport_noblesse():
         )
 
     except Exception as e:
-        return render_template('roles/superviseur/error.html',
+        return render_template(SUPERVISEUR_ERROR_TEMPLATE,
                              message=f"Erreur: {str(e)}", readonly=True)
 
 
@@ -653,8 +677,8 @@ def rapport_charter():
         total_passagers = sum([t.nombre_places_occupees or 0 for t in trajets])
 
         # Formatage de la date pour l'affichage
-        mois_noms = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-                     'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']
+        mois_noms = ['Janvier', MOIS_FEVRIER, 'Mars', 'Avril', 'Mai', 'Juin',
+                     'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', MOIS_DECEMBRE]
         date_actuelle = datetime.now()
         mois_actuel = mois_noms[date_actuelle.month - 1]
         periode_formatee = f"{mois_actuel} {date_actuelle.year}"
@@ -663,7 +687,7 @@ def rapport_charter():
         prestataire_info = Prestataire.query.filter_by(nom_prestataire='Charter').first()
 
         return render_template(
-            'legacy/rapport_entity.html',
+            RAPPORT_ENTITY_TEMPLATE,
             trajets=trajets,
             start_date=start_date,
             end_date=end_date,
@@ -679,7 +703,7 @@ def rapport_charter():
         )
 
     except Exception as e:
-        return render_template('roles/superviseur/error.html',
+        return render_template(SUPERVISEUR_ERROR_TEMPLATE,
                              message=f"Erreur: {str(e)}", readonly=True)
 
 
@@ -735,14 +759,14 @@ def rapport_bus_udm():
         total_passagers = sum([t.nombre_places_occupees or 0 for t in trajets])
 
         # Formatage de la date pour l'affichage
-        mois_noms = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-                     'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']
+        mois_noms = ['Janvier', MOIS_FEVRIER, 'Mars', 'Avril', 'Mai', 'Juin',
+                     'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', MOIS_DECEMBRE]
         date_actuelle = datetime.now()
         mois_actuel = mois_noms[date_actuelle.month - 1]
         periode_formatee = f"{mois_actuel} {date_actuelle.year}"
 
         return render_template(
-            'legacy/rapport_entity.html',
+            RAPPORT_ENTITY_TEMPLATE,
             trajets=trajets,
             start_date=start_date,
             end_date=end_date,
@@ -757,7 +781,7 @@ def rapport_bus_udm():
         )
 
     except Exception as e:
-        return render_template('roles/superviseur/error.html',
+        return render_template(SUPERVISEUR_ERROR_TEMPLATE,
                              message=f"Erreur: {str(e)}", readonly=True)
 
 
@@ -785,7 +809,7 @@ def export_trajets(format):
             content, filename = RapportService.export_trajets_csv(rapport['trajets'])
             
             response = make_response(content)
-            response.headers['Content-Type'] = 'text/csv; charset=utf-8'
+            response.headers['Content-Type'] = CSV_MIMETYPE
             response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
             return response
             
@@ -798,7 +822,7 @@ def export_trajets(format):
             return response
             
         else:
-            return jsonify({'error': 'Format non supporté'}), 400
+            return jsonify({'error': ERR_FORMAT_NON_SUPPORTE}), 400
             
     except Exception as e:
         return jsonify({'error': f'Erreur lors de l\'export: {str(e)}'}), 500
@@ -861,12 +885,12 @@ def export_carburation(format):
             filename = f'carburations_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
             
             response = make_response(content)
-            response.headers['Content-Type'] = 'text/csv; charset=utf-8'
+            response.headers['Content-Type'] = CSV_MIMETYPE
             response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
             return response
             
         else:
-            return jsonify({'error': 'Format non supporté'}), 400
+            return jsonify({'error': ERR_FORMAT_NON_SUPPORTE}), 400
             
     except Exception as e:
         return jsonify({'error': f'Erreur lors de l\'export: {str(e)}'}), 500
@@ -922,12 +946,12 @@ def export_chauffeurs(format):
             filename = f'chauffeurs_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
             
             response = make_response(content)
-            response.headers['Content-Type'] = 'text/csv; charset=utf-8'
+            response.headers['Content-Type'] = CSV_MIMETYPE
             response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
             return response
             
         else:
-            return jsonify({'error': 'Format non supporté'}), 400
+            return jsonify({'error': ERR_FORMAT_NON_SUPPORTE}), 400
             
     except Exception as e:
         return jsonify({'error': f'Erreur lors de l\'export: {str(e)}'}), 500
@@ -973,12 +997,12 @@ def export_bus(format):
             filename = f'bus_udm_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
             
             response = make_response(content)
-            response.headers['Content-Type'] = 'text/csv; charset=utf-8'
+            response.headers['Content-Type'] = CSV_MIMETYPE
             response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
             return response
             
         else:
-            return jsonify({'error': 'Format non supporté'}), 400
+            return jsonify({'error': ERR_FORMAT_NON_SUPPORTE}), 400
             
     except Exception as e:
         return jsonify({'error': f'Erreur lors de l\'export: {str(e)}'}), 500
@@ -1022,12 +1046,12 @@ def export_utilisateurs(format):
             filename = f'utilisateurs_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
             
             response = make_response(content)
-            response.headers['Content-Type'] = 'text/csv; charset=utf-8'
+            response.headers['Content-Type'] = CSV_MIMETYPE
             response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
             return response
             
         else:
-            return jsonify({'error': 'Format non supporté'}), 400
+            return jsonify({'error': ERR_FORMAT_NON_SUPPORTE}), 400
             
     except Exception as e:
         return jsonify({'error': f'Erreur lors de l\'export: {str(e)}'}), 500
@@ -1057,12 +1081,12 @@ def export_maintenance(format):
             content, filename = RapportService.export_maintenance_csv(rapport)
             
             response = make_response(content)
-            response.headers['Content-Type'] = 'text/csv; charset=utf-8'
+            response.headers['Content-Type'] = CSV_MIMETYPE
             response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
             return response
             
         else:
-            return jsonify({'error': 'Format non supporté'}), 400
+            return jsonify({'error': ERR_FORMAT_NON_SUPPORTE}), 400
             
     except Exception as e:
         return jsonify({'error': f'Erreur lors de l\'export: {str(e)}'}), 500
@@ -1103,7 +1127,7 @@ def api_stats():
 @bp.errorhandler(403)
 def forbidden(error):
     """Gestionnaire d'erreur 403 - Accès interdit"""
-    return render_template('roles/superviseur/error.html',
+    return render_template(SUPERVISEUR_ERROR_TEMPLATE,
                          message="Accès interdit. Permissions insuffisantes.",
                          readonly=True), 403
 
@@ -1111,6 +1135,6 @@ def forbidden(error):
 @bp.errorhandler(404)
 def not_found(error):
     """Gestionnaire d'erreur 404 - Page non trouvée"""
-    return render_template('roles/superviseur/error.html',
+    return render_template(SUPERVISEUR_ERROR_TEMPLATE,
                          message="Page non trouvée.",
                          readonly=True), 404

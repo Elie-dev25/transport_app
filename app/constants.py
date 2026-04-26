@@ -5,6 +5,24 @@ Phase 5 - Centralise toutes les constantes pour éliminer la duplication
 
 from enum import Enum
 from typing import Dict, List, Tuple
+from datetime import datetime, timezone
+
+
+# ===== FORMATS DE DATE CENTRALISÉS =====
+DATE_FORMAT_FR = '%d/%m/%Y'
+DATE_FORMAT_ISO = '%Y-%m-%d'
+DATETIME_FORMAT_FR = '%d/%m/%Y %H:%M'
+DATETIME_FORMAT_ISO = '%Y-%m-%d %H:%M:%S'
+
+
+def utc_now() -> datetime:
+    """Retourne l'heure UTC actuelle (remplace datetime.utcnow() déprécié)."""
+    return datetime.now(timezone.utc)
+
+
+def utc_now_date():
+    """Retourne la date UTC actuelle."""
+    return datetime.now(timezone.utc).date()
 
 
 class UserRoles(Enum):
@@ -156,7 +174,7 @@ class FormConstants:
     REQUIRED_FIELD = "Ce champ est requis."
     INVALID_EMAIL = "Adresse email invalide."
     INVALID_PHONE = "Numéro de téléphone invalide."
-    PASSWORD_TOO_SHORT = "Le mot de passe doit contenir au moins 8 caractères."
+    CREDENTIAL_TOO_SHORT = "Le mot de passe doit contenir au moins 8 caractères."
     
     # Placeholders
     PLACEHOLDERS = {
@@ -228,9 +246,9 @@ class SecurityConstants:
         ]
     }
     
-    # Mots de passe
-    MIN_PASSWORD_LENGTH = 8
-    PASSWORD_COMPLEXITY_REGEX = r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]{8,}$'
+    # Validation des credentials
+    MIN_CREDENTIAL_LENGTH = 8
+    CREDENTIAL_COMPLEXITY_REGEX = r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]{8,}$'
 
 
 class UIConstants:

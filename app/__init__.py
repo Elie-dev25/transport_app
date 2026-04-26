@@ -1,8 +1,8 @@
 from flask import Flask
 from app.config import Config
-from app.extensions import db, login_manager
+from app.extensions import db, login_manager, csrf
 from datetime import date, datetime
-
+from app.constants import DATE_FORMAT_FR
 
 # Fonction de création de l'application Flask
 # Initialise l'application, la configuration et enregistre les blueprints
@@ -27,6 +27,9 @@ def create_app():
     app.config.from_object(CurrentConfig)  # Charge la configuration adaptée
 
     db.init_app(app)  # Initialise la base de données avec l'application
+
+    # Initialisation de la protection CSRF
+    csrf.init_app(app)
 
     # Initialisation de Flask-Login
     login_manager.init_app(app)
@@ -65,6 +68,16 @@ def create_app():
         return value
     app.jinja_env.filters['status_label'] = status_label
 
+    # Filtre Jinja pour marquer le contenu HTML interne comme sûr
+    # Utilisé uniquement pour le HTML généré par le serveur, jamais pour l'input utilisateur
+    from markupsafe import Markup
+    def trusted_html(value):
+        """Marque le contenu comme HTML sûr (pour le contenu généré par le serveur uniquement)."""
+        if value is None:
+            return ''
+        return Markup(value)
+    app.jinja_env.filters['trusted_html'] = trusted_html
+
     # Filtre Jinja pour formater les dates au format jj/mm/aaaa
     def date_fr(value):
         """Retourne une date au format jj/mm/aaaa.
@@ -76,9 +89,9 @@ def create_app():
         try:
             if isinstance(value, datetime):
                 d = value.date()
-                return d.strftime('%d/%m/%Y')
+                return d.strftime(DATE_FORMAT_FR)
             if isinstance(value, date):
-                return value.strftime('%d/%m/%Y')
+                return value.strftime(DATE_FORMAT_FR)
             if isinstance(value, str):
                 # Essai ISO 8601: 'YYYY-MM-DD' ou 'YYYY-MM-DDTHH:MM:SS' ou 'YYYY-MM-DD HH:MM:SS'
                 txt = value.strip()
@@ -86,7 +99,7 @@ def create_app():
                     # Remplacer espace par 'T' si nécessaire pour fromisoformat
                     iso_txt = txt.replace(' ', 'T')
                     dt = datetime.fromisoformat(iso_txt)
-                    return dt.date().strftime('%d/%m/%Y')
+                    return dt.date().strftime(DATE_FORMAT_FR)
                 except Exception:
                     # Dernier recours: conserver tel quel (afin d'éviter les erreurs d'affichage)
                     return txt

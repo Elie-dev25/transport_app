@@ -1,6 +1,7 @@
 from app.database import db
 from datetime import datetime
 from sqlalchemy import Enum
+from app.constants import utc_now
 
 
 class PanneBusUdM(db.Model):
@@ -12,7 +13,7 @@ class PanneBusUdM(db.Model):
     numero_bus_udm = db.Column(db.String(50), nullable=False)
     immatriculation = db.Column(db.String(50), nullable=True)
     kilometrage = db.Column(db.Float, nullable=True)
-    date_heure = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    date_heure = db.Column(db.DateTime, nullable=False, default=utc_now)
     description = db.Column(db.Text, nullable=False)
     criticite = db.Column(Enum('FAIBLE', 'MOYENNE', 'HAUTE', name='criticite_enum'), nullable=False)
     immobilisation = db.Column(db.Boolean, nullable=False, default=False)

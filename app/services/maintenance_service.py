@@ -14,6 +14,9 @@ from app.models.vidange import Vidange
 from app.models.carburation import Carburation
 
 
+
+ERR_BUS_NON_TROUVE = 'Bus non trouvé'
+
 class MaintenanceService:
     """Service pour la gestion de la maintenance"""
     
@@ -94,7 +97,7 @@ class MaintenanceService:
             # Vérifier que le bus existe
             bus = BusUdM.query.get(panne_data['bus_udm_id'])
             if not bus:
-                return False, "Bus non trouvé", None
+                return False, ERR_BUS_NON_TROUVE, None
             
             panne = PanneBusUdM(
                 bus_udm_id=panne_data['bus_udm_id'],
@@ -128,7 +131,7 @@ class MaintenanceService:
                 try:
                     from flask import current_app
                     current_app.logger.warning(f"Échec notification panne: {str(e)}")
-                except:
+                except Exception:
                     print(f"Échec notification panne: {str(e)}")
 
             return True, "Panne enregistrée avec succès", panne.id
@@ -183,7 +186,7 @@ class MaintenanceService:
                 try:
                     from flask import current_app
                     current_app.logger.warning(f"Échec notification réparation: {str(e)}")
-                except:
+                except Exception:
                     print(f"Échec notification réparation: {str(e)}")
 
             return True, "Panne résolue avec succès"
@@ -245,7 +248,7 @@ class MaintenanceService:
             # Vérifier que le bus existe
             bus = BusUdM.query.get(vidange_data['bus_udm_id'])
             if not bus:
-                return False, "Bus non trouvé", None
+                return False, ERR_BUS_NON_TROUVE, None
             
             vidange = Vidange(
                 bus_udm_id=vidange_data['bus_udm_id'],
@@ -311,7 +314,7 @@ class MaintenanceService:
             # Vérifier que le bus existe
             bus = BusUdM.query.get(carburation_data['bus_udm_id'])
             if not bus:
-                return False, "Bus non trouvé", None
+                return False, ERR_BUS_NON_TROUVE, None
             
             carburation = Carburation(
                 bus_udm_id=carburation_data['bus_udm_id'],

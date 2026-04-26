@@ -2,7 +2,7 @@
 # Version multi-stage pour optimiser la taille de l'image finale
 
 # ===== STAGE 1: Builder =====
-FROM python:3.11-slim as builder
+FROM python:3.11-slim AS builder
 
 # Métadonnées
 LABEL maintainer="Transport UdM Team"
@@ -35,7 +35,7 @@ COPY requirements.txt .
 RUN pip install --user --no-cache-dir -r requirements.txt
 
 # ===== STAGE 2: Runtime =====
-FROM python:3.11-slim as runtime
+FROM python:3.11-slim AS runtime
 
 # Variables d'environnement pour la production
 ENV PYTHONUNBUFFERED=1
@@ -63,10 +63,12 @@ COPY --from=builder /root/.local /home/appuser/.local
 # Définir le répertoire de travail
 WORKDIR /app
 
-# Copier le code de l'application
-COPY --chown=appuser:appuser . .
+# Copier les fichiers de l'application (lecture seule, propriétaire root)
+COPY --chmod=0444 requirements.txt ./
+COPY --chmod=0555 run.py ./
+COPY --chmod=0444 app/ ./app/
 
-# Créer les répertoires manquants et ajuster les permissions
+# Créer les répertoires avec permissions d'écriture pour l'utilisateur applicatif
 RUN mkdir -p logs/audit uploads instance \
     && chown -R appuser:appuser logs uploads instance \
     && chmod 755 logs uploads instance

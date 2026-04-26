@@ -1,6 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import current_user
-from datetime import date
 
 # Services centralisés (Phase 1 Refactoring)
 from app.services.dashboard_service import DashboardService
@@ -23,7 +22,7 @@ from app.models.bus_udm import BusUdM
 bp = Blueprint('charge_transport', __name__, url_prefix='/charge')
 
 # Route du tableau de bord chargé de transport
-@bp.route('/dashboard', methods=['GET', 'POST'])
+@bp.route('/dashboard', methods=['GET'])
 def dashboard():
     """
     Dashboard chargé de transport refactorisé - Phase 1
@@ -69,7 +68,7 @@ def bus():
         current_user=current_user,
         active_page='bus',
         readonly=False,
-        base_template='roles/charge_transport/_base_charge.html'
+        base_template=CHARGE_BASE_TEMPLATE
     )
 
 # Route pour les détails d'un bus (accessible aux chargés de transport)
@@ -150,7 +149,7 @@ def details_bus(bus_id):
         depannages=depannages,
         documents=documents,
         active_page='bus_udm',
-        base_template='roles/charge_transport/_base_charge.html'
+        base_template=CHARGE_BASE_TEMPLATE
     )
 
 # Route pour la gestion des chauffeurs
@@ -169,7 +168,7 @@ def chauffeurs():
         'legacy/chauffeurs.html',
         chauffeur_list=chauffeur_list,
         active_page='chauffeurs',
-        base_template='roles/charge_transport/_base_charge.html'
+        base_template=CHARGE_BASE_TEMPLATE
     )
 
 # Route pour la gestion des rapports
@@ -193,7 +192,7 @@ def trajet_interne_bus_udm():
     FormService.populate_trajet_form_choices(form)
 
     if not form.validate():
-        return jsonify({'success': False, 'message': 'Formulaire invalide', 'errors': form.errors}), 400
+        return jsonify({'success': False, 'message': MSG_FORMULAIRE_INVALIDE, 'errors': form.errors}), 400
 
     ok, msg = enregistrer_trajet_interne_bus_udm(form, current_user)
     status = 200 if ok else 400
@@ -220,7 +219,7 @@ def trajet_prestataire_modernise():
         print(f"Erreur lors du peuplement des prestataires: {e}")
 
     if not form.validate():
-        return jsonify({'success': False, 'message': 'Formulaire invalide', 'errors': form.errors}), 400
+        return jsonify({'success': False, 'message': MSG_FORMULAIRE_INVALIDE, 'errors': form.errors}), 400
 
     ok, msg = enregistrer_trajet_prestataire_modernise(form, current_user)
     status = 200 if ok else 400
@@ -235,7 +234,7 @@ def autres_trajets():
     FormService.populate_trajet_form_choices(form)
 
     if not form.validate():
-        return jsonify({'success': False, 'message': 'Formulaire invalide', 'errors': form.errors}), 400
+        return jsonify({'success': False, 'message': MSG_FORMULAIRE_INVALIDE, 'errors': form.errors}), 400
 
     ok, msg = enregistrer_autres_trajets(form, current_user)
     status = 200 if ok else 400

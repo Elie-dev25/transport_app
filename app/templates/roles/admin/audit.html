@@ -94,8 +94,7 @@
                 <div class="card-body">
                     <form method="GET" class="row g-3">
                         <div class="col-md-3">
-                            <label class="form-label">Filtrer par rôle</label>
-                            <select name="role" class="form-select">
+                            <label for="audit_role" class="form-label">Filtrer par rôle</label> <select id="audit_role" name="role" class="form-select">
                                 <option value="">Tous les rôles</option>
                                 <option value="ADMIN" {% if role_filter == 'ADMIN' %}selected{% endif %}>ADMIN</option>
                                 <option value="RESPONSABLE" {% if role_filter == 'RESPONSABLE' %}selected{% endif %}>RESPONSABLE</option>
@@ -103,8 +102,7 @@
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Filtrer par action</label>
-                            <select name="action" class="form-select">
+                            <label for="audit_action" class="form-label">Filtrer par action</label> <select id="audit_action" name="action" class="form-select">
                                 <option value="">Toutes les actions</option>
                                 <option value="CONSULTATION" {% if action_filter == 'CONSULTATION' %}selected{% endif %}>CONSULTATION</option>
                                 <option value="ACTION_ADMIN" {% if action_filter == 'ACTION_ADMIN' %}selected{% endif %}>ACTION_ADMIN</option>
@@ -115,8 +113,7 @@
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label">Limite</label>
-                            <select name="limit" class="form-select">
+                            <label for="audit_limit" class="form-label">Limite</label> <select id="audit_limit" name="limit" class="form-select">
                                 <option value="50" {% if limit == 50 %}selected{% endif %}>50</option>
                                 <option value="100" {% if limit == 100 %}selected{% endif %}>100</option>
                                 <option value="200" {% if limit == 200 %}selected{% endif %}>200</option>
@@ -124,11 +121,11 @@
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label">&nbsp;</label>
+                            <div class="form-label" aria-hidden="true">&nbsp;</div>
                             <button type="submit" class="btn btn-primary d-block">Filtrer</button>
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label">&nbsp;</label>
+                            <div class="form-label" aria-hidden="true">&nbsp;</div>
                             <a href="{{ url_for('admin.audit_logs') }}" class="btn btn-outline-secondary d-block">Reset</a>
                         </div>
                     </form>

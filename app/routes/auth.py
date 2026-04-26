@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, session, request
+from flask import Blueprint, render_template, redirect, url_for, flash, session, request, current_app
 from flask_login import login_user, logout_user
 from app.forms.login_form import LoginForm
 from app.models.utilisateur import Utilisateur
@@ -7,29 +7,26 @@ from app.utils.audit_logger import (
     log_login_success, log_login_failed, log_logout,
     log_unauthorized_access, log_system_error
 )
+import os
 
-LDAP_SERVER = '192.168.21.131'
-LDAP_DOMAIN = 'domaine.local'
-BASE_DN = 'DC=domaine,DC=local'
+# Configuration LDAP via variables d'environnement (OBLIGATOIRE en production)
+# Les valeurs par défaut sont vides - doivent être définies dans .env
+LDAP_SERVER = os.environ.get('LDAP_SERVER', '')
+LDAP_DOMAIN = os.environ.get('LDAP_DOMAIN', '')
+BASE_DN = os.environ.get('BASE_DN', '')
 
-# Fonction d'authentification MySQL (temporaire - remplace LDAP)
+# Fonction d'authentification MySQL sécurisée
 def authenticate_mysql(username, password):
+    """Authentifie un utilisateur via la base de données MySQL.
+    
+    Args:
+        username: Login de l'utilisateur
+        password: Mot de passe en clair à vérifier
+        
+    Returns:
+        Tuple (success: bool, groups: list, error: str|None)
+    """
     try:
-        # Authentification de test pour le superviseur
-        if username == "superviseur" and password == "superviseur123":
-            print('Auth Test: Connexion superviseur réussie')
-            return True, ['Superviseurs'], None
-
-        # Authentification de test pour l'admin
-        if username == "admin" and password == "admin123":
-            print('Auth Test: Connexion admin réussie')
-            return True, ['Administrateur'], None
-
-        # Authentification de test pour le responsable
-        if username == "responsable" and password == "responsable123":
-            print('Auth Test: Connexion responsable réussie')
-            return True, ['Responsables'], None
-
         # Chercher l'utilisateur en base MySQL
         user = Utilisateur.query.filter_by(login=username).first()
         if user:
@@ -67,74 +64,22 @@ def authenticate_mysql(username, password):
         print(f'Erreur MySQL Auth: {e}')
         return False, [], str(e)
 
-# Fonction d'authentification AD (SIMPLE bind via LDAPS, fallback StartTLS) - DÉSACTIVÉE
-def authenticate_ad_disabled(username, password):
-    # Utiliser le format UPN pour éviter NTLM/MD4
-    user_upn = f"{username}@{LDAP_DOMAIN}"
-
-    # Config TLS (validation désactivée en dev; sécuriser en prod)
-    tls_config = Tls(validate=ssl.CERT_NONE, version=ssl.PROTOCOL_TLSv1_2)
-
-    # 1) Tentative LDAPS (port 636)
-    server_ldaps = Server(LDAP_SERVER, port=636, use_ssl=True, tls=tls_config, get_info=ALL)
-    try:
-        conn = Connection(
-            server_ldaps,
-            user=user_upn,
-            password=password,
-            authentication=SIMPLE,
-            auto_bind=True,
-        )
-        conn.search(BASE_DN, f'(sAMAccountName={username})', attributes=['memberOf'])
-        if conn.entries:
-            entry = conn.entries[0]
-            groups = entry.memberOf.values if 'memberOf' in entry else []
-            user_groups = [g.split(',')[0].replace('CN=', '') for g in groups]
-            return True, user_groups, None
-        print('LDAP: Utilisateur non trouvé dans AD.')
-        return False, [], 'Utilisateur non trouvé dans AD.'
-    except Exception as e_ldaps:
-        # 2) Fallback: LDAP 389 + StartTLS
-        try:
-            server_ldap = Server(LDAP_SERVER, port=389, use_ssl=False, tls=tls_config, get_info=ALL)
-            conn = Connection(
-                server_ldap,
-                user=user_upn,
-                password=password,
-                authentication=SIMPLE,
-                auto_bind=False,
-            )
-            conn.open()
-            conn.start_tls()
-            if not conn.bind():
-                raise Exception(conn.result)
-
-            conn.search(BASE_DN, f'(sAMAccountName={username})', attributes=['memberOf'])
-            if conn.entries:
-                entry = conn.entries[0]
-                groups = entry.memberOf.values if 'memberOf' in entry else []
-                user_groups = [g.split(',')[0].replace('CN=', '') for g in groups]
-                return True, user_groups, None
-            print('LDAP: Utilisateur non trouvé dans AD.')
-            return False, [], 'Utilisateur non trouvé dans AD.'
-        except Exception as e_starttls:
-            err = f"LDAPS 636 a échoué: {e_ldaps}; StartTLS 389 a échoué: {e_starttls}"
-            print(f'Erreur LDAP: {err}')
-            return False, [], err
-    finally:
-        try:
-            conn.unbind()
-        except Exception:
-            pass
-
 # Création du blueprint pour l'authentification
 bp = Blueprint('auth', __name__)
 
-# Route pour la page de connexion
-@bp.route('/login', methods=['GET', 'POST'])
+# Route pour afficher le formulaire de connexion (GET)
+@bp.route('/login', methods=['GET'])
+def login_form():
+    """Affiche le formulaire de connexion."""
+    form = LoginForm()
+    return render_template('auth/login.html', form=form)
+
+# Route pour traiter la connexion (POST)
+@bp.route('/login', methods=['POST'])
 def login():
-    form = LoginForm()  # Instancie le formulaire de connexion
-    if form.validate_on_submit():  # Vérifie si le formulaire est soumis et valide
+    """Traite la soumission du formulaire de connexion."""
+    form = LoginForm()
+    if form.validate_on_submit():
         username = form.login.data
         password = form.mot_de_passe.data
         success, groups, auth_error = authenticate_mysql(username, password)
@@ -157,7 +102,9 @@ def login():
             # Synchroniser l'utilisateur local (création si absent)
             user = Utilisateur.query.filter_by(login=username).first()
             if not user:
-                # Créer l'utilisateur avec le bon mot de passe
+                # Créer l'utilisateur avec un mot de passe temporaire sécurisé
+                import secrets
+                temp_password = secrets.token_urlsafe(16)
                 user = Utilisateur(
                     nom=username.capitalize(),
                     prenom='Test',
@@ -166,15 +113,8 @@ def login():
                     email=f"{username}@udm.local",
                     telephone='000000000'
                 )
-                # Définir le mot de passe selon l'utilisateur
-                if username == "superviseur":
-                    user.set_password('superviseur123')
-                elif username == "admin":
-                    user.set_password('admin123')
-                elif username == "responsable":
-                    user.set_password('responsable123')
-                else:
-                    user.set_password('password123')
+                user.set_password(temp_password)
+                # Note: L'utilisateur devra réinitialiser son mot de passe
 
                 db.session.add(user)
                 db.session.commit()
@@ -234,7 +174,7 @@ def login():
                 reason=auth_error or "Invalid credentials"
             )
             flash(f"Login ou mot de passe incorrect. Erreur: {auth_error}", "danger")  # Message d'erreur
-    return render_template('auth/login.html', form=form)  # Affiche la page de login
+    return render_template('auth/login.html', form=form)
 
 # Route pour la déconnexion
 @bp.route('/logout')

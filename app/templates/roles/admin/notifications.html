@@ -227,7 +227,7 @@ function testPanneNotification() {
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ bus_id: parseInt(busId) })
+        body: JSON.stringify({ bus_id: Number.parseInt(busId) })
     })
     .then(response => response.json())
     .then(data => {
@@ -266,7 +266,7 @@ function testStatutNotification() {
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ chauffeur_id: parseInt(chauffeurId) })
+        body: JSON.stringify({ chauffeur_id: Number.parseInt(chauffeurId) })
     })
     .then(response => response.json())
     .then(data => {

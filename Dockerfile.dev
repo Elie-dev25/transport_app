@@ -11,9 +11,9 @@ LABEL version="2.0.0-dev"
 # Variables d'environnement pour le développement
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
-ENV FLASK_ENV=development
 ENV FLASK_APP=run.py
-ENV FLASK_DEBUG=1
+# Note: FLASK_DEBUG doit être défini via docker-compose ou au runtime
+# Ne pas activer le debug par défaut dans l'image
 
 # Installer les dépendances système
 RUN apt-get update && apt-get install -y \
@@ -46,8 +46,13 @@ RUN pip install --no-cache-dir \
 RUN mkdir -p logs/audit uploads instance \
     && chown -R devuser:devuser /app
 
-# Copier le code de l'application
-COPY --chown=devuser:devuser . .
+# Copier les fichiers de l'application (lecture seule, propriétaire root)
+COPY --chmod=0444 requirements.txt ./
+COPY --chmod=0555 run.py ./
+COPY --chmod=0444 app/ ./app/
+
+# Ajuster les permissions des répertoires pour l'utilisateur de développement
+RUN chmod 755 logs uploads instance 2>/dev/null || true
 
 # Passer à l'utilisateur de développement
 USER devuser

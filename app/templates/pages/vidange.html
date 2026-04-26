@@ -19,7 +19,7 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/print-header.css') }}">
 <script src="{{ url_for('static', filename='js/tableaux.js') }}"></script>
 <script src="{{ url_for('static', filename='js/print-header.js') }}"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="/static/vendor/js/sweetalert2.min.js"></script>
 {% endblock %}
 
 {% block dashboard_content %}
@@ -166,9 +166,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Gestionnaire pour les boutons "Vidanger" (ouvre directement le formulaire)
     document.querySelectorAll('button[data-open-formulaire-direct="1"]').forEach(btn => {
         btn.addEventListener('click', function() {
-            const busId = this.getAttribute('data-bus-id');
-            const numero = this.getAttribute('data-numero');
-            const demandeur = this.getAttribute('data-demandeur');
+            const busId = this.dataset.busId;
+            const numero = this.dataset.numero;
+            const demandeur = this.dataset.demandeur;
 
             // Remplir les champs du formulaire
             document.getElementById('bus_udm_id_hidden').value = busId || '';
@@ -202,8 +202,8 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="table-filters" style="margin-bottom: 20px; padding: 15px; background: #f8fafc; border-radius: 10px;">
                 <div style="display:flex;gap:15px;align-items:center;flex-wrap:wrap;">
                     <div style="display:flex;align-items:center;gap:8px;">
-                        <label for="numero_udm" style="font-weight:500;"><i class="fas fa-bus"></i> Véhicule :</label>
-                        <select name="numero_udm" id="numero_udm" onchange="filterHistoriqueVidange(this.value)"
+                        <label for="filter_numero_udm" style="font-weight:500;"><i class="fas fa-bus"></i> Véhicule :</label>
+                        <select name="numero_udm" id="filter_numero_udm" onchange="filterHistoriqueVidange(this.value)"
                                 style="padding:8px 12px;border:2px solid #e5e7eb;border-radius:8px;background:white;">
                             <option value="">Tous les véhicules</option>
                             {% for numero in numeros_aed %}
@@ -212,7 +212,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         </select>
                     </div>
                     <div style="display:flex;align-items:center;gap:8px;">
-                        <label style="font-weight:500;"><i class="fas fa-calendar"></i> Période :</label>
+                        <label for="vid_date_debut" style="font-weight:500;"><i class="fas fa-calendar"></i> Période :</label>
                         <input type="date" id="vid_date_debut" value="{{ selected_date_debut or '' }}"
                                onchange="filterHistoriqueVidange(document.getElementById('numero_udm').value)"
                                style="padding:8px;border:2px solid #e5e7eb;border-radius:8px;" />

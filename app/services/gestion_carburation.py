@@ -1,6 +1,7 @@
 from app.database import db
 from app.models.bus_udm import BusUdM
 from datetime import datetime
+from app.constants import utc_now_date
 
 
 def get_carburation_history(numero_bus_udm=None, date_debut=None, date_fin=None):
@@ -122,7 +123,7 @@ def enregistrer_carburation_common(data: dict) -> dict:
     # Persister la carburation
     carburation = Carburation(
         bus_udm_id=bus_udm_id_int,
-        date_carburation=datetime.utcnow().date(),
+        date_carburation=utc_now_date(),
         kilometrage=km_int,
         quantite_litres=quantite_float,
         prix_unitaire=prix_float,

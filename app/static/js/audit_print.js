@@ -188,7 +188,7 @@ function getBusNumeroFromPage() {
     
     // Chercher dans les éléments de la page
     const busElement = document.querySelector('[data-bus-numero]');
-    if (busElement) return busElement.getAttribute('data-bus-numero');
+    if (busElement) return busElement.dataset.busNumero;
     
     return null;
 }

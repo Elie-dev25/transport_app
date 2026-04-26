@@ -12,19 +12,16 @@
       <form id="addUserForm" action="/admin/ajouter_utilisateur_ajax" method="POST">
         <div class="form-grid">
           <div class="form-group">
-            <label>Nom :</label>
-            <input type="text" name="nom" required>
+            <label for="adduser_nom">Nom :</label> <input id="adduser_nom" type="text" name="nom" required>
           </div>
           <div class="form-group">
-            <label>Prénom :</label>
-            <input type="text" name="prenom" required>
+            <label for="adduser_prenom">Prénom :</label> <input id="adduser_prenom" type="text" name="prenom" required>
           </div>
           <div class="form-group">
-            <label>Login :</label>
-            <input type="text" name="login" required>
+            <label for="adduser_login">Login :</label> <input id="adduser_login" type="text" name="login" required>
           </div>
           <div class="form-group">
-            <label>Rôle :</label>
+            <label for="roleSelectAddUser">Rôle :</label>
             <select name="role" id="roleSelectAddUser" required>
               <option value="ADMIN">Administrateur</option>
               <option value="RESPONSABLE">Responsable</option>
@@ -34,28 +31,22 @@
             </select>
           </div>
           <div class="form-group">
-            <label>Mot de passe :</label>
-            <input type="password" name="mot_de_passe" required>
+            <label for="adduser_mot_de_passe">Mot de passe :</label> <input id="adduser_mot_de_passe" type="password" name="mot_de_passe" required>
           </div>
           <div class="form-group">
-            <label>Email :</label>
-            <input type="email" name="email" required>
+            <label for="adduser_email">Email :</label> <input id="adduser_email" type="email" name="email" required>
           </div>
           <div class="form-group">
-            <label>Téléphone :</label>
-            <input type="text" name="telephone" required>
+            <label for="adduser_telephone">Téléphone :</label> <input id="adduser_telephone" type="text" name="telephone" required>
           </div>
           <div class="form-group permis-only" style="display:none;">
-            <label>Numéro de permis :</label>
-            <input type="text" name="numero_permis">
+            <label for="adduser_numero_permis">Numéro de permis :</label> <input id="adduser_numero_permis" type="text" name="numero_permis">
           </div>
           <div class="form-group permis-only" style="display:none;">
-            <label>Date de délivrance du permis :</label>
-            <input type="date" name="date_delivrance_permis">
+            <label for="adduser_date_delivrance_permis">Date de délivrance du permis :</label> <input id="adduser_date_delivrance_permis" type="date" name="date_delivrance_permis">
           </div>
           <div class="form-group permis-only" style="display:none;">
-            <label>Date d'expiration du permis :</label>
-            <input type="date" name="date_expiration_permis">
+            <label for="adduser_date_expiration_permis">Date d'expiration du permis :</label> <input id="adduser_date_expiration_permis" type="date" name="date_expiration_permis">
           </div>
         </div>
         <div class="form-actions">

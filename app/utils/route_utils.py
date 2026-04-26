@@ -6,6 +6,12 @@ from flask import request
 from flask_login import current_user
 
 
+
+
+ADMIN_BASE_TEMPLATE = 'roles/admin/_base_admin.html'
+
+RESPONSABLE_BASE_TEMPLATE = 'roles/responsable/_base_responsable.html'
+
 def get_base_template_for_role(role=None, source=None):
     """
     Retourne le template de base approprié selon le rôle de l'utilisateur
@@ -19,21 +25,21 @@ def get_base_template_for_role(role=None, source=None):
     """
     # Priorité au paramètre source
     if source == 'responsable':
-        return 'roles/responsable/_base_responsable.html'
+        return RESPONSABLE_BASE_TEMPLATE
     
     # Utiliser le rôle fourni ou celui de l'utilisateur connecté
     user_role = role or (current_user.role if current_user.is_authenticated else None)
     
     template_mapping = {
-        'ADMIN': 'roles/admin/_base_admin.html',
-        'RESPONSABLE': 'roles/responsable/_base_responsable.html',
+        'ADMIN': ADMIN_BASE_TEMPLATE,
+        'RESPONSABLE': RESPONSABLE_BASE_TEMPLATE,
         'SUPERVISEUR': 'roles/superviseur/_base_superviseur.html',
         'CHARGE': 'roles/charge_transport/_base_charge.html',
         'CHAUFFEUR': 'roles/chauffeur/_base_chauffeur.html',
         'MECANICIEN': 'roles/mecanicien/_base_mecanicien.html'
     }
     
-    return template_mapping.get(user_role, 'roles/admin/_base_admin.html')
+    return template_mapping.get(user_role, ADMIN_BASE_TEMPLATE)
 
 
 def get_template_context_for_role():
@@ -53,7 +59,7 @@ def get_template_context_for_role():
     
     if source == 'responsable' or (current_user.is_authenticated and current_user.role == 'RESPONSABLE'):
         context['use_responsable_base'] = True
-        context['base_template'] = 'roles/responsable/_base_responsable.html'
+        context['base_template'] = RESPONSABLE_BASE_TEMPLATE
     elif current_user.is_authenticated and current_user.role == 'SUPERVISEUR':
         context['superviseur_mode'] = True
         context['base_template'] = 'roles/superviseur/_base_superviseur.html'
@@ -64,7 +70,7 @@ def get_template_context_for_role():
     elif current_user.is_authenticated and current_user.role == 'CHAUFFEUR':
         context['base_template'] = 'roles/chauffeur/_base_chauffeur.html'
     else:
-        context['base_template'] = 'roles/admin/_base_admin.html'
+        context['base_template'] = ADMIN_BASE_TEMPLATE
     
     return context
 

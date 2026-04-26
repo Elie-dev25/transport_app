@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 
 {% block head %}
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="/static/vendor/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard-main.css') }}?v=20250821">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/tableaux.css') }}?v=20250907">
     <script src="{{ url_for('static', filename='js/tableaux.js') }}?v=20250907"></script>
@@ -15,7 +15,8 @@
 </button>
 
 <!-- Overlay -->
-<div class="overlay" onclick="toggleSidebar()"></div>
+<button type="button" class="overlay" aria-label="Fermer la barre latérale"
+     onclick="toggleSidebar()"></button>
 
 <!-- Mini Sidebar pour tablettes -->
 <div class="mini-sidebar">
@@ -132,7 +133,7 @@
 </div>
 
 <!-- Common Scripts -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="/static/vendor/js/jquery-3.6.0.min.js"></script>
 <script src="{{ url_for('static', filename='js/audit_print.js') }}"></script>
 <script>
 // Common dashboard functions

@@ -6,8 +6,8 @@
 {% set page_title = 'Liste des Bus AED' %}
 
 {% block extra_head %}
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="/static/vendor/js/all.min.js"></script>
+    <script src="/static/vendor/js/sweetalert2.min.js"></script>
     <!-- CSS déjà inclus dans dashboard-main.css via bus-aed.css -->
 {% endblock %}
 
@@ -101,8 +101,7 @@
     <div class="modal-body">
       <form id="docForm">
         <div class="form-group">
-          <label>Type de document</label>
-          <select name="type_document" required>
+          <label for="busaed_type_document">Type de document</label> <select id="busaed_type_document" name="type_document" required>
             <option value="">-- Choisir --</option>
             <option value="ASSURANCE">Assurance</option>
             <option value="VISITE_TECHNIQUE">Visite Technique</option>
@@ -111,8 +110,8 @@
             <option value="CARTE_GRISE">Carte Grise</option>
           </select>
         </div>
-        <div class="form-group"><label>Date début</label><input type="date" name="date_debut" required></div>
-        <div class="form-group" id="dateExpGroup"><label>Date expiration</label><input type="date" name="date_expiration"></div>
+        <div class="form-group"><label for="busaed_date_debut">Date début</label> <input id="busaed_date_debut" type="date" name="date_debut" required></div>
+        <div class="form-group" id="dateExpGroup"><label for="busaed_date_expiration">Date expiration</label> <input id="busaed_date_expiration" type="date" name="date_expiration"></div>
         <div style="text-align:right;margin-top:12px;">
           <button type="submit" class="submit-btn">Enregistrer</button>
         </div>
@@ -293,7 +292,7 @@ $(function() {
 
     // Validation client: kilometrage >= min si un AED est reconnu
     const selected = window.busUdMIndexByNumero[formData.numero_bus_udm];
-    const kmVal = formData.kilometrage !== '' ? Number(formData.kilometrage) : NaN;
+    const kmVal = formData.kilometrage === '' ? Number.NaN : Number(formData.kilometrage);
     const minAttr = Number($('#kilometrage_panne').attr('min') || 0);
     if (Number.isNaN(kmVal)) {
       Swal.fire('Erreur', 'Veuillez renseigner le kilométrage.', 'error');
@@ -645,7 +644,7 @@ $(function() {
       Swal.fire('Erreur', 'Numéro Bus UdM inconnu. Veuillez sélectionner un numéro existant.', 'error');
       return;
     }
-    const kmVal = formData.kilometrage !== '' ? Number(formData.kilometrage) : NaN;
+    const kmVal = formData.kilometrage === '' ? Number.NaN : Number(formData.kilometrage);
     const minAttr = Number($('#kilometrage_panne').attr('min') || 0);
     if (Number.isNaN(kmVal)) {
       Swal.fire('Erreur', 'Veuillez renseigner le kilométrage.', 'error');

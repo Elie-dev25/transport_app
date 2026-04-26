@@ -1,6 +1,7 @@
 from flask import jsonify
 from datetime import datetime, date
 from app.models.bus_udm import BusUdM
+from app.constants import utc_now_date
 from app.models.trajet import Trajet
 from app.database import db
 from app.routes.common import role_required
@@ -18,7 +19,7 @@ def documents_alerts_ajax():
     """Retourne les documents dont l'expiration est comprise entre 20% et 30% du temps restant."""
     from app.models.document_aed import DocumentAED
     alerts = []
-    today = datetime.utcnow().date()
+    today = utc_now_date()
     docs = DocumentAED.query.filter(DocumentAED.date_expiration != None).all()
     for d in docs:
         total_days = max((d.date_expiration - d.date_debut).days, 1)

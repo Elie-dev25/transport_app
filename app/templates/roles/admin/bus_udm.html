@@ -11,8 +11,8 @@
 {% set page_title = 'Liste des Bus UdM' %}
 
 {% block extra_head %}
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkfHcA21fZyMcJ6r0F/YvC3etwFh0qU6V7qX+6lGJ3j1b8d+6K/Y3GZ3g==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="/static/vendor/css/all.min.css">
+    <script src="/static/vendor/js/sweetalert2.min.js"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/tableaux.css') }}">
     <script src="{{ url_for('static', filename='js/tableaux.js') }}"></script>
@@ -312,7 +312,7 @@ window.openPanneModal = function(numero, immatriculation, kilometrage) {
   $('#immatriculation_panne').val(immatriculation || '');
   $('#kilometrage_panne').val(kilometrage || '');
   const minKm = (typeof kilometrage !== 'undefined' && kilometrage !== null && kilometrage !== '') ? Number(kilometrage) : 0;
-  $('#kilometrage_panne').attr('min', isNaN(minKm) ? 0 : minKm);
+  $('#kilometrage_panne').attr('min', Number.isNaN(minKm) ? 0 : minKm);
   $('#panneModal').removeAttr('hidden').addClass('show').attr('aria-hidden','false');
 };
 </script>

@@ -72,8 +72,8 @@ function calculateTotal() {
     const pEl = document.getElementById('modalPrixUnitaire');
     const tEl = document.getElementById('modalCoutTotal');
     if (!qEl || !pEl || !tEl) return;
-    const quantite = parseFloat(qEl.value) || 0;
-    const prixUnitaire = parseFloat(pEl.value) || 0;
+    const quantite = Number.parseFloat(qEl.value) || 0;
+    const prixUnitaire = Number.parseFloat(pEl.value) || 0;
     const total = quantite * prixUnitaire;
     tEl.value = total.toFixed(0);
 }
@@ -188,9 +188,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const carbBtns = document.querySelectorAll('.btn-carburation[data-aed-id]');
     carbBtns.forEach(btn => {
         btn.addEventListener('click', () => {
-            const aedId = btn.getAttribute('data-aed-id');
-            const numero = btn.getAttribute('data-numero');
-            const effectuePar = btn.getAttribute('data-effectue-par');
+            const aedId = btn.dataset.aedId;
+            const numero = btn.dataset.numero;
+            const effectuePar = btn.dataset.effectuePar;
             openCarburationModal(aedId, numero, effectuePar);
         });
     });
@@ -199,9 +199,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const vidangeBtns = document.querySelectorAll('button[data-open-vidange="1"][data-bus-id]');
     vidangeBtns.forEach(btn => {
         btn.addEventListener('click', () => {
-            const busId = btn.getAttribute('data-bus-id');
-            const numero = btn.getAttribute('data-numero');
-            const demandeur = btn.getAttribute('data-demandeur');
+            const busId = btn.dataset.busId;
+            const numero = btn.dataset.numero;
+            const demandeur = btn.dataset.demandeur;
             openVidangeModal(busId, numero, demandeur);
         });
     });

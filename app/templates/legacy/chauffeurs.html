@@ -28,8 +28,8 @@
 {% set readonly = readonly or superviseur_mode %}
 
 {% block extra_head %}
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="/static/vendor/js/all.min.js"></script>
+    <script src="/static/vendor/js/sweetalert2.min.js"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/tableaux.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/print.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/print-header.css') }}">
@@ -275,11 +275,11 @@
 <script>
 // Fonction pour afficher les détails du statut
 function showStatutDetails(button) {
-  const statut = button.getAttribute('data-statut');
-  const dateDebut = button.getAttribute('data-date-debut');
-  const dateFin = button.getAttribute('data-date-fin');
-  const chauffeurNom = button.getAttribute('data-chauffeur-nom');
-  const chauffeurId = button.getAttribute('data-chauffeur-id');
+  const statut = button.dataset.statut;
+  const dateDebut = button.dataset.dateDebut;
+  const dateFin = button.dataset.dateFin;
+  const chauffeurNom = button.dataset.chauffeurNom;
+  const chauffeurId = button.dataset.chauffeurId;
 
   // Remplir les informations dans la modale
   document.getElementById('detailChauffeurNom').textContent = chauffeurNom;

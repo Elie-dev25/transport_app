@@ -23,7 +23,7 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/print.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/print-header.css') }}">
 <script src="{{ url_for('static', filename='js/print-header.js') }}"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="/static/vendor/js/sweetalert2.min.js"></script>
 <style>
 /* Styles de base pour les modales */
 .modal {
@@ -165,7 +165,7 @@
                         </select>
                     </div>
                     <div style="display:flex;align-items:center;gap:8px;">
-                        <label style="font-weight:500;"><i class="fas fa-calendar"></i> Période :</label>
+                        <label for="carb_date_debut" style="font-weight:500;"><i class="fas fa-calendar"></i> Période :</label>
                         <input type="date" id="carb_date_debut" value="{{ selected_date_debut or '' }}"
                                onchange="filterHistorique(document.getElementById('carb_numero_select').value)"
                                style="padding:8px;border:2px solid #e5e7eb;border-radius:8px;" />
@@ -317,10 +317,10 @@ document.addEventListener('DOMContentLoaded', function () {
     // Ouvrir directement le formulaire de carburation
     document.querySelectorAll('.btn-carburation-direct').forEach(btn => {
         btn.addEventListener('click', function() {
-            const aedId = this.getAttribute('data-aed-id');
-            const numero = this.getAttribute('data-numero');
-            const immat = this.getAttribute('data-immatriculation');
-            const operateur = this.getAttribute('data-effectue-par');
+            const aedId = this.dataset.aedId;
+            const numero = this.dataset.numero;
+            const immat = this.dataset.immatriculation;
+            const operateur = this.dataset.effectuePar;
 
             // Remplir directement le formulaire
             document.getElementById('bus_udm_id_hidden').value = aedId || '';
@@ -332,9 +332,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Auto-calcul du coût total
     const recalcCout = () => {
-        const q = parseFloat(document.getElementById('quantite_input').value || '0');
-        const p = parseFloat(document.getElementById('prix_unitaire_input').value || '0');
-        const total = (isNaN(q) ? 0 : q) * (isNaN(p) ? 0 : p);
+        const q = Number.parseFloat(document.getElementById('quantite_input').value || '0');
+        const p = Number.parseFloat(document.getElementById('prix_unitaire_input').value || '0');
+        const total = (Number.isNaN(q) ? 0 : q) * (Number.isNaN(p) ? 0 : p);
         document.getElementById('cout_total_input').value = total ? total.toFixed(2) : '';
     };
     ['quantite_input','prix_unitaire_input'].forEach(id => {

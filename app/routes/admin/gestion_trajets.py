@@ -18,6 +18,8 @@ from app.services.trajet_service import (
 from app.routes.common import role_required
 from . import bp
 
+MSG_FORMULAIRE_INVALIDE = 'Formulaire invalide'
+
 # Définition du décorateur admin_only (ADMIN et RESPONSABLE avec traçabilité)
 def admin_only(view):
     from app.routes.common import admin_or_responsable
@@ -37,7 +39,7 @@ def depart_aed():
         form.numero_bus_udm.choices = []
     
     if not form.validate():
-        return jsonify({'success': False, 'message': 'Formulaire invalide', 'errors': form.errors}), 400
+        return jsonify({'success': False, 'message': MSG_FORMULAIRE_INVALIDE, 'errors': form.errors}), 400
     
     ok, msg = enregistrer_depart_aed(form, current_user)
     status = 200 if ok else 400
@@ -63,7 +65,7 @@ def depart_banekane_retour():
         form.numero_bus_udm.choices = []
     
     if not form.validate():
-        return jsonify({'success': False, 'message': 'Formulaire invalide', 'errors': form.errors}), 400
+        return jsonify({'success': False, 'message': MSG_FORMULAIRE_INVALIDE, 'errors': form.errors}), 400
     
     ok, msg = enregistrer_depart_banekane_retour(form, current_user)
     status = 200 if ok else 400
@@ -87,7 +89,7 @@ def depart_sortie_hors_ville():
     print(f"DEBUG - Form validate: {form.validate()}")
     
     if not form.validate():
-        return jsonify({'success': False, 'message': 'Formulaire invalide', 'errors': form.errors}), 400
+        return jsonify({'success': False, 'message': MSG_FORMULAIRE_INVALIDE, 'errors': form.errors}), 400
     
     ok, msg = enregistrer_depart_sortie_hors_ville(form, current_user)
     status = 200 if ok else 400
@@ -122,7 +124,7 @@ def trajet_interne_bus_udm():
             for error in errors:
                 error_details.append(f"{field_label_text}: {error}")
 
-        error_msg = " | ".join(error_details) if error_details else "Formulaire invalide"
+        error_msg = " | ".join(error_details) if error_details else MSG_FORMULAIRE_INVALIDE
         return jsonify({'success': False, 'message': error_msg, 'errors': form.errors}), 400
 
     ok, msg = enregistrer_trajet_interne_bus_udm(form, current_user)
@@ -165,7 +167,7 @@ def trajet_prestataire_modernise():
             for error in errors:
                 error_details.append(f"{field_label_text}: {error}")
 
-        error_msg = " | ".join(error_details) if error_details else "Formulaire invalide"
+        error_msg = " | ".join(error_details) if error_details else MSG_FORMULAIRE_INVALIDE
         print(f"DEBUG - Validation échouée: {error_msg}")
         return jsonify({'success': False, 'message': error_msg, 'errors': form.errors}), 400
 
@@ -205,7 +207,7 @@ def autres_trajets():
             for error in errors:
                 error_details.append(f"{field_label_text}: {error}")
 
-        error_msg = " | ".join(error_details) if error_details else "Formulaire invalide"
+        error_msg = " | ".join(error_details) if error_details else MSG_FORMULAIRE_INVALIDE
         print(f"DEBUG AUTRES TRAJETS - Validation échouée: {error_msg}")
         return jsonify({'success': False, 'message': error_msg, 'errors': form.errors}), 400
 

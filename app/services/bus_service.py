@@ -15,6 +15,9 @@ from app.models.carburation import Carburation
 from app.models.trajet import Trajet
 
 
+
+ERR_BUS_NON_TROUVE = 'Bus non trouvé'
+
 class BusService:
     """Service pour la gestion des bus"""
     
@@ -250,7 +253,7 @@ class BusService:
         try:
             bus = BusUdM.query.get(bus_id)
             if not bus:
-                return False, "Bus non trouvé"
+                return False, ERR_BUS_NON_TROUVE
             
             # Mettre à jour les champs modifiables
             for field in ['numero', 'immatriculation', 'marque', 'modele',
@@ -274,7 +277,7 @@ class BusService:
         try:
             bus = BusUdM.query.get(bus_id)
             if not bus:
-                return False, "Bus non trouvé"
+                return False, ERR_BUS_NON_TROUVE
             
             # Vérifier s'il y a des trajets associés
             trajets_count = Trajet.query.filter_by(bus_udm_id=bus_id).count()
@@ -298,7 +301,7 @@ class BusService:
         try:
             bus = BusUdM.query.get(bus_id)
             if not bus:
-                return False, "Bus non trouvé"
+                return False, ERR_BUS_NON_TROUVE
             
             if new_level < 0 or new_level > bus.carburant_max:
                 return False, f"Niveau invalide (0-{bus.carburant_max}L)"

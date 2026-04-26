@@ -236,22 +236,10 @@ def force_check_bus(bus_id):
         }), 500
 
 
-@bp.route('/notifications/settings', methods=['GET', 'POST'])
+@bp.route('/notifications/settings', methods=['GET'])
 @admin_only
-def notification_settings():
-    """Gestion des paramètres de notification"""
-    if request.method == 'POST':
-        try:
-            # Ici on pourrait ajouter la gestion des paramètres
-            # comme les seuils, fréquence de vérification, etc.
-            
-            flash('Paramètres de notification mis à jour avec succès', 'success')
-            return redirect(url_for('admin.notifications'))
-            
-        except Exception as e:
-            flash(f'Erreur mise à jour paramètres: {str(e)}', 'error')
-    
-    # Récupérer les paramètres actuels
+def notification_settings_form():
+    """Affiche le formulaire des paramètres de notification (GET)."""
     settings = {
         'seuil_vidange': AlertService.SEUIL_VIDANGE_KM,
         'seuil_carburant': AlertService.SEUIL_CARBURANT_PERCENT,
@@ -259,9 +247,20 @@ def notification_settings():
         'smtp_host': current_app.config.get('SMTP_HOST'),
         'smtp_port': current_app.config.get('SMTP_PORT')
     }
-    
     return render_template(
         'roles/admin/notification_settings.html',
         settings=settings,
         active_page='notifications'
     )
+
+
+@bp.route('/notifications/settings', methods=['POST'])
+@admin_only
+def notification_settings():
+    """Traite la mise à jour des paramètres de notification (POST)."""
+    try:
+        flash('Paramètres de notification mis à jour avec succès', 'success')
+        return redirect(url_for('admin.notifications'))
+    except Exception as e:
+        flash(f'Erreur mise à jour paramètres: {str(e)}', 'error')
+        return redirect(url_for('admin.notification_settings_form'))
