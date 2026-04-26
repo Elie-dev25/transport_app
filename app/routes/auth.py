@@ -15,6 +15,9 @@ LDAP_SERVER = os.environ.get('LDAP_SERVER', '')
 LDAP_DOMAIN = os.environ.get('LDAP_DOMAIN', '')
 BASE_DN = os.environ.get('BASE_DN', '')
 
+# Templates
+TEMPLATE_LOGIN = 'auth/login.html'
+
 # Mapping rôle applicatif -> groupes AD simulés (inverse de _AD_GROUP_TO_ROLE)
 _ROLE_TO_AD_GROUPS = {
     'ADMIN': ['Administrateur'],
@@ -65,7 +68,7 @@ bp = Blueprint('auth', __name__)
 def login_form():
     """Affiche le formulaire de connexion."""
     form = LoginForm()
-    return render_template('auth/login.html', form=form)
+    return render_template(TEMPLATE_LOGIN, form=form)
 
 # Mapping groupes AD -> rôle applicatif
 _AD_GROUP_TO_ROLE = (
@@ -152,7 +155,7 @@ def login():
     """Traite la soumission du formulaire de connexion."""
     form = LoginForm()
     if not form.validate_on_submit():
-        return render_template('auth/login.html', form=form)
+        return render_template(TEMPLATE_LOGIN, form=form)
 
     username = form.login.data
     password = form.mot_de_passe.data
@@ -161,7 +164,7 @@ def login():
     if not success:
         log_login_failed(username=username, reason=auth_error or "Invalid credentials")
         flash(f"Login ou mot de passe incorrect. Erreur: {auth_error}", "danger")
-        return render_template('auth/login.html', form=form)
+        return render_template(TEMPLATE_LOGIN, form=form)
 
     role = _role_from_groups(groups)
     user = _get_or_create_user(username, role)
