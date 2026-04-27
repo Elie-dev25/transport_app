@@ -309,11 +309,16 @@ pytest tests/test_trajets.py -v
 
 ---
 
-## Auteur
+## 👤 Auteur
 
 **Elie NJINE TIENCHEU**
 
-🌐 **Portfolio** : [portfolio.elie-njine.online](https://portfolio.elie-njine.online)
+| | |
+|---|---|
+| 📞 **Téléphone** | +237 656 440 786 |
+| 📧 **Email** | contact@elie-njine.online |
+| 💼 **LinkedIn** | [linkedin.com/in/elie-njine-736b04274](https://linkedin.com/in/elie-njine-736b04274) |
+| 🌐 **Portfolio** | [www.elie-njine.online](https://www.elie-njine.online) |
 
 ---
 
