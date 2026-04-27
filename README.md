@@ -309,10 +309,16 @@ pytest tests/test_trajets.py -v
 
 ---
 
-## Contact
+## 👤 Auteur
 
-- **Email** : elienjinedev@gmail.com
-- **LinkedIn** : [Elie Njine](https://www.linkedin.com/in/elie-njine-736b04274)
+**Elie NJINE TIENCHEU**
+
+| | |
+|---|---|
+| 📞 **Téléphone** | +237 656 440 786 |
+| 📧 **Email** | contact@elie-njine.online |
+| 💼 **LinkedIn** | [linkedin.com/in/elie-njine-736b04274](https://linkedin.com/in/elie-njine-736b04274) |
+| 🌐 **Portfolio** | [www.elie-njine.online](https://www.elie-njine.online) |
 
 ---
 
