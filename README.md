@@ -309,17 +309,15 @@ pytest tests/test_trajets.py -v
 
 ---
 
+
 ## 👤 Auteur
 
-**Elie NJINE TIENCHEU**
+**Elie NJINE TIENCHEU**  
+Software Engineer
 
-| | |
-|---|---|
-| 📞 **Téléphone** | +237 656 440 786 |
-| 📧 **Email** | contact@elie-njine.online |
-| 💼 **LinkedIn** | [linkedin.com/in/elie-njine-736b04274](https://linkedin.com/in/elie-njine-736b04274) |
-| 🌐 **Portfolio** | [www.elie-njine.online](https://www.elie-njine.online) |
-
----
+[![GitHub](https://img.shields.io/badge/GitHub-Elie--dev25-181717?style=flat&logo=github)](https://github.com/Elie-dev25)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Elie%20NJINE-0077B5?style=flat&logo=linkedin)](https://www.linkedin.com/in/elie-njine-736b04274)
+[![Portfolio](https://img.shields.io/badge/Portfolio-elie--njine.online-FF5733?style=flat&logo=google-chrome)](https://elie-njine.online)
+[![Email](https://img.shields.io/badge/Email-contact@elie--njine.online-D14836?style=flat&logo=gmail)](mailto:contact@elie-njine.online)
 
 *Développé avec ❤️ pour l'Université des Montagnes*
